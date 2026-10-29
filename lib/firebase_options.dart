@@ -5,6 +5,16 @@ import 'package:flutter/foundation.dart'
 /// Default [FirebaseOptions] for use with your Firebase apps.
 /// Run `flutterfire configure` to replace these placeholders with your actual project keys.
 class DefaultFirebaseOptions {
+  /// Returns true only if real Firebase credentials are provided rather than placeholder values.
+  static bool get isConfigured {
+    try {
+      final key = currentPlatform.apiKey;
+      return key.isNotEmpty && !key.contains('Placeholder');
+    } catch (_) {
+      return false;
+    }
+  }
+
   static FirebaseOptions get currentPlatform {
     if (kIsWeb) {
       return web;

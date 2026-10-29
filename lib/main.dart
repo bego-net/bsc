@@ -18,29 +18,45 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   bool isFirebaseReady = false;
-  try {
-    await Firebase.initializeApp(
-      options: DefaultFirebaseOptions.currentPlatform,
-    );
+  if (DefaultFirebaseOptions.isConfigured) {
     try {
-      FirebaseFirestore.instance.settings = const Settings(
-        persistenceEnabled: true,
+      await Firebase.initializeApp(
+        options: DefaultFirebaseOptions.currentPlatform,
       );
-    } catch (_) {
-      // Persistence setting warning on specific platforms
+      try {
+        FirebaseFirestore.instance.settings = const Settings(
+          persistenceEnabled: true,
+        );
+      } catch (_) {
+        // Persistence setting warning on specific platforms
+      }
+      isFirebaseReady = true;
+    } catch (e) {
+      debugPrint(
+        'Firebase initialization fallback: Running with local repositories. '
+        'Run "flutterfire configure" to connect to your live project.\nDetails: $e',
+      );
     }
-    isFirebaseReady = true;
-  } catch (e) {
+  } else {
     debugPrint(
-      'Firebase initialization fallback: Running with local repositories. '
-      'Run "flutterfire configure" to connect to your live project.\nDetails: $e',
+      'Notice: Running in offline development mode with mock repositories.\n'
+      'Run "flutterfire configure" to connect to your live Firebase project.',
     );
   }
 
   // Use Firebase implementations if ready; fallback to in-memory fake repositories
-  final AuthRepository authRepository = isFirebaseReady
-      ? FirebaseAuthRepository()
-      : FakeAuthRepository();
+  final AuthRepository authRepository;
+  if (isFirebaseReady) {
+    authRepository = FirebaseAuthRepository();
+  } else {
+    final fakeAuth = FakeAuthRepository();
+    fakeAuth.seedUser(
+      name: 'Test Member',
+      email: 'test@example.com',
+      password: 'password123',
+    );
+    authRepository = fakeAuth;
+  }
 
   final StudyRepository studyRepository = isFirebaseReady
       ? FirebaseStudyRepository()

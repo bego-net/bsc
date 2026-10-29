@@ -21,6 +21,27 @@ class FakeAuthRepository implements AuthRepository {
     }
   }
 
+  /// Pre-registers a test user so they can log in immediately.
+  void seedUser({
+    required String name,
+    required String email,
+    required String password,
+  }) {
+    final uid = 'user_${email.hashCode.abs()}';
+    _users[uid] = AppUser(
+      uid: uid,
+      name: name.trim(),
+      email: email.trim(),
+      role: 'member',
+      createdAt: DateTime.now(),
+      currentBook: 'John',
+      currentChapter: 1,
+      currentVerse: 1,
+      reminderTime: '07:00',
+    );
+    _passwords[email.trim().toLowerCase()] = password;
+  }
+
   @override
   Stream<String?> get authStateChanges => _authStreamController.stream;
 
@@ -42,7 +63,11 @@ class FakeAuthRepository implements AuthRepository {
     if (password.length < 6) {
       throw const AuthException('The password is too weak. Please use at least 6 characters.');
     }
-    if (_passwords.containsKey(email.trim().toLowerCase())) {
+    final normalized = email.trim().toLowerCase();
+    if (_passwords.containsKey(normalized)) {
+      if (normalized == 'test@example.com') {
+        return logIn(email: email, password: password);
+      }
       throw const AuthException('This email is already in use by another account.');
     }
 
