@@ -36,7 +36,8 @@ class FakeAuthRepository implements AuthRepository {
       createdAt: DateTime.now(),
       currentBook: 'John',
       currentChapter: 1,
-      currentVerse: 1,
+      verseFrom: 1,
+      verseTo: 1,
       reminderTime: '07:00',
     );
     _passwords[email.trim().toLowerCase()] = password;
@@ -80,7 +81,8 @@ class FakeAuthRepository implements AuthRepository {
       createdAt: DateTime.now(),
       currentBook: 'John',
       currentChapter: 1,
-      currentVerse: 1,
+      verseFrom: 1,
+      verseTo: 1,
       reminderTime: '07:00',
     );
 

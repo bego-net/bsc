@@ -7,7 +7,8 @@ class AppUser {
   final DateTime createdAt;
   final String currentBook;
   final int currentChapter;
-  final int currentVerse;
+  final int verseFrom;
+  final int verseTo;
   final String reminderTime; // e.g., '07:00'
 
   const AppUser({
@@ -18,9 +19,15 @@ class AppUser {
     required this.createdAt,
     this.currentBook = 'John',
     this.currentChapter = 1,
-    this.currentVerse = 1,
+    int? currentVerse,
+    int? verseFrom,
+    int? verseTo,
     this.reminderTime = '07:00',
-  });
+  })  : verseFrom = verseFrom ?? currentVerse ?? 1,
+        verseTo = verseTo ?? currentVerse ?? verseFrom ?? 1;
+
+  /// Backward-compatible alias for [verseFrom].
+  int get currentVerse => verseFrom;
 
   bool get isAdmin => role == 'admin';
 
@@ -32,7 +39,9 @@ class AppUser {
       'createdAt': createdAt.toIso8601String(),
       'currentBook': currentBook,
       'currentChapter': currentChapter,
-      'currentVerse': currentVerse,
+      'currentVerse': verseFrom,
+      'verseFrom': verseFrom,
+      'verseTo': verseTo,
       'reminderTime': reminderTime,
     };
   }
@@ -46,6 +55,10 @@ class AppUser {
       return DateTime.now();
     }
 
+    final legacyVerse = (map['currentVerse'] as num?)?.toInt() ?? 1;
+    final vFrom = (map['verseFrom'] as num?)?.toInt() ?? legacyVerse;
+    final vTo = (map['verseTo'] as num?)?.toInt() ?? vFrom;
+
     return AppUser(
       uid: uid,
       name: map['name'] as String? ?? '',
@@ -54,7 +67,8 @@ class AppUser {
       createdAt: parseDate(map['createdAt']),
       currentBook: map['currentBook'] as String? ?? 'John',
       currentChapter: (map['currentChapter'] as num?)?.toInt() ?? 1,
-      currentVerse: (map['currentVerse'] as num?)?.toInt() ?? 1,
+      verseFrom: vFrom,
+      verseTo: vTo,
       reminderTime: map['reminderTime'] as String? ?? '07:00',
     );
   }
@@ -67,6 +81,8 @@ class AppUser {
     String? currentBook,
     int? currentChapter,
     int? currentVerse,
+    int? verseFrom,
+    int? verseTo,
     String? reminderTime,
   }) {
     return AppUser(
@@ -77,7 +93,8 @@ class AppUser {
       createdAt: createdAt ?? this.createdAt,
       currentBook: currentBook ?? this.currentBook,
       currentChapter: currentChapter ?? this.currentChapter,
-      currentVerse: currentVerse ?? this.currentVerse,
+      verseFrom: verseFrom ?? currentVerse ?? this.verseFrom,
+      verseTo: verseTo ?? currentVerse ?? this.verseTo,
       reminderTime: reminderTime ?? this.reminderTime,
     );
   }

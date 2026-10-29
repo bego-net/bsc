@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 
 import '../models/reading_entry.dart';
@@ -11,6 +12,10 @@ import 'book_picker_screen.dart';
 class IndividualScreen extends StatelessWidget {
   const IndividualScreen({super.key});
 
+  /// The font family used for the "Individual BS" heading.
+  /// Change this variable anytime to easily switch fonts (e.g. 'Playfair Display', 'Lora', 'Merriweather').
+  static const String headingFontFamily = 'Playfair Display';
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -20,9 +25,13 @@ class IndividualScreen extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text(
+        title: Text(
           'Individual BS',
-          style: TextStyle(fontWeight: FontWeight.bold),
+          style: GoogleFonts.getFont(
+            headingFontFamily,
+            fontSize: 24,
+            fontWeight: FontWeight.bold,
+          ),
         ),
         actions: [
           // Streak indicator
@@ -166,10 +175,12 @@ class IndividualScreen extends StatelessWidget {
                         color: colorScheme.onSurface,
                       ),
                     ),
-                    const SizedBox(height: 2),
-                    // Verse number below it
+                    const SizedBox(height: 4),
+                    // Verse range below it
                     Text(
-                      'Verse ${state.currentVerse}',
+                      state.verseFrom == state.verseTo
+                          ? 'Verse ${state.verseFrom}'
+                          : 'Verses ${state.verseFrom}-${state.verseTo}',
                       style: theme.textTheme.titleMedium?.copyWith(
                         color: colorScheme.primary,
                         fontWeight: FontWeight.w600,
@@ -179,74 +190,72 @@ class IndividualScreen extends StatelessWidget {
                 ),
               ),
             ),
-            const Divider(height: 28),
+            const Divider(height: 24),
 
-            // Chapter and Verse Steppers Row
-            Row(
+            // Chapter selector
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Chapter selector
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+                Text(
+                  'Chapter (${state.maxChapters} total)',
+                  style: theme.textTheme.labelSmall?.copyWith(
+                    color: colorScheme.onSurfaceVariant,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                const SizedBox(height: 6),
+                Container(
+                  decoration: BoxDecoration(
+                    color: colorScheme.surfaceContainerLowest,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: colorScheme.outlineVariant.withValues(alpha: 0.4),
+                    ),
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text(
-                        'Chapter (${state.maxChapters} total)',
-                        style: theme.textTheme.labelSmall?.copyWith(
-                          color: colorScheme.onSurfaceVariant,
-                          fontWeight: FontWeight.w600,
-                        ),
+                      IconButton(
+                        icon: const Icon(Icons.chevron_left),
+                        onPressed: state.currentChapter > 1
+                            ? () => state.previousChapter()
+                            : null,
+                        visualDensity: VisualDensity.compact,
                       ),
-                      const SizedBox(height: 6),
-                      Container(
-                        decoration: BoxDecoration(
-                          color: colorScheme.surfaceContainerLowest,
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(
-                            color: colorScheme.outlineVariant.withValues(alpha: 0.4),
+                      InkWell(
+                        onTap: () => _showChapterPicker(context, state),
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+                          child: Text(
+                            'Ch. ${state.currentChapter}',
+                            style: const TextStyle(fontWeight: FontWeight.bold),
                           ),
                         ),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            IconButton(
-                              icon: const Icon(Icons.chevron_left),
-                              onPressed: state.currentChapter > 1
-                                  ? () => state.previousChapter()
-                                  : null,
-                              visualDensity: VisualDensity.compact,
-                            ),
-                            InkWell(
-                              onTap: () => _showChapterPicker(context, state),
-                              child: Padding(
-                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
-                                child: Text(
-                                  'Ch. ${state.currentChapter}',
-                                  style: const TextStyle(fontWeight: FontWeight.bold),
-                                ),
-                              ),
-                            ),
-                            IconButton(
-                              icon: const Icon(Icons.chevron_right),
-                              onPressed: state.currentChapter < state.maxChapters
-                                  ? () => state.nextChapter()
-                                  : null,
-                              visualDensity: VisualDensity.compact,
-                            ),
-                          ],
-                        ),
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.chevron_right),
+                        onPressed: state.currentChapter < state.maxChapters
+                            ? () => state.nextChapter()
+                            : null,
+                        visualDensity: VisualDensity.compact,
                       ),
                     ],
                   ),
                 ),
-                const SizedBox(width: 12),
+              ],
+            ),
+            const SizedBox(height: 12),
 
-                // Verse stepper
+            // Verse range: "From verse" and "To verse" steppers
+            Row(
+              children: [
+                // "From verse" stepper
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Verse (1 - 176)',
+                        'From verse',
                         style: theme.textTheme.labelSmall?.copyWith(
                           color: colorScheme.onSurfaceVariant,
                           fontWeight: FontWeight.w600,
@@ -266,25 +275,82 @@ class IndividualScreen extends StatelessWidget {
                           children: [
                             IconButton(
                               icon: const Icon(Icons.remove),
-                              onPressed: state.currentVerse > 1
-                                  ? () => state.decrementVerse()
+                              onPressed: state.verseFrom > 1
+                                  ? () => state.decrementVerseFrom()
                                   : null,
                               visualDensity: VisualDensity.compact,
                             ),
                             InkWell(
-                              onTap: () => _showVerseInputDialog(context, state),
+                              onTap: () => _showVerseFromInputDialog(context, state),
                               child: Padding(
                                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
                                 child: Text(
-                                  'V. ${state.currentVerse}',
+                                  'V. ${state.verseFrom}',
                                   style: const TextStyle(fontWeight: FontWeight.bold),
                                 ),
                               ),
                             ),
                             IconButton(
                               icon: const Icon(Icons.add),
-                              onPressed: state.currentVerse < 176
-                                  ? () => state.incrementVerse()
+                              onPressed: state.verseFrom < 176
+                                  ? () => state.incrementVerseFrom()
+                                  : null,
+                              visualDensity: VisualDensity.compact,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 12),
+
+                // "To verse" stepper
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'To verse',
+                        style: theme.textTheme.labelSmall?.copyWith(
+                          color: colorScheme.onSurfaceVariant,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      const SizedBox(height: 6),
+                      Container(
+                        decoration: BoxDecoration(
+                          color: colorScheme.surfaceContainerLowest,
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                            color: colorScheme.outlineVariant.withValues(alpha: 0.4),
+                          ),
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            IconButton(
+                              icon: const Icon(Icons.remove),
+                              // "To" can never be lower than "From"
+                              onPressed: state.verseTo > state.verseFrom
+                                  ? () => state.decrementVerseTo()
+                                  : null,
+                              visualDensity: VisualDensity.compact,
+                            ),
+                            InkWell(
+                              onTap: () => _showVerseToInputDialog(context, state),
+                              child: Padding(
+                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+                                child: Text(
+                                  'V. ${state.verseTo}',
+                                  style: const TextStyle(fontWeight: FontWeight.bold),
+                                ),
+                              ),
+                            ),
+                            IconButton(
+                              icon: const Icon(Icons.add),
+                              onPressed: state.verseTo < 176
+                                  ? () => state.incrementVerseTo()
                                   : null,
                               visualDensity: VisualDensity.compact,
                             ),
@@ -522,7 +588,7 @@ class IndividualScreen extends StatelessWidget {
                     ),
                   ),
                   title: Text(
-                    '${entry.book} ${entry.chapter}:${entry.verse}',
+                    entry.referenceText,
                     style: const TextStyle(fontWeight: FontWeight.bold),
                   ),
                   subtitle: Text(
@@ -546,11 +612,12 @@ class IndividualScreen extends StatelessWidget {
       context: context,
       builder: (context) {
         return AlertDialog(
-          title: Text('${entry.book} ${entry.chapter}:${entry.verse}'),
+          title: Text(entry.referenceText),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              Text('Portion: ${entry.referenceText}'),
               Text('Date: ${entry.date}'),
               const SizedBox(height: 6),
               Text('Status: ${entry.completed ? 'Completed ✓' : 'Undone'}'),
@@ -655,14 +722,14 @@ class IndividualScreen extends StatelessWidget {
     );
   }
 
-  /// Opens a dialog to enter a verse number directly.
-  void _showVerseInputDialog(BuildContext context, StudyState state) {
-    final controller = TextEditingController(text: '${state.currentVerse}');
+  /// Opens a dialog to enter the "From" verse directly.
+  void _showVerseFromInputDialog(BuildContext context, StudyState state) {
+    final controller = TextEditingController(text: '${state.verseFrom}');
     showDialog(
       context: context,
       builder: (context) {
         return AlertDialog(
-          title: const Text('Enter Verse Number'),
+          title: const Text('Enter "From" Verse'),
           content: TextField(
             controller: controller,
             keyboardType: TextInputType.number,
@@ -681,7 +748,7 @@ class IndividualScreen extends StatelessWidget {
               onPressed: () {
                 final val = int.tryParse(controller.text);
                 if (val != null && val >= 1 && val <= 176) {
-                  state.setVerse(val);
+                  state.setVerseFrom(val);
                 }
                 Navigator.of(context).pop();
               },
@@ -692,6 +759,46 @@ class IndividualScreen extends StatelessWidget {
       },
     );
   }
+
+  /// Opens a dialog to enter the "To" verse directly.
+  void _showVerseToInputDialog(BuildContext context, StudyState state) {
+    final controller = TextEditingController(text: '${state.verseTo}');
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('Enter "To" Verse'),
+          content: TextField(
+            controller: controller,
+            keyboardType: TextInputType.number,
+            autofocus: true,
+            decoration: InputDecoration(
+              hintText: '${state.verseFrom} to 176',
+              helperText: 'Cannot be lower than "From" verse (${state.verseFrom})',
+              border: const OutlineInputBorder(),
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('Cancel'),
+            ),
+            FilledButton(
+              onPressed: () {
+                final val = int.tryParse(controller.text);
+                if (val != null && val >= state.verseFrom && val <= 176) {
+                  state.setVerseTo(val);
+                }
+                Navigator.of(context).pop();
+              },
+              child: const Text('Save'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
 
   /// Opens time picker to set daily reminder.
   Future<void> _pickReminderTime(BuildContext context, StudyState state) async {

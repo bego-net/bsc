@@ -16,12 +16,18 @@ class FirebaseStudyRepository implements StudyRepository {
     required String uid,
     required String book,
     required int chapter,
-    required int verse,
+    int? verse,
+    int? verseFrom,
+    int? verseTo,
   }) async {
+    final vFrom = verseFrom ?? verse ?? 1;
+    final vTo = verseTo ?? verse ?? vFrom;
     await _firestore.collection('users').doc(uid).set({
       'currentBook': book,
       'currentChapter': chapter,
-      'currentVerse': verse,
+      'currentVerse': vFrom,
+      'verseFrom': vFrom,
+      'verseTo': vTo,
     }, SetOptions(merge: true));
   }
 

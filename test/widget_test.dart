@@ -106,6 +106,85 @@ void main() {
       await state.setVerse(-10);
       expect(state.currentVerse, equals(1));
     });
+
+    test('Verse range rules: To can never be lower than From, formats properly', () async {
+      final studyRepo = FakeStudyRepository();
+      final user = AppUser(
+        uid: 'user_range',
+        name: 'Range Tester',
+        email: 'range@test.com',
+        createdAt: DateTime.now(),
+        currentBook: 'Matthew',
+        currentChapter: 5,
+        verseFrom: 1,
+        verseTo: 8,
+      );
+
+      final state = StudyState(
+        repository: studyRepo,
+        initialUser: user,
+      );
+
+      // Initial range 1-8
+      expect(state.verseFrom, equals(1));
+      expect(state.verseTo, equals(8));
+      expect(state.verseRangeText, equals('1-8'));
+      expect(state.currentReferenceText, equals('Matthew 5:1-8'));
+
+      // If user selects same number, show single verse: "Matthew 5:3"
+      await state.setVerseRange(3, 3);
+      expect(state.verseFrom, equals(3));
+      expect(state.verseTo, equals(3));
+      expect(state.verseRangeText, equals('3'));
+      expect(state.currentReferenceText, equals('Matthew 5:3'));
+
+      // "To" can never be lower than "From"
+      await state.setVerseTo(1); // attempt to set to 1 when from is 3
+      expect(state.verseTo, equals(3)); // must remain at least from (3)
+
+      // Advancing "From" beyond "To" pushes "To" forward
+      await state.setVerseFrom(10);
+      expect(state.verseFrom, equals(10));
+      expect(state.verseTo, equals(10));
+
+      // Stepping "To"
+      await state.incrementVerseTo();
+      expect(state.verseTo, equals(11));
+      expect(state.verseRangeText, equals('10-11'));
+
+      // Decrementing "To" stops at "From"
+      await state.decrementVerseTo();
+      expect(state.verseTo, equals(10));
+      await state.decrementVerseTo();
+      expect(state.verseTo, equals(10)); // cannot be lower than from
+    });
+
+    test('Legacy records with single verse are parsed with verseFrom = verseTo', () {
+      // Legacy user map with only currentVerse
+      final userMap = {
+        'name': 'Old User',
+        'email': 'old@test.com',
+        'currentBook': 'Romans',
+        'currentChapter': 8,
+        'currentVerse': 28,
+      };
+      final user = AppUser.fromMap('old_uid', userMap);
+      expect(user.verseFrom, equals(28));
+      expect(user.verseTo, equals(28));
+
+      // Legacy reading entry with only verse
+      final entryMap = {
+        'book': 'Romans',
+        'chapter': 8,
+        'verse': 28,
+        'completed': true,
+        'updatedAt': '2026-10-29T10:00:00.000',
+      };
+      final entry = ReadingEntry.fromMap('2026-10-29', entryMap);
+      expect(entry.verseFrom, equals(28));
+      expect(entry.verseTo, equals(28));
+      expect(entry.referenceText, equals('Romans 8:28'));
+    });
   });
 
   group('Marking and Undoing Today Tests', () {
@@ -370,10 +449,13 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      // Top card displays "Currently studying", "John 1", "Verse 1"
+      // Heading and Top card displays
+      expect(find.text('Individual BS'), findsOneWidget);
       expect(find.text('Currently studying'), findsOneWidget);
       expect(find.text('John 1'), findsOneWidget);
       expect(find.text('Verse 1'), findsOneWidget);
+      expect(find.text('From verse'), findsOneWidget);
+      expect(find.text('To verse'), findsOneWidget);
 
       // Buttons
       expect(find.text('Mark as read today'), findsOneWidget);

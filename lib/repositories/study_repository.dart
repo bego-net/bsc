@@ -2,12 +2,14 @@ import '../models/reading_entry.dart';
 
 /// Abstract repository interface for Bible study progress and reading history.
 abstract class StudyRepository {
-  /// Updates the user's currently active book, chapter, and verse immediately.
+  /// Updates the user's currently active book, chapter, and verse range.
   Future<void> updateCurrentStudy({
     required String uid,
     required String book,
     required int chapter,
-    required int verse,
+    int? verse,
+    int? verseFrom,
+    int? verseTo,
   });
 
   /// Updates the user's reminder time setting.

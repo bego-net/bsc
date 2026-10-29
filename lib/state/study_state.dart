@@ -14,7 +14,8 @@ class StudyState extends ChangeNotifier {
   String? _uid;
   String _currentBook = 'John';
   int _currentChapter = 1;
-  int _currentVerse = 1;
+  int _verseFrom = 1;
+  int _verseTo = 1;
   TimeOfDay _reminderTime = const TimeOfDay(hour: 7, minute: 0);
 
   ReadingEntry? _todayReading;
@@ -43,7 +44,13 @@ class StudyState extends ChangeNotifier {
   String? get uid => _uid;
   String get currentBook => _currentBook;
   int get currentChapter => _currentChapter;
-  int get currentVerse => _currentVerse;
+  int get verseFrom => _verseFrom;
+  int get verseTo => _verseTo;
+  int get currentVerse => _verseFrom;
+  String get verseRangeText =>
+      _verseFrom == _verseTo ? '$_verseFrom' : '$_verseFrom-$_verseTo';
+  String get currentReferenceText =>
+      '$_currentBook $_currentChapter:$verseRangeText';
   int get maxChapters => BibleBooks.getChapterCount(_currentBook);
   TimeOfDay get reminderTime => _reminderTime;
   ReadingEntry? get todayReading => _todayReading;
@@ -79,7 +86,8 @@ class StudyState extends ChangeNotifier {
   void _applyUser(AppUser user) {
     _currentBook = user.currentBook;
     _currentChapter = user.currentChapter;
-    _currentVerse = user.currentVerse;
+    _verseFrom = user.verseFrom;
+    _verseTo = user.verseTo < user.verseFrom ? user.verseFrom : user.verseTo;
     _reminderTime = _parseReminderTime(user.reminderTime);
     notifyListeners();
   }
@@ -135,7 +143,8 @@ class StudyState extends ChangeNotifier {
     if (_currentChapter > max) {
       _currentChapter = max;
     }
-    _currentVerse = 1;
+    _verseFrom = 1;
+    _verseTo = 1;
     notifyListeners();
 
     await _persistCurrentStudy();
@@ -147,7 +156,8 @@ class StudyState extends ChangeNotifier {
     if (_currentChapter == clamped) return;
 
     _currentChapter = clamped;
-    _currentVerse = 1;
+    _verseFrom = 1;
+    _verseTo = 1;
     notifyListeners();
 
     await _persistCurrentStudy();
@@ -167,29 +177,87 @@ class StudyState extends ChangeNotifier {
     }
   }
 
-  /// Changes the current verse (clamped between 1 and 176).
-  Future<void> setVerse(int verse) async {
-    final clamped = verse.clamp(1, 176);
-    if (_currentVerse == clamped) return;
+  /// Changes the "from" verse (clamped between 1 and 176).
+  /// If [from] is greater than current [_verseTo], [_verseTo] is advanced to match.
+  Future<void> setVerseFrom(int from) async {
+    final clamped = from.clamp(1, 176);
+    if (_verseFrom == clamped && _verseTo >= clamped) return;
 
-    _currentVerse = clamped;
+    _verseFrom = clamped;
+    if (_verseTo < clamped) {
+      _verseTo = clamped;
+    }
     notifyListeners();
 
     await _persistCurrentStudy();
   }
 
-  /// Increments the verse by 1 (max 176).
-  Future<void> incrementVerse() async {
-    if (_currentVerse < 176) {
-      await setVerse(_currentVerse + 1);
+  /// Changes the "to" verse (clamped between [_verseFrom] and 176).
+  /// "To" can never be lower than "From".
+  Future<void> setVerseTo(int to) async {
+    final clamped = to.clamp(_verseFrom, 176);
+    if (_verseTo == clamped) return;
+
+    _verseTo = clamped;
+    notifyListeners();
+
+    await _persistCurrentStudy();
+  }
+
+  /// Sets both "from" and "to" verses, ensuring "to" >= "from".
+  Future<void> setVerseRange(int from, int to) async {
+    final clampedFrom = from.clamp(1, 176);
+    final clampedTo = to < clampedFrom ? clampedFrom : to.clamp(1, 176);
+    if (_verseFrom == clampedFrom && _verseTo == clampedTo) return;
+
+    _verseFrom = clampedFrom;
+    _verseTo = clampedTo;
+    notifyListeners();
+
+    await _persistCurrentStudy();
+  }
+
+  /// Increments "from" verse by 1 (max 176).
+  Future<void> incrementVerseFrom() async {
+    if (_verseFrom < 176) {
+      await setVerseFrom(_verseFrom + 1);
     }
   }
 
-  /// Decrements the verse by 1 (min 1).
-  Future<void> decrementVerse() async {
-    if (_currentVerse > 1) {
-      await setVerse(_currentVerse - 1);
+  /// Decrements "from" verse by 1 (min 1).
+  Future<void> decrementVerseFrom() async {
+    if (_verseFrom > 1) {
+      await setVerseFrom(_verseFrom - 1);
     }
+  }
+
+  /// Increments "to" verse by 1 (max 176).
+  Future<void> incrementVerseTo() async {
+    if (_verseTo < 176) {
+      await setVerseTo(_verseTo + 1);
+    }
+  }
+
+  /// Decrements "to" verse by 1 (never lower than [_verseFrom]).
+  Future<void> decrementVerseTo() async {
+    if (_verseTo > _verseFrom) {
+      await setVerseTo(_verseTo - 1);
+    }
+  }
+
+  /// Changes the current single verse (backward-compatible).
+  Future<void> setVerse(int verse) async {
+    await setVerseRange(verse, verse);
+  }
+
+  /// Increments the verse by 1 (backward-compatible).
+  Future<void> incrementVerse() async {
+    await incrementVerseFrom();
+  }
+
+  /// Decrements the verse by 1 (backward-compatible).
+  Future<void> decrementVerse() async {
+    await decrementVerseFrom();
   }
 
   // --- Mark Read & Undo ---
@@ -210,7 +278,8 @@ class StudyState extends ChangeNotifier {
       date: dateKey,
       book: _currentBook,
       chapter: _currentChapter,
-      verse: _currentVerse,
+      verseFrom: _verseFrom,
+      verseTo: _verseTo,
       completed: !currentlyCompleted,
       updatedAt: DateTime.now(),
     );
@@ -304,7 +373,8 @@ class StudyState extends ChangeNotifier {
       uid: _uid!,
       book: _currentBook,
       chapter: _currentChapter,
-      verse: _currentVerse,
+      verseFrom: _verseFrom,
+      verseTo: _verseTo,
     );
   }
 

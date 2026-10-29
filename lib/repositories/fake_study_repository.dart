@@ -14,12 +14,18 @@ class FakeStudyRepository implements StudyRepository {
     required String uid,
     required String book,
     required int chapter,
-    required int verse,
+    int? verse,
+    int? verseFrom,
+    int? verseTo,
   }) async {
+    final vFrom = verseFrom ?? verse ?? 1;
+    final vTo = verseTo ?? verse ?? vFrom;
     final profile = _userProfiles.putIfAbsent(uid, () => {});
     profile['currentBook'] = book;
     profile['currentChapter'] = chapter;
-    profile['currentVerse'] = verse;
+    profile['currentVerse'] = vFrom;
+    profile['verseFrom'] = vFrom;
+    profile['verseTo'] = vTo;
   }
 
   @override

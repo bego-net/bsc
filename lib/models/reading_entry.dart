@@ -4,7 +4,8 @@ class ReadingEntry {
   final String date;
   final String book;
   final int chapter;
-  final int verse;
+  final int verseFrom;
+  final int verseTo;
   final bool completed;
   final DateTime updatedAt;
 
@@ -12,16 +13,31 @@ class ReadingEntry {
     required this.date,
     required this.book,
     required this.chapter,
-    required this.verse,
+    int? verse,
+    int? verseFrom,
+    int? verseTo,
     required this.completed,
     required this.updatedAt,
-  });
+  })  : verseFrom = verseFrom ?? verse ?? 1,
+        verseTo = verseTo ?? verse ?? verseFrom ?? 1;
+
+  /// Backward-compatible alias for [verseFrom].
+  int get verse => verseFrom;
+
+  /// Formatted verse string, e.g. "3" or "1-8".
+  String get verseRangeText =>
+      verseFrom == verseTo ? '$verseFrom' : '$verseFrom-$verseTo';
+
+  /// Complete reference text, e.g. "Matthew 5:1-8" or "Matthew 5:3".
+  String get referenceText => '$book $chapter:$verseRangeText';
 
   Map<String, dynamic> toMap() {
     return {
       'book': book,
       'chapter': chapter,
-      'verse': verse,
+      'verse': verseFrom,
+      'verseFrom': verseFrom,
+      'verseTo': verseTo,
       'completed': completed,
       'updatedAt': updatedAt.toIso8601String(),
     };
@@ -36,11 +52,16 @@ class ReadingEntry {
       return DateTime.now();
     }
 
+    final legacyVerse = (map['verse'] as num?)?.toInt() ?? 1;
+    final vFrom = (map['verseFrom'] as num?)?.toInt() ?? legacyVerse;
+    final vTo = (map['verseTo'] as num?)?.toInt() ?? vFrom;
+
     return ReadingEntry(
       date: date,
       book: map['book'] as String? ?? 'John',
       chapter: (map['chapter'] as num?)?.toInt() ?? 1,
-      verse: (map['verse'] as num?)?.toInt() ?? 1,
+      verseFrom: vFrom,
+      verseTo: vTo,
       completed: map['completed'] as bool? ?? false,
       updatedAt: parseDate(map['updatedAt']),
     );
@@ -51,6 +72,8 @@ class ReadingEntry {
     String? book,
     int? chapter,
     int? verse,
+    int? verseFrom,
+    int? verseTo,
     bool? completed,
     DateTime? updatedAt,
   }) {
@@ -58,7 +81,8 @@ class ReadingEntry {
       date: date ?? this.date,
       book: book ?? this.book,
       chapter: chapter ?? this.chapter,
-      verse: verse ?? this.verse,
+      verseFrom: verseFrom ?? verse ?? this.verseFrom,
+      verseTo: verseTo ?? verse ?? this.verseTo,
       completed: completed ?? this.completed,
       updatedAt: updatedAt ?? this.updatedAt,
     );
