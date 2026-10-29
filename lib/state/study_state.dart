@@ -8,7 +8,7 @@ import '../repositories/study_repository.dart';
 /// Manages Bible study state for the active user, including current portion,
 /// today's reading completion, streak counting, reading history, and reminders.
 class StudyState extends ChangeNotifier {
-  final StudyRepository _repository;
+  final StudyRepository _repo;
   DateTime Function() _now;
 
   String? _uid;
@@ -20,13 +20,14 @@ class StudyState extends ChangeNotifier {
   ReadingEntry? _todayReading;
   List<ReadingEntry> _history = [];
   bool _isLoading = false;
+  Future<void>? _pendingLoad;
 
   StudyState({
     required StudyRepository repository,
     String? uid,
     AppUser? initialUser,
     DateTime Function()? now,
-  })  : _repository = repository,
+  })  : _repo = repository,
         _uid = uid ?? initialUser?.uid,
         _now = now ?? DateTime.now {
     if (initialUser != null) {
@@ -65,6 +66,7 @@ class StudyState extends ChangeNotifier {
       _uid = null;
       _todayReading = null;
       _history = [];
+      _pendingLoad = null;
       notifyListeners();
       return;
     }
@@ -94,18 +96,31 @@ class StudyState extends ChangeNotifier {
     _isLoading = true;
     notifyListeners();
 
-    try {
-      final dateKey = todayDateKey;
-      _todayReading = await _repository.getReadingForDate(
-        uid: _uid!,
-        date: dateKey,
-      );
-      _history = await _repository.getReadingHistory(uid: _uid!);
-    } catch (e) {
-      debugPrint('Error loading study data: $e');
-    } finally {
-      _isLoading = false;
-      notifyListeners();
+    final targetUid = _uid;
+    final future = () async {
+      try {
+        final dateKey = todayDateKey;
+        final reading = await _repo.getReadingForDate(
+          uid: targetUid!,
+          date: dateKey,
+        );
+        final history = await _repo.getReadingHistory(uid: targetUid);
+        if (_uid == targetUid) {
+          _todayReading = reading;
+          _history = List<ReadingEntry>.from(history);
+        }
+      } catch (e) {
+        debugPrint('Error loading study data: $e');
+      } finally {
+        _isLoading = false;
+        notifyListeners();
+      }
+    }();
+
+    _pendingLoad = future;
+    await future;
+    if (_pendingLoad == future) {
+      _pendingLoad = null;
     }
   }
 
@@ -183,6 +198,11 @@ class StudyState extends ChangeNotifier {
   Future<void> toggleMarkToday() async {
     if (_uid == null) return;
 
+    if (_pendingLoad != null) {
+      await _pendingLoad;
+    }
+    if (_uid == null) return;
+
     final dateKey = todayDateKey;
     final currentlyCompleted = isReadToday;
 
@@ -207,7 +227,7 @@ class StudyState extends ChangeNotifier {
     _history.sort((a, b) => b.date.compareTo(a.date));
     notifyListeners();
 
-    await _repository.saveReading(uid: _uid!, entry: entry);
+    await _repo.saveReading(uid: _uid!, entry: entry);
   }
 
   // --- Reminder Time ---
@@ -220,7 +240,7 @@ class StudyState extends ChangeNotifier {
     if (_uid != null) {
       final formatted =
           '${time.hour.toString().padLeft(2, '0')}:${time.minute.toString().padLeft(2, '0')}';
-      await _repository.updateReminderTime(
+      await _repo.updateReminderTime(
         uid: _uid!,
         reminderTime: formatted,
       );
@@ -280,7 +300,7 @@ class StudyState extends ChangeNotifier {
 
   Future<void> _persistCurrentStudy() async {
     if (_uid == null) return;
-    await _repository.updateCurrentStudy(
+    await _repo.updateCurrentStudy(
       uid: _uid!,
       book: _currentBook,
       chapter: _currentChapter,

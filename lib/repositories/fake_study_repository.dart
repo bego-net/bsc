@@ -55,6 +55,6 @@ class FakeStudyRepository implements StudyRepository {
     final userReadings = _readings[uid]?.values.toList() ?? [];
     // Sort newest date first
     userReadings.sort((a, b) => b.date.compareTo(a.date));
-    return List.unmodifiable(userReadings);
+    return List<ReadingEntry>.from(userReadings);
   }
 }

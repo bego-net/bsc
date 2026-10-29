@@ -6,7 +6,7 @@ import '../repositories/auth_repository.dart';
 
 /// Manages authentication state, current user profile, and sign-in lifecycle.
 class AuthState extends ChangeNotifier {
-  final AuthRepository _authRepository;
+  final AuthRepository _repo;
   StreamSubscription<String?>? _authSubscription;
 
   AppUser? _user;
@@ -14,7 +14,7 @@ class AuthState extends ChangeNotifier {
   String? _errorMessage;
 
   AuthState({required AuthRepository authRepository})
-      : _authRepository = authRepository {
+      : _repo = authRepository {
     _init();
   }
 
@@ -28,7 +28,7 @@ class AuthState extends ChangeNotifier {
     notifyListeners();
 
     try {
-      _user = await _authRepository.getCurrentUser();
+      _user = await _repo.getCurrentUser();
     } catch (e) {
       debugPrint('Failed to load current user: $e');
     }
@@ -36,12 +36,12 @@ class AuthState extends ChangeNotifier {
     _isLoading = false;
     notifyListeners();
 
-    _authSubscription = _authRepository.authStateChanges.listen((uid) async {
+    _authSubscription = _repo.authStateChanges.listen((uid) async {
       if (uid == null) {
         _user = null;
         notifyListeners();
       } else {
-        _user = await _authRepository.getCurrentUser();
+        _user = await _repo.getCurrentUser();
         notifyListeners();
       }
     });
@@ -58,7 +58,7 @@ class AuthState extends ChangeNotifier {
     notifyListeners();
 
     try {
-      _user = await _authRepository.signUp(
+      _user = await _repo.signUp(
         name: name,
         email: email,
         password: password,
@@ -84,7 +84,7 @@ class AuthState extends ChangeNotifier {
     notifyListeners();
 
     try {
-      _user = await _authRepository.logIn(
+      _user = await _repo.logIn(
         email: email,
         password: password,
       );
@@ -104,7 +104,7 @@ class AuthState extends ChangeNotifier {
     _isLoading = true;
     notifyListeners();
 
-    await _authRepository.logOut();
+    await _repo.logOut();
     _user = null;
     _isLoading = false;
     notifyListeners();
