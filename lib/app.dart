@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import 'screens/admin/dashboard_screen.dart';
 import 'screens/individual_screen.dart';
+import 'screens/leaderboard_screen.dart';
 import 'screens/login_screen.dart';
 import 'screens/old_testament_screen.dart';
-import 'screens/placeholder_screen.dart';
 import 'screens/team_screen.dart';
 import 'services/notification_service.dart';
 import 'state/auth_state.dart';
@@ -122,53 +123,62 @@ class _AppShellState extends State<AppShell> {
     super.dispose();
   }
 
-  final List<Widget> _screens = const [
-    IndividualScreen(),
-    TeamScreen(),
-    OldTestamentScreen(),
-    PlaceholderScreen(
-      title: 'Leaderboard',
-      icon: Icons.leaderboard_outlined,
-      description: 'Community reading streaks and team participation rankings are coming soon.',
-    ),
-  ];
-
   @override
   Widget build(BuildContext context) {
+    final isAdmin = context.watch<AuthState>().isAdmin;
+
+    final screens = [
+      const IndividualScreen(),
+      const TeamScreen(),
+      const OldTestamentScreen(),
+      const LeaderboardScreen(),
+      if (isAdmin) const DashboardScreen(),
+    ];
+
+    final destinations = [
+      const NavigationDestination(
+        icon: Icon(Icons.person_outline),
+        selectedIcon: Icon(Icons.person),
+        label: 'Individual BS',
+      ),
+      const NavigationDestination(
+        icon: Icon(Icons.group_outlined),
+        selectedIcon: Icon(Icons.group),
+        label: 'Team BS',
+      ),
+      const NavigationDestination(
+        icon: Icon(Icons.menu_book_outlined),
+        selectedIcon: Icon(Icons.menu_book),
+        label: 'Old Testament',
+      ),
+      const NavigationDestination(
+        icon: Icon(Icons.leaderboard_outlined),
+        selectedIcon: Icon(Icons.leaderboard),
+        label: 'Leaderboard',
+      ),
+      if (isAdmin)
+        const NavigationDestination(
+          icon: Icon(Icons.dashboard_outlined),
+          selectedIcon: Icon(Icons.dashboard),
+          label: 'Dashboard',
+        ),
+    ];
+
+    final effectiveIndex = _currentIndex >= screens.length ? 0 : _currentIndex;
+
     return Scaffold(
       body: IndexedStack(
-        index: _currentIndex,
-        children: _screens,
+        index: effectiveIndex,
+        children: screens,
       ),
       bottomNavigationBar: NavigationBar(
-        selectedIndex: _currentIndex,
+        selectedIndex: effectiveIndex,
         onDestinationSelected: (index) {
           setState(() {
             _currentIndex = index;
           });
         },
-        destinations: const [
-          NavigationDestination(
-            icon: Icon(Icons.person_outline),
-            selectedIcon: Icon(Icons.person),
-            label: 'Individual BS',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.group_outlined),
-            selectedIcon: Icon(Icons.group),
-            label: 'Team BS',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.menu_book_outlined),
-            selectedIcon: Icon(Icons.menu_book),
-            label: 'Old Testament',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.leaderboard_outlined),
-            selectedIcon: Icon(Icons.leaderboard),
-            label: 'Leaderboard',
-          ),
-        ],
+        destinations: destinations,
       ),
     );
   }
