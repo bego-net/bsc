@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../state/team_state.dart';
+import 'dashboard_screen.dart';
 import 'edit_week_screen.dart';
 import 'materials_screen.dart';
 import 'overview_screen.dart';
@@ -72,6 +73,20 @@ class AdminHomeScreen extends StatelessWidget {
               Navigator.of(context).push(
                 MaterialPageRoute<void>(
                   builder: (_) => const OverviewScreen(),
+                ),
+              );
+            },
+          ),
+          const Divider(height: 1),
+          ListTile(
+            leading: const Icon(Icons.dashboard_outlined),
+            title: const Text('Admin Dashboard'),
+            subtitle: const Text('Stats, rankings, and weekly summary'),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () {
+              Navigator.of(context).push(
+                MaterialPageRoute<void>(
+                  builder: (_) => const DashboardScreen(),
                 ),
               );
             },

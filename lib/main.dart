@@ -6,11 +6,14 @@ import 'package:provider/provider.dart';
 import 'app.dart';
 import 'firebase_options.dart';
 import 'repositories/auth_repository.dart';
+import 'repositories/dashboard_repository.dart';
 import 'repositories/fake_auth_repository.dart';
+import 'repositories/fake_dashboard_repository.dart';
 import 'repositories/fake_ot_repository.dart';
 import 'repositories/fake_study_repository.dart';
 import 'repositories/fake_team_repository.dart';
 import 'repositories/firebase_auth_repository.dart';
+import 'repositories/firebase_dashboard_repository.dart';
 import 'repositories/firebase_ot_repository.dart';
 import 'repositories/firebase_study_repository.dart';
 import 'repositories/firebase_team_repository.dart';
@@ -21,6 +24,7 @@ import 'services/fake_notification_service.dart';
 import 'services/local_notification_service.dart';
 import 'services/notification_service.dart';
 import 'state/auth_state.dart';
+import 'state/dashboard_state.dart';
 import 'state/ot_state.dart';
 import 'state/study_state.dart';
 import 'state/team_state.dart';
@@ -87,6 +91,10 @@ void main() async {
       ? FirebaseOtRepository()
       : FakeOtRepository();
 
+  final DashboardRepository dashboardRepository = isFirebaseReady
+      ? FirebaseDashboardRepository()
+      : FakeDashboardRepository();
+
   // Initialize notification service.
   // NOTE: flutter_local_notifications does NOT work on web (Chrome).
   // FakeNotificationService is used in offline mode or tests.
@@ -106,6 +114,7 @@ void main() async {
         Provider<StudyRepository>.value(value: studyRepository),
         Provider<TeamRepository>.value(value: teamRepository),
         Provider<OtRepository>.value(value: otRepository),
+        Provider<DashboardRepository>.value(value: dashboardRepository),
         Provider<NotificationService>.value(value: notificationService),
         ChangeNotifierProvider<AuthState>(
           create: (_) => AuthState(authRepository: authRepository),
@@ -200,6 +209,12 @@ void main() async {
             }
             return otState;
           },
+        ),
+        ChangeNotifierProvider<DashboardState>(
+          create: (_) => DashboardState(
+            repository: dashboardRepository,
+            otRepository: otRepository,
+          ),
         ),
       ],
       child: const BibleStudyApp(),
