@@ -85,6 +85,10 @@ class BibleBooks {
     BibleBook(name: 'Revelation', chapterCount: 22, testament: 'NT'),
   ];
 
+  /// Returns only the 39 Old Testament books.
+  static List<BibleBook> get oldTestament =>
+      all.where((b) => b.testament == 'OT').toList();
+
   /// Returns the chapter count for the given [bookName], defaulting to 1 if not found.
   static int getChapterCount(String bookName) {
     for (final book in all) {
