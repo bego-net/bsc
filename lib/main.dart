@@ -7,17 +7,21 @@ import 'app.dart';
 import 'firebase_options.dart';
 import 'repositories/auth_repository.dart';
 import 'repositories/fake_auth_repository.dart';
+import 'repositories/fake_ot_repository.dart';
 import 'repositories/fake_study_repository.dart';
 import 'repositories/fake_team_repository.dart';
 import 'repositories/firebase_auth_repository.dart';
+import 'repositories/firebase_ot_repository.dart';
 import 'repositories/firebase_study_repository.dart';
 import 'repositories/firebase_team_repository.dart';
+import 'repositories/ot_repository.dart';
 import 'repositories/study_repository.dart';
 import 'repositories/team_repository.dart';
 import 'services/fake_notification_service.dart';
 import 'services/local_notification_service.dart';
 import 'services/notification_service.dart';
 import 'state/auth_state.dart';
+import 'state/ot_state.dart';
 import 'state/study_state.dart';
 import 'state/team_state.dart';
 
@@ -79,6 +83,10 @@ void main() async {
       ? FirebaseTeamRepository()
       : FakeTeamRepository();
 
+  final OtRepository otRepository = isFirebaseReady
+      ? FirebaseOtRepository()
+      : FakeOtRepository();
+
   // Initialize notification service.
   // NOTE: flutter_local_notifications does NOT work on web (Chrome).
   // FakeNotificationService is used in offline mode or tests.
@@ -97,6 +105,7 @@ void main() async {
         Provider<AuthRepository>.value(value: authRepository),
         Provider<StudyRepository>.value(value: studyRepository),
         Provider<TeamRepository>.value(value: teamRepository),
+        Provider<OtRepository>.value(value: otRepository),
         Provider<NotificationService>.value(value: notificationService),
         ChangeNotifierProvider<AuthState>(
           create: (_) => AuthState(authRepository: authRepository),
@@ -153,6 +162,43 @@ void main() async {
               );
             }
             return teamState;
+          },
+        ),
+        ChangeNotifierProxyProvider<AuthState, OtState>(
+          create: (context) {
+            final auth = context.read<AuthState>();
+            return OtState(
+              repository: otRepository,
+              uid: auth.user?.uid,
+              isAdmin: auth.isAdmin,
+              reminderTime: auth.user?.reminderTime ?? '07:00',
+              notificationService: notificationService,
+            );
+          },
+          update: (context, authState, otState) {
+            if (otState == null) {
+              return OtState(
+                repository: otRepository,
+                uid: authState.user?.uid,
+                isAdmin: authState.isAdmin,
+                reminderTime: authState.user?.reminderTime ?? '07:00',
+                notificationService: notificationService,
+              );
+            }
+            // If user changes (login/logout), return a fresh OtState.
+            if (otState.uid != authState.user?.uid) {
+              if (authState.user == null) {
+                notificationService.cancelOtReminders();
+              }
+              return OtState(
+                repository: otRepository,
+                uid: authState.user?.uid,
+                isAdmin: authState.isAdmin,
+                reminderTime: authState.user?.reminderTime ?? '07:00',
+                notificationService: notificationService,
+              );
+            }
+            return otState;
           },
         ),
       ],
