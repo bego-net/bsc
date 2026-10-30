@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 
+import '../models/ot_week.dart';
 import '../models/study_week.dart';
 
 /// Abstract service for local reminders and notifications.
@@ -15,6 +16,16 @@ abstract class NotificationService {
 
   /// Cancels any scheduled Thursday reminder.
   Future<void> cancelThursdayReminder();
+
+  /// Schedules daily Old Testament reminders for days with passages in [week].
+  Future<void> scheduleOtReminders({
+    required OtWeek week,
+    required String reminderTime,
+    required bool enabled,
+  });
+
+  /// Cancels any scheduled Old Testament reminders.
+  Future<void> cancelOtReminders();
 
   /// Sends an immediate test notification (used in Admin Tools to verify on phone/emulator).
   Future<void> sendTestNotification({

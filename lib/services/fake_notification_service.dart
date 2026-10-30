@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 
+import '../models/ot_week.dart';
 import '../models/study_week.dart';
 import 'notification_service.dart';
 
@@ -11,6 +12,10 @@ class FakeNotificationService implements NotificationService {
   bool isInitialized = false;
   StudyWeek? scheduledWeek;
   DateTime? scheduledDateTime;
+  OtWeek? scheduledOtWeek;
+  List<String> scheduledOtDates = [];
+  bool otRemindersEnabled = true;
+  bool otRemindersCancelled = false;
   String? lastNotificationTitle;
   String? lastNotificationBody;
 
@@ -30,6 +35,33 @@ class FakeNotificationService implements NotificationService {
   Future<void> cancelThursdayReminder() async {
     scheduledWeek = null;
     scheduledDateTime = null;
+  }
+
+  @override
+  Future<void> scheduleOtReminders({
+    required OtWeek week,
+    required String reminderTime,
+    required bool enabled,
+  }) async {
+    scheduledOtWeek = week;
+    otRemindersEnabled = enabled;
+    scheduledOtDates.clear();
+    otRemindersCancelled = false;
+
+    if (!enabled) return;
+
+    for (final day in week.days) {
+      if (day.book.isNotEmpty) {
+        scheduledOtDates.add(day.date);
+      }
+    }
+  }
+
+  @override
+  Future<void> cancelOtReminders() async {
+    scheduledOtWeek = null;
+    scheduledOtDates.clear();
+    otRemindersCancelled = true;
   }
 
   @override

@@ -5,6 +5,7 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:timezone/data/latest_all.dart' as tz_data;
 import 'package:timezone/timezone.dart' as tz;
 
+import '../models/ot_week.dart';
 import '../models/study_week.dart';
 import 'notification_service.dart';
 
@@ -13,6 +14,11 @@ const _kThursdayChannelId = 'thursday_reminder';
 const _kThursdayChannelName = 'Thursday Study Reminder';
 const _kThursdayNotificationId = 1001;
 const _kTestNotificationId = 1002;
+
+/// Notification channel ID used for Old Testament daily reminders.
+const _kOtChannelId = 'ot_reminder';
+const _kOtChannelName = 'Old Testament Daily Reminder';
+const _kOtBaseNotificationId = 2000;
 
 /// Concrete [NotificationService] using flutter_local_notifications and timezone.
 ///
@@ -115,6 +121,65 @@ class LocalNotificationService implements NotificationService {
     if (kIsWeb || !_initialized) return;
     await _plugin.cancel(id: _kThursdayNotificationId);
     debugPrint('[NotificationService] Thursday reminder cancelled.');
+  }
+
+  @override
+  Future<void> scheduleOtReminders({
+    required OtWeek week,
+    required String reminderTime,
+    required bool enabled,
+  }) async {
+    if (kIsWeb || !_initialized) return;
+
+    // Cancel existing OT reminders first
+    await cancelOtReminders();
+    if (!enabled) return;
+
+    final (hour, minute) = parseReminderHourMinute(reminderTime);
+    final now = DateTime.now();
+
+    const androidDetails = AndroidNotificationDetails(
+      _kOtChannelId,
+      _kOtChannelName,
+      importance: Importance.high,
+      priority: Priority.high,
+      playSound: true,
+    );
+    const notificationDetails = NotificationDetails(android: androidDetails);
+
+    for (int i = 0; i < week.days.length; i++) {
+      final day = week.days[i];
+      if (day.book.isEmpty) continue;
+
+      final dt = DateTime.tryParse(day.date);
+      if (dt == null) continue;
+
+      final targetDate = DateTime(dt.year, dt.month, dt.day, hour, minute);
+      if (targetDate.isAfter(now)) {
+        final tzTime = tz.TZDateTime.from(targetDate, tz.local);
+        final title = 'Old Testament today: ${day.passageText}';
+        final body = week.topic.isNotEmpty ? '(${week.topic})' : 'Daily reading';
+
+        await _plugin.zonedSchedule(
+          id: _kOtBaseNotificationId + i,
+          title: title,
+          body: body,
+          scheduledDate: tzTime,
+          notificationDetails: notificationDetails,
+          payload: 'old_testament',
+          androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
+        );
+      }
+    }
+  }
+
+  @override
+  Future<void> cancelOtReminders() async {
+    if (kIsWeb || !_initialized) return;
+    for (int i = 0; i < 10; i++) {
+      await _plugin.cancel(id: _kOtBaseNotificationId + i);
+    }
+    debugPrint('[NotificationService] Old Testament reminders cancelled.');
   }
 
   @override

@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 
 import 'screens/individual_screen.dart';
 import 'screens/login_screen.dart';
+import 'screens/old_testament_screen.dart';
 import 'screens/placeholder_screen.dart';
 import 'screens/team_screen.dart';
 import 'services/notification_service.dart';
@@ -97,10 +98,18 @@ class _AppShellState extends State<AppShell> {
   }
 
   void _handleNotificationPayload() {
-    if (_notificationService?.selectedPayload.value == 'team_bs') {
+    final payload = _notificationService?.selectedPayload.value;
+    if (payload == 'team_bs') {
       if (mounted) {
         setState(() {
           _currentIndex = 1;
+        });
+      }
+      _notificationService?.selectedPayload.value = null;
+    } else if (payload == 'old_testament') {
+      if (mounted) {
+        setState(() {
+          _currentIndex = 2;
         });
       }
       _notificationService?.selectedPayload.value = null;
@@ -116,12 +125,7 @@ class _AppShellState extends State<AppShell> {
   final List<Widget> _screens = const [
     IndividualScreen(),
     TeamScreen(),
-
-    PlaceholderScreen(
-      title: 'Old Testament',
-      icon: Icons.menu_book_outlined,
-      description: 'Old Testament topic plans curated by church leaders are coming soon.',
-    ),
+    OldTestamentScreen(),
     PlaceholderScreen(
       title: 'Leaderboard',
       icon: Icons.leaderboard_outlined,
