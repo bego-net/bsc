@@ -36,7 +36,7 @@ class MaterialsScreen extends StatelessWidget {
               : ListView.separated(
                   padding: const EdgeInsets.only(bottom: 80),
                   itemCount: materials.length,
-                  separatorBuilder: (_, __) => const Divider(height: 1),
+                  separatorBuilder: (_, _) => const Divider(height: 1),
                   itemBuilder: (_, i) {
                     final m = materials[i];
                     return ListTile(

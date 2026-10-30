@@ -34,7 +34,7 @@ class QuestionsScreen extends StatelessWidget {
               : ReorderableListView.builder(
                   padding: const EdgeInsets.only(bottom: 80),
                   itemCount: questions.length,
-                  onReorder: (oldIndex, newIndex) {
+                  onReorderItem: (oldIndex, newIndex) {
                     teamState.reorderQuestions(oldIndex, newIndex);
                   },
                   itemBuilder: (_, i) {

@@ -27,13 +27,10 @@ class TeamState extends ChangeNotifier {
 
   TeamState({
     required TeamRepository repository,
-    required String? uid,
-    required bool isAdmin,
-    required NotificationService notificationService,
-  })  : _repo = repository,
-        _uid = uid,
-        _isAdmin = isAdmin,
-        _notificationService = notificationService;
+    required this._uid,
+    required this._isAdmin,
+    required this._notificationService,
+  }) : _repo = repository;
 
   // ── Getters ─────────────────────────────────────────────────────────────────
 
@@ -72,7 +69,7 @@ class TeamState extends ChangeNotifier {
         if (_uid != null) {
           _isPrepared = await _repo.isUserPrepared(
             weekId: week.id,
-            uid: _uid!,
+            uid: _uid,
           );
         }
 
@@ -104,7 +101,7 @@ class TeamState extends ChangeNotifier {
     try {
       await _repo.setUserPrepared(
         weekId: _currentWeek!.id,
-        uid: _uid!,
+        uid: _uid,
         prepared: next,
       );
     } catch (e) {
@@ -127,7 +124,7 @@ class TeamState extends ChangeNotifier {
     try {
       final published = await _repo.publishWeek(
         week,
-        updatedBy: _uid!,
+        updatedBy: _uid,
         isNewWeek: isNewWeek,
       );
       _currentWeek = published;
@@ -187,10 +184,11 @@ class TeamState extends ChangeNotifier {
   /// Reorders questions. Admin only.
   Future<void> reorderQuestions(int oldIndex, int newIndex) async {
     if (!_isAdmin || _currentWeek == null) return;
+    if (oldIndex < 0 || oldIndex >= _questions.length) return;
     final list = [..._questions];
-    final adjusted = newIndex > oldIndex ? newIndex - 1 : newIndex;
     final item = list.removeAt(oldIndex);
-    list.insert(adjusted, item);
+    final targetIndex = newIndex.clamp(0, list.length);
+    list.insert(targetIndex, item);
     _questions = list;
     _safeNotify();
     try {

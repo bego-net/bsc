@@ -221,7 +221,7 @@ class _EditWeekScreenState extends State<EditWeekScreen> {
             // ── Session day ────────────────────────────────────────────────
             _SectionLabel('Session Day'),
             DropdownButtonFormField<String>(
-              value: _sessionDay,
+              initialValue: _sessionDay,
               decoration: const InputDecoration(border: OutlineInputBorder()),
               items: _days
                   .map((d) => DropdownMenuItem(value: d, child: Text(d)))

@@ -111,7 +111,7 @@ class _OverviewScreenState extends State<OverviewScreen> {
                         Expanded(
                           child: ListView.separated(
                             itemCount: members.length,
-                            separatorBuilder: (_, __) =>
+                            separatorBuilder: (_, _) =>
                                 const Divider(height: 1),
                             itemBuilder: (_, i) {
                               final m = members[i];
