@@ -5,6 +5,7 @@ import 'screens/individual_screen.dart';
 import 'screens/login_screen.dart';
 import 'screens/placeholder_screen.dart';
 import 'screens/team_screen.dart';
+import 'services/notification_service.dart';
 import 'state/auth_state.dart';
 
 
@@ -81,6 +82,36 @@ class AppShell extends StatefulWidget {
 
 class _AppShellState extends State<AppShell> {
   int _currentIndex = 0;
+  NotificationService? _notificationService;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        _notificationService = context.read<NotificationService>();
+        _notificationService?.selectedPayload.addListener(_handleNotificationPayload);
+        _handleNotificationPayload();
+      }
+    });
+  }
+
+  void _handleNotificationPayload() {
+    if (_notificationService?.selectedPayload.value == 'team_bs') {
+      if (mounted) {
+        setState(() {
+          _currentIndex = 1;
+        });
+      }
+      _notificationService?.selectedPayload.value = null;
+    }
+  }
+
+  @override
+  void dispose() {
+    _notificationService?.selectedPayload.removeListener(_handleNotificationPayload);
+    super.dispose();
+  }
 
   final List<Widget> _screens = const [
     IndividualScreen(),

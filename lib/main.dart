@@ -136,6 +136,9 @@ void main() async {
             }
             // If user changes (login/logout), return a fresh TeamState.
             if (teamState.uid != authState.user?.uid) {
+              if (authState.user == null) {
+                notificationService.cancelThursdayReminder();
+              }
               return TeamState(
                 repository: teamRepository,
                 uid: authState.user?.uid,

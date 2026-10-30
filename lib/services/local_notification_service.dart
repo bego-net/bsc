@@ -23,6 +23,9 @@ class LocalNotificationService implements NotificationService {
   final FlutterLocalNotificationsPlugin _plugin =
       FlutterLocalNotificationsPlugin();
 
+  @override
+  final ValueNotifier<String?> selectedPayload = ValueNotifier<String?>(null);
+
   bool _initialized = false;
 
   @override
@@ -44,7 +47,17 @@ class LocalNotificationService implements NotificationService {
       macOS: darwinInit,
     );
 
-    await _plugin.initialize(initSettings);
+    await _plugin.initialize(
+      settings: initSettings,
+      onDidReceiveNotificationResponse: (response) {
+        selectedPayload.value = response.payload;
+      },
+    );
+
+    final launchDetails = await _plugin.getNotificationAppLaunchDetails();
+    if (launchDetails?.didNotificationLaunchApp ?? false) {
+      selectedPayload.value = launchDetails?.notificationResponse?.payload;
+    }
 
     // Request Android 13+ POST_NOTIFICATIONS permission politely.
     if (Platform.isAndroid) {
@@ -81,14 +94,15 @@ class LocalNotificationService implements NotificationService {
         '${week.sessionTime}, ${week.place}. Have you read the questions?';
 
     await _plugin.zonedSchedule(
-      _kThursdayNotificationId,
-      title,
-      body,
-      tzTime,
-      notificationDetails,
+      id: _kThursdayNotificationId,
+      title: title,
+      body: body,
+      scheduledDate: tzTime,
+      notificationDetails: notificationDetails,
       payload: 'team_bs',
       // Use inexact scheduling — no SCHEDULE_EXACT_ALARM permission needed.
       androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
+      matchDateTimeComponents: DateTimeComponents.dayOfWeekAndTime,
     );
 
     debugPrint(
@@ -99,7 +113,7 @@ class LocalNotificationService implements NotificationService {
   @override
   Future<void> cancelThursdayReminder() async {
     if (kIsWeb || !_initialized) return;
-    await _plugin.cancel(_kThursdayNotificationId);
+    await _plugin.cancel(id: _kThursdayNotificationId);
     debugPrint('[NotificationService] Thursday reminder cancelled.');
   }
 
@@ -120,10 +134,10 @@ class LocalNotificationService implements NotificationService {
     const notificationDetails = NotificationDetails(android: androidDetails);
 
     await _plugin.show(
-      _kTestNotificationId,
-      title,
-      body,
-      notificationDetails,
+      id: _kTestNotificationId,
+      title: title,
+      body: body,
+      notificationDetails: notificationDetails,
       payload: 'team_bs',
     );
     debugPrint('[NotificationService] Sent test notification.');

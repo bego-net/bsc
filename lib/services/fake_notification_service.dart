@@ -1,8 +1,13 @@
+import 'package:flutter/foundation.dart';
+
 import '../models/study_week.dart';
 import 'notification_service.dart';
 
 /// Fake implementation of [NotificationService] for unit/widget tests and offline mode.
 class FakeNotificationService implements NotificationService {
+  @override
+  final ValueNotifier<String?> selectedPayload = ValueNotifier<String?>(null);
+
   bool isInitialized = false;
   StudyWeek? scheduledWeek;
   DateTime? scheduledDateTime;

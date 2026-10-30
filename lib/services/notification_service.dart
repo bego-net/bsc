@@ -1,7 +1,12 @@
+import 'package:flutter/foundation.dart';
+
 import '../models/study_week.dart';
 
 /// Abstract service for local reminders and notifications.
 abstract class NotificationService {
+  /// Stream/notifier triggered when user taps a notification with a payload.
+  ValueNotifier<String?> get selectedPayload;
+
   /// Initializes notification plugins, time zones, and permissions.
   Future<void> initialize();
 
