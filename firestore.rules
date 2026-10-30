@@ -44,6 +44,37 @@ service cloud.firestore {
       }
     }
 
+    // Config: config/currentWeek
+    match /config/currentWeek {
+      allow read: if isSignedIn();
+      allow write: if isAdmin();
+    }
+
+    // Team BS Weeks: weeks/{weekId}
+    match /weeks/{weekId} {
+      // Signed-in users can read week info; only admins can write
+      allow read: if isSignedIn();
+      allow write: if isAdmin();
+
+      // Discussion Questions: weeks/{weekId}/questions/{id}
+      match /questions/{id} {
+        allow read: if isAdmin() || (isSignedIn() && resource.data.published == true);
+        allow write: if isAdmin();
+      }
+
+      // Study Materials: weeks/{weekId}/materials/{id}
+      match /materials/{id} {
+        allow read: if isAdmin() || (isSignedIn() && resource.data.published == true);
+        allow write: if isAdmin();
+      }
+
+      // Member Preparation Status: weeks/{weekId}/prepared/{uid}
+      match /prepared/{uid} {
+        allow read: if isOwner(uid) || isAdmin();
+        allow write: if isOwner(uid);
+      }
+    }
+
     // Default deny all other collections and documents
     match /{document=**} {
       allow read, write: if false;

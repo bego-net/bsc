@@ -4,7 +4,9 @@ import 'package:provider/provider.dart';
 import 'screens/individual_screen.dart';
 import 'screens/login_screen.dart';
 import 'screens/placeholder_screen.dart';
+import 'screens/team_screen.dart';
 import 'state/auth_state.dart';
+
 
 /// The root application widget configuring the Material 3 light theme
 /// and routing based on authentication state.
@@ -82,11 +84,8 @@ class _AppShellState extends State<AppShell> {
 
   final List<Widget> _screens = const [
     IndividualScreen(),
-    PlaceholderScreen(
-      title: 'Team BS',
-      icon: Icons.group_outlined,
-      description: 'Group Bible study plans, discussions, and leader guides are coming soon.',
-    ),
+    TeamScreen(),
+
     PlaceholderScreen(
       title: 'Old Testament',
       icon: Icons.menu_book_outlined,
