@@ -62,6 +62,12 @@ void main() async {
       email: 'test@example.com',
       password: 'password123',
     );
+    fakeAuth.seedUser(
+      name: 'Test Admin',
+      email: 'admin@example.com',
+      password: 'admin123',
+      role: 'admin',
+    );
     authRepository = fakeAuth;
   }
 

@@ -26,13 +26,14 @@ class FakeAuthRepository implements AuthRepository {
     required String name,
     required String email,
     required String password,
+    String role = 'member',
   }) {
     final uid = 'user_${email.hashCode.abs()}';
     _users[uid] = AppUser(
       uid: uid,
       name: name.trim(),
       email: email.trim(),
-      role: 'member',
+      role: role,
       createdAt: DateTime.now(),
       currentBook: 'John',
       currentChapter: 1,
