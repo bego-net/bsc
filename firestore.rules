@@ -42,10 +42,17 @@ service cloud.firestore {
         allow read: if isOwner(userId) || isAdmin();
         allow write: if isOwner(userId);
       }
+
+      // Old Testament reading entries: users/{userId}/otReadings/{date}
+      match /otReadings/{date} {
+        // Members can read and write their own OT readings; Admins can read all.
+        allow read: if isOwner(userId) || isAdmin();
+        allow write: if isOwner(userId);
+      }
     }
 
-    // Config: config/currentWeek
-    match /config/currentWeek {
+    // Config: config/currentWeek, config/currentOtWeek
+    match /config/{configDoc} {
       allow read: if isSignedIn();
       allow write: if isAdmin();
     }
@@ -72,6 +79,18 @@ service cloud.firestore {
       match /prepared/{uid} {
         allow read: if isOwner(uid) || isAdmin();
         allow write: if isOwner(uid);
+      }
+    }
+
+    // Old Testament Weeks: otWeeks/{weekId}
+    match /otWeeks/{weekId} {
+      allow read: if isSignedIn();
+      allow write: if isAdmin();
+
+      // Assigned Days: otWeeks/{weekId}/days/{date}
+      match /days/{date} {
+        allow read: if isSignedIn();
+        allow write: if isAdmin();
       }
     }
 
