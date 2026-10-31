@@ -86,6 +86,14 @@ class FakeOtRepository implements OtRepository {
 
   @override
   Future<List<OtDay>> getDaysForWeek(String weekId) async {
+    final week = _weeks[weekId];
+    if (week != null && week.isChapterPerDay) {
+      return computeOtDaysForWeek(
+        book: week.book!,
+        startChapter: week.startChapter ?? 1,
+        startDate: week.startDate,
+      );
+    }
     final daysMap = _days[weekId] ?? {};
     final list = daysMap.values.toList();
     list.sort((a, b) => a.date.compareTo(b.date));
@@ -141,8 +149,19 @@ class FakeOtRepository implements OtRepository {
       return 0;
     }
 
+    String fmt(DateTime d) =>
+        '${d.year}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';
+
+    final currentPlan = _currentWeekId != null ? _weeks[_currentWeekId] : null;
+
     int streak = 0;
     while (completedDates.contains(current)) {
+      if (currentPlan != null && currentPlan.isChapterPerDay) {
+        final day = currentPlan.getDayForDate(fmt(current));
+        if (day == null) {
+          break;
+        }
+      }
       streak++;
       current = current.subtract(const Duration(days: 1));
     }
@@ -162,29 +181,45 @@ class FakeOtRepository implements OtRepository {
 
   @override
   Future<OtWeek> publishWeek({
-    required String topic,
+    String topic = '',
     required String startDate,
-    required List<OtDay> days,
+    List<OtDay> days = const [],
     required String updatedBy,
+    String? book,
+    int? startChapter,
   }) async {
     final id = 'ot_week_${DateTime.now().millisecondsSinceEpoch}';
+    final isChapterPerDay = book != null && book.isNotEmpty;
+
+    final effectiveDays = isChapterPerDay
+        ? computeOtDaysForWeek(
+            book: book,
+            startChapter: startChapter ?? 1,
+            startDate: startDate,
+          )
+        : days;
+
     final week = OtWeek(
       id: id,
       topic: topic,
       startDate: startDate,
       publishedAt: DateTime.now(),
       updatedBy: updatedBy,
-      days: days,
+      days: effectiveDays,
+      book: book,
+      startChapter: startChapter,
     );
 
     _weeks[id] = week;
     _currentWeekId = id;
 
-    final daysMap = <String, OtDay>{};
-    for (final d in days) {
-      daysMap[d.date] = d;
+    if (!isChapterPerDay) {
+      final daysMap = <String, OtDay>{};
+      for (final d in days) {
+        daysMap[d.date] = d;
+      }
+      _days[id] = daysMap;
     }
-    _days[id] = daysMap;
 
     return week;
   }

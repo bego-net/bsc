@@ -23,7 +23,11 @@ class OtAdminHomeScreen extends StatelessWidget {
             title: const Text('Edit This Week\'s Topic & Plan'),
             subtitle: Text(
               currentWeek != null
-                  ? '${currentWeek.topic} (${currentWeek.startDate})'
+                  ? (currentWeek.isBookFinished()
+                      ? 'Book finished'
+                      : (currentWeek.topic.isNotEmpty
+                          ? '${currentWeek.topic} (${currentWeek.startDate})'
+                          : '${currentWeek.book ?? "OT"} (${currentWeek.startDate})'))
                   : 'No active week published',
             ),
             trailing: const Icon(Icons.chevron_right),

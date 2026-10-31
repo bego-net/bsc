@@ -5,6 +5,7 @@ import '../models/ot_day.dart';
 import '../state/auth_state.dart';
 import '../state/ot_state.dart';
 import 'admin/ot_admin_home_screen.dart';
+import 'admin/ot_edit_week_screen.dart';
 import 'ot_history_screen.dart';
 
 /// The Old Testament tab — displays the weekly topic plan, daily reading,
@@ -140,6 +141,7 @@ class _OldTestamentScreenState extends State<OldTestamentScreen> {
       );
     }
 
+    final isFinished = otState.isBookFinished;
     final todayDay = otState.todayDay;
 
     return RefreshIndicator(
@@ -148,11 +150,23 @@ class _OldTestamentScreenState extends State<OldTestamentScreen> {
         padding: const EdgeInsets.all(16),
         children: [
           // ── Topic & Progress Card ─────────────────────────────────────────
-          _TopicProgressCard(otState: otState, weekTopic: week.topic),
+          _TopicProgressCard(
+            otState: otState,
+            weekTopic: week.topic.isNotEmpty
+                ? week.topic
+                : (week.book != null
+                    ? '${week.book} Daily Reading'
+                    : 'Old Testament Reading'),
+          ),
           const SizedBox(height: 16),
 
-          // ── Today's Reading Highlighted Card ──────────────────────────────
-          if (todayDay != null)
+          // ── Today's Reading Highlighted Card / Book Finished ──────────────
+          if (isFinished)
+            _BookFinishedCard(
+              book: week.book ?? 'Book',
+              isAdmin: context.watch<AuthState>().isAdmin,
+            )
+          else if (todayDay != null)
             _TodayHighlightCard(
               todayDay: todayDay,
               isCompleted: otState.isTodayCompleted,
@@ -345,6 +359,71 @@ class _TodayHighlightCard extends StatelessWidget {
                       ),
                     ),
             ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _BookFinishedCard extends StatelessWidget {
+  final String book;
+  final bool isAdmin;
+
+  const _BookFinishedCard({
+    required this.book,
+    required this.isAdmin,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
+    return Card(
+      elevation: 0,
+      color: colorScheme.secondaryContainer.withValues(alpha: 0.3),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+        side: BorderSide(color: colorScheme.secondary.withValues(alpha: 0.3)),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(Icons.check_circle_outline, color: colorScheme.secondary, size: 24),
+                const SizedBox(width: 8),
+                Text(
+                  'Book finished',
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: colorScheme.secondary,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'All chapters for $book have been completed! Great job reading daily.',
+              style: theme.textTheme.bodyMedium,
+            ),
+            if (isAdmin) ...[
+              const SizedBox(height: 14),
+              FilledButton.icon(
+                icon: const Icon(Icons.menu_book),
+                label: const Text('Pick a new book'),
+                onPressed: () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute<void>(
+                      builder: (_) => const OtEditWeekScreen(),
+                    ),
+                  );
+                },
+              ),
+            ],
           ],
         ),
       ),

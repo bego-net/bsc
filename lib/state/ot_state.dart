@@ -77,15 +77,14 @@ class OtState extends ChangeNotifier {
     return '${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}';
   }
 
-  /// Today's assigned [OtDay] if present in current week.
+  /// Today's assigned [OtDay] computed by the shared function.
   OtDay? get todayDay {
-    final today = todayDateString;
-    try {
-      return _days.firstWhere((d) => d.date == today);
-    } catch (_) {
-      return null;
-    }
+    if (_currentWeek == null) return null;
+    return _currentWeek!.getDayForDate(todayDateString);
   }
+
+  /// Whether the current book reading plan has ended.
+  bool get isBookFinished => _currentWeek?.isBookFinished() ?? false;
 
   bool get isTodayCompleted {
     return _readings[todayDateString] == true;
@@ -99,8 +98,9 @@ class OtState extends ChangeNotifier {
     if (dateStr.compareTo(today) > 0) {
       return false;
     }
-    // Must be a day that belongs to the current week plan
-    return _days.any((d) => d.date == dateStr);
+    if (_currentWeek == null) return false;
+    // Must be a day with assigned reading from the shared function (or legacy days)
+    return _currentWeek!.getDayForDate(dateStr) != null;
   }
 
   bool isFutureDay(String dateStr) {
@@ -249,9 +249,11 @@ class OtState extends ChangeNotifier {
   // ── Admin Actions ─────────────────────────────────────────────────────────────
 
   Future<OtWeek?> publishWeek({
-    required String topic,
+    String topic = '',
     required String startDate,
-    required List<OtDay> days,
+    List<OtDay> days = const [],
+    String? book,
+    int? startChapter,
   }) async {
     if (!_isAdmin || _uid == null) return null;
 
@@ -261,11 +263,13 @@ class OtState extends ChangeNotifier {
         startDate: startDate,
         days: days,
         updatedBy: _uid,
+        book: book,
+        startChapter: startChapter,
       );
 
       _currentWeek = published;
-      _days = days;
-      _readings = {for (final d in days) d.date: false};
+      _days = published.days;
+      _readings = {for (final d in _days) d.date: false};
 
       await _notificationService.scheduleOtReminders(
         week: published,
