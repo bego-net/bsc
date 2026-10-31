@@ -3,6 +3,7 @@ class AppUser {
   final String uid;
   final String name;
   final String email;
+  final String username;
   final String role; // 'member' or 'admin'
   final DateTime createdAt;
   final String currentBook;
@@ -10,11 +11,13 @@ class AppUser {
   final int verseFrom;
   final int verseTo;
   final String reminderTime; // e.g., '07:00'
+  final bool mustChangePassword;
 
   const AppUser({
     required this.uid,
     required this.name,
     required this.email,
+    this.username = '',
     this.role = 'member',
     required this.createdAt,
     this.currentBook = 'John',
@@ -23,6 +26,7 @@ class AppUser {
     int? verseFrom,
     int? verseTo,
     this.reminderTime = '07:00',
+    this.mustChangePassword = false,
   })  : verseFrom = verseFrom ?? currentVerse ?? 1,
         verseTo = verseTo ?? currentVerse ?? verseFrom ?? 1;
 
@@ -35,6 +39,7 @@ class AppUser {
     return {
       'name': name,
       'email': email,
+      'username': username,
       'role': role,
       'createdAt': createdAt.toIso8601String(),
       'currentBook': currentBook,
@@ -43,6 +48,7 @@ class AppUser {
       'verseFrom': verseFrom,
       'verseTo': verseTo,
       'reminderTime': reminderTime,
+      'mustChangePassword': mustChangePassword,
     };
   }
 
@@ -63,6 +69,7 @@ class AppUser {
       uid: uid,
       name: map['name'] as String? ?? '',
       email: map['email'] as String? ?? '',
+      username: map['username'] as String? ?? '',
       role: map['role'] as String? ?? 'member',
       createdAt: parseDate(map['createdAt']),
       currentBook: map['currentBook'] as String? ?? 'John',
@@ -70,12 +77,14 @@ class AppUser {
       verseFrom: vFrom,
       verseTo: vTo,
       reminderTime: map['reminderTime'] as String? ?? '07:00',
+      mustChangePassword: map['mustChangePassword'] as bool? ?? false,
     );
   }
 
   AppUser copyWith({
     String? name,
     String? email,
+    String? username,
     String? role,
     DateTime? createdAt,
     String? currentBook,
@@ -84,11 +93,13 @@ class AppUser {
     int? verseFrom,
     int? verseTo,
     String? reminderTime,
+    bool? mustChangePassword,
   }) {
     return AppUser(
       uid: uid,
       name: name ?? this.name,
       email: email ?? this.email,
+      username: username ?? this.username,
       role: role ?? this.role,
       createdAt: createdAt ?? this.createdAt,
       currentBook: currentBook ?? this.currentBook,
@@ -96,6 +107,7 @@ class AppUser {
       verseFrom: verseFrom ?? currentVerse ?? this.verseFrom,
       verseTo: verseTo ?? currentVerse ?? this.verseTo,
       reminderTime: reminderTime ?? this.reminderTime,
+      mustChangePassword: mustChangePassword ?? this.mustChangePassword,
     );
   }
 }

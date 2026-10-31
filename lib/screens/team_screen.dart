@@ -6,6 +6,7 @@ import '../models/material_item.dart';
 import '../models/question.dart';
 import '../state/auth_state.dart';
 import '../state/team_state.dart';
+import '../widgets/profile_avatar_button.dart';
 import 'admin/admin_home_screen.dart';
 
 /// The Team BS tab — shown to all authenticated users.
@@ -72,6 +73,7 @@ class _TeamScreenState extends State<TeamScreen> {
             tooltip: 'Refresh',
             onPressed: () => teamState.loadData(),
           ),
+          const ProfileAvatarButton(),
         ],
       ),
       body: _buildBody(context, teamState, colorScheme),

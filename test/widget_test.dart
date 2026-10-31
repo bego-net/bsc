@@ -423,7 +423,7 @@ void main() {
 
       final user = await fakeAuth.signUp(
         name: 'Bego Tester',
-        email: 'bego@example.com',
+        username: 'begotester',
         password: 'password123',
       );
 

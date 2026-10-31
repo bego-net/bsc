@@ -28,10 +28,19 @@ service cloud.firestore {
       allow create: if isOwner(userId) &&
         request.resource.data.role == 'member';
 
-      // A user can update their profile, but cannot change their own role.
-      // Admins cannot change other users' roles from the client app.
+      // A user can update only their own name, reminder settings, reading progress,
+      // and mustChangePassword (only from true to false).
+      // Never role, username, or createdAt.
       allow update: if isOwner(userId) &&
-        request.resource.data.role == resource.data.role;
+        request.resource.data.role == resource.data.role &&
+        request.resource.data.get('username', '') == resource.data.get('username', '') &&
+        request.resource.data.get('createdAt', null) == resource.data.get('createdAt', null) &&
+        (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['mustChangePassword']) ||
+          (resource.data.get('mustChangePassword', false) == true && request.resource.data.mustChangePassword == false)) &&
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+          'name', 'reminderTime', 'otRemindersEnabled', 'mustChangePassword',
+          'currentBook', 'currentChapter', 'currentVerse', 'verseFrom', 'verseTo'
+        ]);
 
       // Deleting user documents from the client app is disallowed.
       allow delete: if false;

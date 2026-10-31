@@ -5,6 +5,7 @@ import '../models/member_summary.dart';
 import '../services/points.dart';
 import '../state/auth_state.dart';
 import '../state/dashboard_state.dart';
+import '../widgets/profile_avatar_button.dart';
 
 /// Weekly Leaderboard displaying community rankings with category filters.
 class LeaderboardScreen extends StatefulWidget {
@@ -38,6 +39,7 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Leaderboard'),
+        actions: const [ProfileAvatarButton()],
       ),
       body: Column(
         children: [

@@ -6,6 +6,7 @@ import '../models/reading_entry.dart';
 import '../state/auth_state.dart';
 import '../state/study_state.dart';
 import 'book_picker_screen.dart';
+import '../widgets/profile_avatar_button.dart';
 
 /// Screen for the member's daily individual Bible study, chapter & verse controls,
 /// reading confirmation, streak tracking, reminder setting, and reading history.
@@ -67,6 +68,7 @@ class IndividualScreen extends StatelessWidget {
             tooltip: 'Log out',
             onPressed: () => _confirmLogout(context, authState),
           ),
+          const ProfileAvatarButton(),
         ],
       ),
       body: Center(

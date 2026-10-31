@@ -2,9 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../state/auth_state.dart';
+import 'forgot_password_screen.dart';
 import 'signup_screen.dart';
 
-/// Screen for existing users to sign in with email and password.
+/// Screen for existing users to sign in with username and password.
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
 
@@ -14,13 +15,13 @@ class LoginScreen extends StatefulWidget {
 
 class _LoginScreenState extends State<LoginScreen> {
   final _formKey = GlobalKey<FormState>();
-  final _emailController = TextEditingController();
+  final _usernameController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _obscurePassword = true;
 
   @override
   void dispose() {
-    _emailController.dispose();
+    _usernameController.dispose();
     _passwordController.dispose();
     super.dispose();
   }
@@ -30,12 +31,13 @@ class _LoginScreenState extends State<LoginScreen> {
 
     final authState = context.read<AuthState>();
     final success = await authState.logIn(
-      email: _emailController.text,
+      username: _usernameController.text.trim().toLowerCase(),
       password: _passwordController.text,
     );
 
     if (!success && mounted) {
-      final error = authState.errorMessage ?? 'Sign in failed. Please try again.';
+      final error =
+          authState.errorMessage ?? 'Sign in failed. Please try again.';
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(error),
@@ -100,24 +102,22 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
                       const SizedBox(height: 28),
 
-                      // Email input
+                      // Username input
                       TextFormField(
-                        controller: _emailController,
-                        keyboardType: TextInputType.emailAddress,
+                        controller: _usernameController,
+                        keyboardType: TextInputType.text,
                         textInputAction: TextInputAction.next,
+                        autocorrect: false,
                         decoration: InputDecoration(
-                          labelText: 'Email Address',
-                          prefixIcon: const Icon(Icons.email_outlined),
+                          labelText: 'Username',
+                          prefixIcon: const Icon(Icons.person_outline),
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(12),
                           ),
                         ),
                         validator: (value) {
                           if (value == null || value.trim().isEmpty) {
-                            return 'Please enter your email';
-                          }
-                          if (!value.contains('@') || !value.contains('.')) {
-                            return 'Please enter a valid email address';
+                            return 'Please enter your username';
                           }
                           return null;
                         },
@@ -156,7 +156,26 @@ class _LoginScreenState extends State<LoginScreen> {
                           return null;
                         },
                       ),
-                      const SizedBox(height: 24),
+                      const SizedBox(height: 8),
+
+                      // Forgot password
+                      Align(
+                        alignment: Alignment.centerRight,
+                        child: TextButton(
+                          onPressed: () {
+                            Navigator.of(context).push(
+                              MaterialPageRoute(
+                                builder: (_) => ForgotPasswordScreen(
+                                  initialUsername:
+                                      _usernameController.text.trim(),
+                                ),
+                              ),
+                            );
+                          },
+                          child: const Text('Forgot password?'),
+                        ),
+                      ),
+                      const SizedBox(height: 8),
 
                       // Submit button
                       FilledButton(

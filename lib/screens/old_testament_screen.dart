@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../models/ot_day.dart';
 import '../state/auth_state.dart';
 import '../state/ot_state.dart';
+import '../widgets/profile_avatar_button.dart';
 import 'admin/ot_admin_home_screen.dart';
 import 'admin/ot_edit_week_screen.dart';
 import 'ot_history_screen.dart';
@@ -67,6 +68,7 @@ class _OldTestamentScreenState extends State<OldTestamentScreen> {
             tooltip: 'Refresh',
             onPressed: () => otState.loadData(),
           ),
+          const ProfileAvatarButton(),
         ],
       ),
       body: _buildBody(context, otState, colorScheme),

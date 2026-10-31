@@ -7,6 +7,7 @@ import '../../services/points.dart';
 import '../../services/weekly_summary.dart';
 import '../../state/dashboard_state.dart';
 import 'members_list_screen.dart';
+import '../../widgets/profile_avatar_button.dart';
 import 'member_detail_screen.dart';
 
 /// Admin-only home for the Dashboard tab: summary cards + top readers.
@@ -51,6 +52,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
             tooltip: 'Copy weekly summary',
             onPressed: dash.isLoading ? null : () => _copySummary(context, dash),
           ),
+          const ProfileAvatarButton(),
         ],
       ),
       body: Builder(builder: (context) {
