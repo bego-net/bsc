@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
 import '../models/app_user.dart';
+import '../utils/auth_utils.dart';
 import 'auth_repository.dart';
 
 /// Exception thrown when an authentication error occurs.
@@ -46,12 +47,15 @@ class FirebaseAuthRepository implements AuthRepository {
   @override
   Future<AppUser> signUp({
     required String name,
-    required String email,
+    required String username,
     required String password,
   }) async {
+    final normalized = username.trim().toLowerCase();
+    final hiddenEmail = usernameToEmail(normalized);
     try {
+      // Firebase uniqueness is enforced via email uniqueness.
       final credential = await _auth.createUserWithEmailAndPassword(
-        email: email.trim(),
+        email: hiddenEmail,
         password: password,
       );
       final user = credential.user;
@@ -61,11 +65,11 @@ class FirebaseAuthRepository implements AuthRepository {
 
       await user.updateDisplayName(name.trim());
 
-      // Create user document with role 'member' (never admin from app)
       final appUser = AppUser(
         uid: user.uid,
         name: name.trim(),
-        email: email.trim(),
+        email: hiddenEmail,
+        username: normalized,
         role: 'member',
         createdAt: DateTime.now(),
         currentBook: 'John',
@@ -73,6 +77,7 @@ class FirebaseAuthRepository implements AuthRepository {
         verseFrom: 1,
         verseTo: 1,
         reminderTime: '07:00',
+        mustChangePassword: false,
       );
 
       await _firestore
@@ -82,7 +87,7 @@ class FirebaseAuthRepository implements AuthRepository {
 
       return appUser;
     } on FirebaseAuthException catch (e) {
-      throw AuthException(_mapFirebaseAuthError(e));
+      throw AuthException(_mapFirebaseAuthError(e, isSignUp: true));
     } catch (e) {
       if (e is AuthException) rethrow;
       throw AuthException(e.toString());
@@ -91,12 +96,14 @@ class FirebaseAuthRepository implements AuthRepository {
 
   @override
   Future<AppUser> logIn({
-    required String email,
+    required String username,
     required String password,
   }) async {
+    final normalized = username.trim().toLowerCase();
+    final hiddenEmail = usernameToEmail(normalized);
     try {
       final credential = await _auth.signInWithEmailAndPassword(
-        email: email.trim(),
+        email: hiddenEmail,
         password: password,
       );
       final user = credential.user;
@@ -106,15 +113,19 @@ class FirebaseAuthRepository implements AuthRepository {
 
       final doc = await _firestore.collection('users').doc(user.uid).get();
       if (!doc.exists || doc.data() == null) {
-        // Fallback profile if Firestore doc was not found
+        // Fallback profile
         final appUser = AppUser(
           uid: user.uid,
           name: user.displayName ?? '',
-          email: user.email ?? email,
+          email: hiddenEmail,
+          username: normalized,
           role: 'member',
           createdAt: DateTime.now(),
         );
-        await _firestore.collection('users').doc(user.uid).set(appUser.toMap());
+        await _firestore
+            .collection('users')
+            .doc(user.uid)
+            .set(appUser.toMap());
         return appUser;
       }
 
@@ -132,19 +143,67 @@ class FirebaseAuthRepository implements AuthRepository {
     await _auth.signOut();
   }
 
-  String _mapFirebaseAuthError(FirebaseAuthException e) {
+  @override
+  Future<void> changePassword({
+    required String currentPassword,
+    required String newPassword,
+  }) async {
+    final firebaseUser = _auth.currentUser;
+    if (firebaseUser == null) throw const AuthException('Not signed in.');
+
+    // Re-authenticate first.
+    final credential = EmailAuthProvider.credential(
+      email: firebaseUser.email!,
+      password: currentPassword,
+    );
+    try {
+      await firebaseUser.reauthenticateWithCredential(credential);
+      await firebaseUser.updatePassword(newPassword);
+    } on FirebaseAuthException catch (e) {
+      throw AuthException(_mapFirebaseAuthError(e));
+    }
+  }
+
+  @override
+  Future<void> updateName(String name) async {
+    final firebaseUser = _auth.currentUser;
+    if (firebaseUser == null) return;
+    await firebaseUser.updateDisplayName(name.trim());
+    await _firestore.collection('users').doc(firebaseUser.uid).update({
+      'name': name.trim(),
+    });
+  }
+
+  @override
+  Future<void> completePasswordChange(String newPassword) async {
+    final firebaseUser = _auth.currentUser;
+    if (firebaseUser == null) throw const AuthException('Not signed in.');
+    try {
+      await firebaseUser.updatePassword(newPassword);
+      await _firestore
+          .collection('users')
+          .doc(firebaseUser.uid)
+          .update({'mustChangePassword': false});
+    } on FirebaseAuthException catch (e) {
+      throw AuthException(_mapFirebaseAuthError(e));
+    }
+  }
+
+  String _mapFirebaseAuthError(FirebaseAuthException e,
+      {bool isSignUp = false}) {
     switch (e.code) {
       case 'user-not-found':
-        return 'No account found with this email.';
       case 'wrong-password':
       case 'invalid-credential':
-        return 'Incorrect email or password. Please try again.';
+        return 'Incorrect username or password. Please try again.';
       case 'email-already-in-use':
-        return 'This email is already in use by another account.';
+        return isSignUp
+            ? 'Username already taken.'
+            : 'Incorrect username or password. Please try again.';
       case 'weak-password':
         return 'The password is too weak. Please use at least 6 characters.';
       case 'invalid-email':
-        return 'Please enter a valid email address.';
+        return 'Invalid username format.';
       case 'network-request-failed':
         return 'No internet connection. Please check your network and retry.';
       case 'too-many-requests':

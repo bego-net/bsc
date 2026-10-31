@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import 'screens/admin/dashboard_screen.dart';
+import 'screens/force_password_change_screen.dart';
 import 'screens/individual_screen.dart';
 import 'screens/leaderboard_screen.dart';
 import 'screens/login_screen.dart';
@@ -68,6 +69,10 @@ class AuthGate extends StatelessWidget {
 
     if (!authState.isAuthenticated) {
       return const LoginScreen();
+    }
+
+    if (authState.mustChangePassword) {
+      return const ForcePasswordChangeScreen();
     }
 
     return const AppShell();

@@ -2,8 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../state/auth_state.dart';
+import '../utils/auth_utils.dart';
 
-/// Screen for new users to register an account with name, email, and password.
+/// Screen for new users to register an account with name, username, and password.
 class SignupScreen extends StatefulWidget {
   const SignupScreen({super.key});
 
@@ -14,15 +15,18 @@ class SignupScreen extends StatefulWidget {
 class _SignupScreenState extends State<SignupScreen> {
   final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
-  final _emailController = TextEditingController();
+  final _usernameController = TextEditingController();
   final _passwordController = TextEditingController();
+  final _confirmController = TextEditingController();
   bool _obscurePassword = true;
+  bool _obscureConfirm = true;
 
   @override
   void dispose() {
     _nameController.dispose();
-    _emailController.dispose();
+    _usernameController.dispose();
     _passwordController.dispose();
+    _confirmController.dispose();
     super.dispose();
   }
 
@@ -32,14 +36,15 @@ class _SignupScreenState extends State<SignupScreen> {
     final authState = context.read<AuthState>();
     final success = await authState.signUp(
       name: _nameController.text,
-      email: _emailController.text,
+      username: _usernameController.text.trim().toLowerCase(),
       password: _passwordController.text,
     );
 
     if (success && mounted) {
       Navigator.of(context).pop();
     } else if (mounted) {
-      final error = authState.errorMessage ?? 'Sign up failed. Please try again.';
+      final error =
+          authState.errorMessage ?? 'Sign up failed. Please try again.';
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(error),
@@ -127,24 +132,26 @@ class _SignupScreenState extends State<SignupScreen> {
                       ),
                       const SizedBox(height: 16),
 
-                      // Email field
+                      // Username field
                       TextFormField(
-                        controller: _emailController,
-                        keyboardType: TextInputType.emailAddress,
+                        controller: _usernameController,
+                        keyboardType: TextInputType.text,
                         textInputAction: TextInputAction.next,
+                        autocorrect: false,
                         decoration: InputDecoration(
-                          labelText: 'Email Address',
-                          prefixIcon: const Icon(Icons.email_outlined),
+                          labelText: 'Username (3–20 chars, a–z, 0–9, _)',
+                          prefixIcon: const Icon(Icons.alternate_email),
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(12),
                           ),
                         ),
                         validator: (value) {
                           if (value == null || value.trim().isEmpty) {
-                            return 'Please enter your email';
+                            return 'Please choose a username';
                           }
-                          if (!value.contains('@') || !value.contains('.')) {
-                            return 'Please enter a valid email address';
+                          final normalized = value.trim().toLowerCase();
+                          if (!isValidUsername(normalized)) {
+                            return 'Use 3–20 lowercase letters, digits, or underscores';
                           }
                           return null;
                         },
@@ -155,8 +162,7 @@ class _SignupScreenState extends State<SignupScreen> {
                       TextFormField(
                         controller: _passwordController,
                         obscureText: _obscurePassword,
-                        textInputAction: TextInputAction.done,
-                        onFieldSubmitted: (_) => _submit(),
+                        textInputAction: TextInputAction.next,
                         decoration: InputDecoration(
                           labelText: 'Password (min 6 characters)',
                           prefixIcon: const Icon(Icons.lock_outline),
@@ -179,6 +185,40 @@ class _SignupScreenState extends State<SignupScreen> {
                         validator: (value) {
                           if (value == null || value.length < 6) {
                             return 'Password must be at least 6 characters';
+                          }
+                          return null;
+                        },
+                      ),
+                      const SizedBox(height: 16),
+
+                      // Confirm password field
+                      TextFormField(
+                        controller: _confirmController,
+                        obscureText: _obscureConfirm,
+                        textInputAction: TextInputAction.done,
+                        onFieldSubmitted: (_) => _submit(),
+                        decoration: InputDecoration(
+                          labelText: 'Confirm password',
+                          prefixIcon: const Icon(Icons.lock_outline),
+                          suffixIcon: IconButton(
+                            icon: Icon(
+                              _obscureConfirm
+                                  ? Icons.visibility_outlined
+                                  : Icons.visibility_off_outlined,
+                            ),
+                            onPressed: () {
+                              setState(() {
+                                _obscureConfirm = !_obscureConfirm;
+                              });
+                            },
+                          ),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                        validator: (value) {
+                          if (value != _passwordController.text) {
+                            return 'Passwords do not match';
                           }
                           return null;
                         },

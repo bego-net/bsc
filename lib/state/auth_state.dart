@@ -24,6 +24,7 @@ class AuthState extends ChangeNotifier {
   String get userRole => _user?.role ?? 'member';
   bool get isLoading => _isLoading;
   String? get errorMessage => _errorMessage;
+  bool get mustChangePassword => _user?.mustChangePassword ?? false;
 
   Future<void> _init() async {
     _isLoading = true;
@@ -52,7 +53,7 @@ class AuthState extends ChangeNotifier {
   /// Registers a new user.
   Future<bool> signUp({
     required String name,
-    required String email,
+    required String username,
     required String password,
   }) async {
     _isLoading = true;
@@ -62,7 +63,7 @@ class AuthState extends ChangeNotifier {
     try {
       _user = await _repo.signUp(
         name: name,
-        email: email,
+        username: username,
         password: password,
       );
       _isLoading = false;
@@ -78,7 +79,7 @@ class AuthState extends ChangeNotifier {
 
   /// Logs in an existing user.
   Future<bool> logIn({
-    required String email,
+    required String username,
     required String password,
   }) async {
     _isLoading = true;
@@ -87,7 +88,7 @@ class AuthState extends ChangeNotifier {
 
     try {
       _user = await _repo.logIn(
-        email: email,
+        username: username,
         password: password,
       );
       _isLoading = false;
@@ -112,8 +113,65 @@ class AuthState extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// Updates local user object when currently studying portion changes.
+  /// Re-authenticates and changes the password; returns true on success.
+  Future<bool> changePassword({
+    required String currentPassword,
+    required String newPassword,
+  }) async {
+    _errorMessage = null;
+    notifyListeners();
+    try {
+      await _repo.changePassword(
+        currentPassword: currentPassword,
+        newPassword: newPassword,
+      );
+      notifyListeners();
+      return true;
+    } catch (e) {
+      _errorMessage = e.toString();
+      notifyListeners();
+      return false;
+    }
+  }
+
+  /// Updates the user's display name.
+  Future<bool> updateName(String name) async {
+    _errorMessage = null;
+    try {
+      await _repo.updateName(name);
+      if (_user != null) {
+        _user = _user!.copyWith(name: name.trim());
+        notifyListeners();
+      }
+      return true;
+    } catch (e) {
+      _errorMessage = e.toString();
+      notifyListeners();
+      return false;
+    }
+  }
+
+  /// Completes a forced password change and clears mustChangePassword.
+  Future<bool> completePasswordChange(String newPassword) async {
+    _errorMessage = null;
+    notifyListeners();
+    try {
+      await _repo.completePasswordChange(newPassword);
+      if (_user != null) {
+        _user = _user!.copyWith(mustChangePassword: false);
+        notifyListeners();
+      }
+      return true;
+    } catch (e) {
+      _errorMessage = e.toString();
+      notifyListeners();
+      return false;
+    }
+  }
+
+  /// Updates local user object when currently studying portion or settings change.
   void updateLocalProfile({
+    String? name,
     String? currentBook,
     int? currentChapter,
     int? currentVerse,
@@ -121,6 +179,7 @@ class AuthState extends ChangeNotifier {
   }) {
     if (_user == null) return;
     _user = _user!.copyWith(
+      name: name,
       currentBook: currentBook,
       currentChapter: currentChapter,
       currentVerse: currentVerse,
