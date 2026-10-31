@@ -20,6 +20,8 @@ class AuthState extends ChangeNotifier {
 
   AppUser? get user => _user;
   bool get isAuthenticated => _user != null;
+  bool get isAdmin => _user?.isAdmin ?? false;
+  String get userRole => _user?.role ?? 'member';
   bool get isLoading => _isLoading;
   String? get errorMessage => _errorMessage;
 

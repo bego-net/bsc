@@ -21,8 +21,8 @@ service cloud.firestore {
 
     // Rules for user profiles: users/{userId}
     match /users/{userId} {
-      // Members can read their own profile; Admins can read all user profiles.
-      allow read: if isOwner(userId) || isAdmin();
+      // Signed-in users can read profiles for community stats/leaderboard; Admins can read all.
+      allow read: if isSignedIn();
 
       // On signup, a user can only create their profile with role = 'member' (never admin).
       allow create: if isOwner(userId) &&
@@ -38,9 +38,58 @@ service cloud.firestore {
 
       // Daily reading entries: users/{userId}/readings/{date}
       match /readings/{date} {
-        // Members can read and write their own daily readings; Admins can read all readings.
-        allow read: if isOwner(userId) || isAdmin();
+        // Signed-in users can read reading status for leaderboard & community progress
+        allow read: if isSignedIn();
         allow write: if isOwner(userId);
+      }
+
+      // Old Testament reading entries: users/{userId}/otReadings/{date}
+      match /otReadings/{date} {
+        allow read: if isSignedIn();
+        allow write: if isOwner(userId);
+      }
+    }
+
+    // Config: config/currentWeek, config/currentOtWeek
+    match /config/{configDoc} {
+      allow read: if isSignedIn();
+      allow write: if isAdmin();
+    }
+
+    // Team BS Weeks: weeks/{weekId}
+    match /weeks/{weekId} {
+      // Signed-in users can read week info; only admins can write
+      allow read: if isSignedIn();
+      allow write: if isAdmin();
+
+      // Discussion Questions: weeks/{weekId}/questions/{id}
+      match /questions/{id} {
+        allow read: if isAdmin() || (isSignedIn() && resource.data.published == true);
+        allow write: if isAdmin();
+      }
+
+      // Study Materials: weeks/{weekId}/materials/{id}
+      match /materials/{id} {
+        allow read: if isAdmin() || (isSignedIn() && resource.data.published == true);
+        allow write: if isAdmin();
+      }
+
+      // Member Preparation Status: weeks/{weekId}/prepared/{uid}
+      match /prepared/{uid} {
+        allow read: if isSignedIn();
+        allow write: if isOwner(uid);
+      }
+    }
+
+    // Old Testament Weeks: otWeeks/{weekId}
+    match /otWeeks/{weekId} {
+      allow read: if isSignedIn();
+      allow write: if isAdmin();
+
+      // Assigned Days: otWeeks/{weekId}/days/{date}
+      match /days/{date} {
+        allow read: if isSignedIn();
+        allow write: if isAdmin();
       }
     }
 

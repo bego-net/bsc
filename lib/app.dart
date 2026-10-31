@@ -1,10 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import 'screens/admin/dashboard_screen.dart';
 import 'screens/individual_screen.dart';
+import 'screens/leaderboard_screen.dart';
 import 'screens/login_screen.dart';
-import 'screens/placeholder_screen.dart';
+import 'screens/old_testament_screen.dart';
+import 'screens/team_screen.dart';
+import 'services/notification_service.dart';
 import 'state/auth_state.dart';
+
 
 /// The root application widget configuring the Material 3 light theme
 /// and routing based on authentication state.
@@ -79,62 +84,101 @@ class AppShell extends StatefulWidget {
 
 class _AppShellState extends State<AppShell> {
   int _currentIndex = 0;
+  NotificationService? _notificationService;
 
-  final List<Widget> _screens = const [
-    IndividualScreen(),
-    PlaceholderScreen(
-      title: 'Team BS',
-      icon: Icons.group_outlined,
-      description: 'Group Bible study plans, discussions, and leader guides are coming soon.',
-    ),
-    PlaceholderScreen(
-      title: 'Old Testament',
-      icon: Icons.menu_book_outlined,
-      description: 'Old Testament topic plans curated by church leaders are coming soon.',
-    ),
-    PlaceholderScreen(
-      title: 'Leaderboard',
-      icon: Icons.leaderboard_outlined,
-      description: 'Community reading streaks and team participation rankings are coming soon.',
-    ),
-  ];
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        _notificationService = context.read<NotificationService>();
+        _notificationService?.selectedPayload.addListener(_handleNotificationPayload);
+        _handleNotificationPayload();
+      }
+    });
+  }
+
+  void _handleNotificationPayload() {
+    final payload = _notificationService?.selectedPayload.value;
+    if (payload == 'team_bs') {
+      if (mounted) {
+        setState(() {
+          _currentIndex = 1;
+        });
+      }
+      _notificationService?.selectedPayload.value = null;
+    } else if (payload == 'old_testament') {
+      if (mounted) {
+        setState(() {
+          _currentIndex = 2;
+        });
+      }
+      _notificationService?.selectedPayload.value = null;
+    }
+  }
+
+  @override
+  void dispose() {
+    _notificationService?.selectedPayload.removeListener(_handleNotificationPayload);
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
+    final isAdmin = context.watch<AuthState>().isAdmin;
+
+    final screens = [
+      const IndividualScreen(),
+      const TeamScreen(),
+      const OldTestamentScreen(),
+      const LeaderboardScreen(),
+      if (isAdmin) const DashboardScreen(),
+    ];
+
+    final destinations = [
+      const NavigationDestination(
+        icon: Icon(Icons.person_outline),
+        selectedIcon: Icon(Icons.person),
+        label: 'Individual BS',
+      ),
+      const NavigationDestination(
+        icon: Icon(Icons.group_outlined),
+        selectedIcon: Icon(Icons.group),
+        label: 'Team BS',
+      ),
+      const NavigationDestination(
+        icon: Icon(Icons.menu_book_outlined),
+        selectedIcon: Icon(Icons.menu_book),
+        label: 'Old Testament',
+      ),
+      const NavigationDestination(
+        icon: Icon(Icons.leaderboard_outlined),
+        selectedIcon: Icon(Icons.leaderboard),
+        label: 'Leaderboard',
+      ),
+      if (isAdmin)
+        const NavigationDestination(
+          icon: Icon(Icons.dashboard_outlined),
+          selectedIcon: Icon(Icons.dashboard),
+          label: 'Dashboard',
+        ),
+    ];
+
+    final effectiveIndex = _currentIndex >= screens.length ? 0 : _currentIndex;
+
     return Scaffold(
       body: IndexedStack(
-        index: _currentIndex,
-        children: _screens,
+        index: effectiveIndex,
+        children: screens,
       ),
       bottomNavigationBar: NavigationBar(
-        selectedIndex: _currentIndex,
+        selectedIndex: effectiveIndex,
         onDestinationSelected: (index) {
           setState(() {
             _currentIndex = index;
           });
         },
-        destinations: const [
-          NavigationDestination(
-            icon: Icon(Icons.person_outline),
-            selectedIcon: Icon(Icons.person),
-            label: 'Individual BS',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.group_outlined),
-            selectedIcon: Icon(Icons.group),
-            label: 'Team BS',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.menu_book_outlined),
-            selectedIcon: Icon(Icons.menu_book),
-            label: 'Old Testament',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.leaderboard_outlined),
-            selectedIcon: Icon(Icons.leaderboard),
-            label: 'Leaderboard',
-          ),
-        ],
+        destinations: destinations,
       ),
     );
   }
