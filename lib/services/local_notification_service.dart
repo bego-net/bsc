@@ -5,6 +5,7 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:timezone/data/latest_all.dart' as tz_data;
 import 'package:timezone/timezone.dart' as tz;
 
+import '../models/ot_day.dart';
 import '../models/ot_week.dart';
 import '../models/study_week.dart';
 import 'notification_service.dart';
@@ -147,8 +148,17 @@ class LocalNotificationService implements NotificationService {
     );
     const notificationDetails = NotificationDetails(android: androidDetails);
 
-    for (int i = 0; i < week.days.length; i++) {
-      final day = week.days[i];
+    final dayList = week.days.isNotEmpty
+        ? week.days
+        : [
+            for (int j = 0; j < 7; j++)
+              week.getDayForDate(
+                '${now.add(Duration(days: j)).year}-${now.add(Duration(days: j)).month.toString().padLeft(2, '0')}-${now.add(Duration(days: j)).day.toString().padLeft(2, '0')}',
+              ),
+          ].whereType<OtDay>().toList();
+
+    for (int i = 0; i < dayList.length; i++) {
+      final day = dayList[i];
       if (day.book.isEmpty) continue;
 
       final dt = DateTime.tryParse(day.date);

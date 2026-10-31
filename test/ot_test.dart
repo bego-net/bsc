@@ -326,4 +326,197 @@ void main() {
       expect(notifService.scheduledOtDates.isEmpty, isTrue);
     });
   });
+
+  group('One Chapter Per Day & Shared Function Tests', () {
+    test('chapter for a date: computes correct chapter automatically from date', () {
+      // Genesis starting at chapter 1
+      const book = 'Genesis';
+      const startDate = '2026-10-26';
+
+      final day1 = getOtChapterForDate(
+        book: book,
+        startChapter: 1,
+        startDate: startDate,
+        date: '2026-10-26',
+      );
+      expect(day1, isNotNull);
+      expect(day1!.book, equals('Genesis'));
+      expect(day1.chapter, equals(1));
+      expect(day1.passageText, equals('Genesis 1'));
+
+      final day2 = getOtChapterForDate(
+        book: book,
+        startChapter: 1,
+        startDate: startDate,
+        date: '2026-10-27',
+      );
+      expect(day2, isNotNull);
+      expect(day2!.chapter, equals(2));
+      expect(day2.passageText, equals('Genesis 2'));
+
+      final day10 = getOtChapterForDate(
+        book: book,
+        startChapter: 1,
+        startDate: startDate,
+        date: '2026-11-04',
+      );
+      expect(day10, isNotNull);
+      expect(day10!.chapter, equals(10));
+      expect(day10.passageText, equals('Genesis 10'));
+
+      // Custom startChapter: Exodus starting at chapter 5
+      final ex5 = getOtChapterForDate(
+        book: 'Exodus',
+        startChapter: 5,
+        startDate: '2026-11-01',
+        date: '2026-11-01',
+      );
+      expect(ex5, isNotNull);
+      expect(ex5!.chapter, equals(5));
+      expect(ex5.passageText, equals('Exodus 5'));
+
+      final ex7 = getOtChapterForDate(
+        book: 'Exodus',
+        startChapter: 5,
+        startDate: '2026-11-01',
+        date: '2026-11-03',
+      );
+      expect(ex7, isNotNull);
+      expect(ex7!.chapter, equals(7));
+
+      // Date before startDate returns null
+      final before = getOtChapterForDate(
+        book: book,
+        startChapter: 1,
+        startDate: startDate,
+        date: '2026-10-25',
+      );
+      expect(before, isNull);
+    });
+
+    test('book end: detects book finished when date exceeds total chapters', () {
+      // Ruth has only 4 chapters
+      const book = 'Ruth';
+      const startDate = '2026-10-01';
+
+      expect(BibleBooks.getChapterCount('Ruth'), equals(4));
+
+      // Day 1 to 4 are valid chapters
+      final day1 = getOtChapterForDate(
+        book: book,
+        startChapter: 1,
+        startDate: startDate,
+        date: '2026-10-01',
+      );
+      expect(day1?.chapter, equals(1));
+
+      final day4 = getOtChapterForDate(
+        book: book,
+        startChapter: 1,
+        startDate: startDate,
+        date: '2026-10-04',
+      );
+      expect(day4?.chapter, equals(4));
+      expect(day4?.passageText, equals('Ruth 4'));
+
+      // Day 5: Book has ended!
+      final day5 = getOtChapterForDate(
+        book: book,
+        startChapter: 1,
+        startDate: startDate,
+        date: '2026-10-05',
+      );
+      expect(day5, isNull);
+
+      // isOtBookFinished returns true for dates after end of book
+      expect(
+        isOtBookFinished(
+          book: book,
+          startChapter: 1,
+          startDate: startDate,
+          date: '2026-10-04',
+        ),
+        isFalse,
+      );
+      expect(
+        isOtBookFinished(
+          book: book,
+          startChapter: 1,
+          startDate: startDate,
+          date: '2026-10-05',
+        ),
+        isTrue,
+      );
+
+      // OtWeek plan model methods reflect book end
+      final plan = OtWeek(
+        id: 'ruth_plan',
+        book: 'Ruth',
+        startChapter: 1,
+        startDate: '2026-10-01',
+        publishedAt: DateTime(2026, 10, 1),
+      );
+
+      expect(plan.isBookFinished('2026-10-04'), isFalse);
+      expect(plan.isBookFinished('2026-10-05'), isTrue);
+      expect(plan.getDayForDate('2026-10-05'), isNull);
+    });
+
+    test('old data still works: legacy plan with explicit days and without book', () async {
+      final repo = FakeOtRepository(seedInitialData: false);
+
+      final legacyDays = [
+        const OtDay(
+          date: '2026-10-26',
+          book: 'Genesis',
+          chapter: 12,
+          verseFrom: 1,
+          verseTo: 9,
+        ),
+        const OtDay(
+          date: '2026-10-27',
+          book: 'Psalms',
+          chapter: 23,
+          verseFrom: null,
+          verseTo: null,
+        ),
+      ];
+
+      // Publish using legacy parameters (explicit days, no book)
+      final legacyWeek = await repo.publishWeek(
+        topic: 'Abraham Calling',
+        startDate: '2026-10-26',
+        days: legacyDays,
+        updatedBy: 'admin',
+      );
+
+      expect(legacyWeek.isChapterPerDay, isFalse);
+      expect(legacyWeek.isBookFinished(), isFalse);
+
+      // Retrieves legacy OtDay using getDayForDate
+      final day1 = legacyWeek.getDayForDate('2026-10-26');
+      expect(day1, isNotNull);
+      expect(day1!.passageText, equals('Genesis 12:1-9'));
+
+      final day2 = legacyWeek.getDayForDate('2026-10-27');
+      expect(day2, isNotNull);
+      expect(day2!.passageText, equals('Psalms 23'));
+
+      // User readings on legacy days work as before
+      await repo.setDayCompleted(
+        uid: 'legacy_user',
+        weekId: legacyWeek.id,
+        date: '2026-10-26',
+        completed: true,
+      );
+
+      final readings = await repo.getUserReadingsForWeek(
+        uid: 'legacy_user',
+        weekId: legacyWeek.id,
+        dates: ['2026-10-26', '2026-10-27'],
+      );
+      expect(readings['2026-10-26'], isTrue);
+      expect(readings['2026-10-27'], isFalse);
+    });
+  });
 }

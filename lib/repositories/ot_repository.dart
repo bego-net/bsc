@@ -31,12 +31,16 @@ abstract class OtRepository {
   /// Returns past weeks newest first.
   Future<List<OtWeek>> getWeekHistory();
 
-  /// Publishes a new week document with days subcollection and updates config/currentOtWeek.
+  /// Publishes a new OT plan document and updates config/currentOtWeek.
+  /// For chapter-per-day plans, [book] and [startDate] are stored with no per-day documents.
+  /// For legacy weekly plans, [days] are stored.
   Future<OtWeek> publishWeek({
-    required String topic,
+    String topic = '',
     required String startDate,
-    required List<OtDay> days,
+    List<OtDay> days = const [],
     required String updatedBy,
+    String? book,
+    int? startChapter,
   });
 
   /// Fetches completion overview for all members for [weekId].

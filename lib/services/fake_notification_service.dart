@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 
+import '../models/ot_day.dart';
 import '../models/ot_week.dart';
 import '../models/study_week.dart';
 import 'notification_service.dart';
@@ -50,7 +51,16 @@ class FakeNotificationService implements NotificationService {
 
     if (!enabled) return;
 
-    for (final day in week.days) {
+    final dayList = week.days.isNotEmpty
+        ? week.days
+        : [
+            for (int i = 0; i < 7; i++)
+              week.getDayForDate(
+                '${DateTime.now().add(Duration(days: i)).year}-${DateTime.now().add(Duration(days: i)).month.toString().padLeft(2, '0')}-${DateTime.now().add(Duration(days: i)).day.toString().padLeft(2, '0')}',
+              ),
+          ].whereType<OtDay>().toList();
+
+    for (final day in dayList) {
       if (day.book.isNotEmpty) {
         scheduledOtDates.add(day.date);
       }

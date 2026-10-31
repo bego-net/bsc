@@ -30,12 +30,31 @@ class FirebaseOtRepository implements OtRepository {
       return null;
     }
 
-    final days = await getDaysForWeek(weekId);
-    return OtWeek.fromMap(weekDoc.id, weekDoc.data()!, days: days);
+    final data = weekDoc.data()!;
+    final book = data['book'] as String?;
+    List<OtDay> days = const [];
+    if (book == null || book.isEmpty) {
+      days = await getDaysForWeek(weekId);
+    }
+    return OtWeek.fromMap(weekDoc.id, data, days: days);
   }
 
   @override
   Future<List<OtDay>> getDaysForWeek(String weekId) async {
+    final doc = await _firestore.collection('otWeeks').doc(weekId).get();
+    if (doc.exists && doc.data() != null) {
+      final book = doc.data()?['book'] as String?;
+      if (book != null && book.isNotEmpty) {
+        final startChapter = (doc.data()?['startChapter'] as num?)?.toInt() ?? 1;
+        final startDate = doc.data()?['startDate'] as String? ?? '';
+        return computeOtDaysForWeek(
+          book: book,
+          startChapter: startChapter,
+          startDate: startDate,
+        );
+      }
+    }
+
     final snap = await _firestore
         .collection('otWeeks')
         .doc(weekId)
@@ -127,8 +146,18 @@ class FirebaseOtRepository implements OtRepository {
         return 0;
       }
 
+      final currentPlan = await getCurrentWeek();
+      String fmt(DateTime d) =>
+          '${d.year}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';
+
       int streak = 0;
       while (completedDates.contains(current)) {
+        if (currentPlan != null && currentPlan.isChapterPerDay) {
+          final day = currentPlan.getDayForDate(fmt(current));
+          if (day == null) {
+            break;
+          }
+        }
         streak++;
         current = current.subtract(const Duration(days: 1));
       }
@@ -155,12 +184,15 @@ class FirebaseOtRepository implements OtRepository {
 
   @override
   Future<OtWeek> publishWeek({
-    required String topic,
+    String topic = '',
     required String startDate,
-    required List<OtDay> days,
+    List<OtDay> days = const [],
     required String updatedBy,
+    String? book,
+    int? startChapter,
   }) async {
     final docRef = _firestore.collection('otWeeks').doc();
+    final isChapterPerDay = book != null && book.isNotEmpty;
 
     final week = OtWeek(
       id: docRef.id,
@@ -168,18 +200,29 @@ class FirebaseOtRepository implements OtRepository {
       startDate: startDate,
       publishedAt: DateTime.now(),
       updatedBy: updatedBy,
-      days: days,
+      days: isChapterPerDay
+          ? computeOtDaysForWeek(
+              book: book,
+              startChapter: startChapter ?? 1,
+              startDate: startDate,
+            )
+          : days,
+      book: book,
+      startChapter: startChapter,
     );
 
+    // Save one plan document
     await docRef.set(week.toMap());
 
-    // Save days subcollection in a batch
-    final batch = _firestore.batch();
-    for (final day in days) {
-      final dayRef = docRef.collection('days').doc(day.date);
-      batch.set(dayRef, day.toMap());
+    // Only save days subcollection for legacy plans without a book ("No per-day documents")
+    if (!isChapterPerDay && days.isNotEmpty) {
+      final batch = _firestore.batch();
+      for (final day in days) {
+        final dayRef = docRef.collection('days').doc(day.date);
+        batch.set(dayRef, day.toMap());
+      }
+      await batch.commit();
     }
-    await batch.commit();
 
     // Update config/currentOtWeek
     await _firestore.collection('config').doc('currentOtWeek').set({
