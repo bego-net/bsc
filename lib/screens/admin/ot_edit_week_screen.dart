@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../data/bible_books.dart';
+import '../../l10n/app_localizations.dart';
+import '../../state/locale_state.dart';
 import '../../state/ot_state.dart';
 
 /// Screen allowing admins to create and publish a new Old Testament reading plan.
@@ -58,7 +60,7 @@ class _OtEditWeekScreenState extends State<OtEditWeekScreen> {
     }
   }
 
-  Future<void> _publish() async {
+  Future<void> _publish(AppLocalizations l10n, String languageCode) async {
     if (!_formKey.currentState!.validate()) return;
 
     final topic = _topicController.text.trim();
@@ -75,17 +77,18 @@ class _OtEditWeekScreenState extends State<OtEditWeekScreen> {
     setState(() => _isSaving = false);
 
     if (published != null) {
+      final locBook = BibleBooks.getLocalizedName(_selectedBook, languageCode);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            'Published plan: $_selectedBook starting ch. $_startChapter on ${_formatDate(_startDate)}',
+            '$locBook ch. $_startChapter (${_formatDate(_startDate)}) ✓',
           ),
         ),
       );
       Navigator.of(context).pop();
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Failed to publish. Please try again.')),
+        SnackBar(content: Text(l10n.error)),
       );
     }
   }
@@ -93,10 +96,13 @@ class _OtEditWeekScreenState extends State<OtEditWeekScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final languageCode = context.watch<LocaleState>().languageCode;
+    final l10n = AppLocalizations.of(context)!;
     final maxChapters = BibleBooks.getChapterCount(_selectedBook);
+    final localizedBook = BibleBooks.getLocalizedName(_selectedBook, languageCode);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Setup OT Plan')),
+      appBar: AppBar(title: Text(l10n.otPlan)),
       body: Form(
         key: _formKey,
         child: ListView(
@@ -104,7 +110,7 @@ class _OtEditWeekScreenState extends State<OtEditWeekScreen> {
           children: [
             // ── Book Picker ───────────────────────────────────────────────
             Text(
-              'Old Testament Book',
+              l10n.pickBook,
               style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 6),
@@ -126,13 +132,13 @@ class _OtEditWeekScreenState extends State<OtEditWeekScreen> {
                 }
               },
               child: InputDecorator(
-                decoration: const InputDecoration(
-                  labelText: 'Select Book',
-                  border: OutlineInputBorder(),
-                  suffixIcon: Icon(Icons.arrow_drop_down),
+                decoration: InputDecoration(
+                  labelText: l10n.selectBook,
+                  border: const OutlineInputBorder(),
+                  suffixIcon: const Icon(Icons.arrow_drop_down),
                 ),
                 child: Text(
-                  '$_selectedBook ($maxChapters chapters)',
+                  '$localizedBook (${l10n.chaptersCount(maxChapters)})',
                   style: theme.textTheme.bodyLarge,
                 ),
               ),
@@ -141,7 +147,7 @@ class _OtEditWeekScreenState extends State<OtEditWeekScreen> {
 
             // ── Starting Chapter ──────────────────────────────────────────
             Text(
-              'Starting Chapter',
+              l10n.startChapter,
               style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 6),
@@ -157,7 +163,7 @@ class _OtEditWeekScreenState extends State<OtEditWeekScreen> {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text(
-                      'Chapter $_startChapter of $maxChapters',
+                      '${l10n.chapter} $_startChapter / $maxChapters',
                       style: theme.textTheme.titleMedium,
                     ),
                     Row(
@@ -184,7 +190,7 @@ class _OtEditWeekScreenState extends State<OtEditWeekScreen> {
 
             // ── Start Date Picker ─────────────────────────────────────────
             Text(
-              'Start Date',
+              l10n.startDate,
               style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 6),
@@ -202,15 +208,15 @@ class _OtEditWeekScreenState extends State<OtEditWeekScreen> {
 
             // ── Topic (Optional) ──────────────────────────────────────────
             Text(
-              'Topic (Optional)',
+              l10n.topic,
               style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 6),
             TextFormField(
               controller: _topicController,
-              decoration: const InputDecoration(
-                hintText: 'e.g., Journey of Faith (optional)',
-                border: OutlineInputBorder(),
+              decoration: InputDecoration(
+                hintText: l10n.topic,
+                border: const OutlineInputBorder(),
               ),
             ),
             const SizedBox(height: 20),
@@ -239,7 +245,7 @@ class _OtEditWeekScreenState extends State<OtEditWeekScreen> {
                         ),
                         const SizedBox(width: 8),
                         Text(
-                          'Plan Summary',
+                          l10n.otPlan,
                           style: theme.textTheme.labelLarge?.copyWith(
                             color: theme.colorScheme.primary,
                             fontWeight: FontWeight.bold,
@@ -249,9 +255,8 @@ class _OtEditWeekScreenState extends State<OtEditWeekScreen> {
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      '• Reading: $_selectedBook (ch. $_startChapter–$maxChapters)\n'
-                      '• Pace: 1 chapter per day automatically\n'
-                      '• Starting: ${_formatDate(_startDate)}',
+                      '• $localizedBook ($_startChapter–$maxChapters)\n'
+                      '• ${l10n.startDate}: ${_formatDate(_startDate)}',
                       style: theme.textTheme.bodyMedium,
                     ),
                   ],
@@ -262,7 +267,7 @@ class _OtEditWeekScreenState extends State<OtEditWeekScreen> {
 
             // ── Publish Button ────────────────────────────────────────────
             FilledButton.icon(
-              onPressed: _isSaving ? null : _publish,
+              onPressed: _isSaving ? null : () => _publish(l10n, languageCode),
               icon: _isSaving
                   ? const SizedBox(
                       width: 18,
@@ -270,7 +275,7 @@ class _OtEditWeekScreenState extends State<OtEditWeekScreen> {
                       child: CircularProgressIndicator(strokeWidth: 2),
                     )
                   : const Icon(Icons.publish_outlined),
-              label: Text(_isSaving ? 'Publishing...' : 'Publish Plan'),
+              label: Text(_isSaving ? l10n.loading : l10n.publish),
               style: FilledButton.styleFrom(
                 padding: const EdgeInsets.symmetric(vertical: 14),
               ),
@@ -295,26 +300,19 @@ class _OtBookPickerPage extends StatefulWidget {
 
 class _OtBookPickerPageState extends State<_OtBookPickerPage> {
   final _searchController = TextEditingController();
-  final List<BibleBook> _otBooks = BibleBooks.oldTestament;
   List<BibleBook> _filtered = [];
 
   @override
   void initState() {
     super.initState();
-    _filtered = _otBooks;
+    _filtered = BibleBooks.oldTestament;
     _searchController.addListener(_onSearch);
   }
 
   void _onSearch() {
-    final query = _searchController.text.trim().toLowerCase();
+    final query = _searchController.text.trim();
     setState(() {
-      if (query.isEmpty) {
-        _filtered = _otBooks;
-      } else {
-        _filtered = _otBooks
-            .where((b) => b.name.toLowerCase().contains(query))
-            .toList();
-      }
+      _filtered = BibleBooks.search(query, testament: 'OT');
     });
   }
 
@@ -326,8 +324,11 @@ class _OtBookPickerPageState extends State<_OtBookPickerPage> {
 
   @override
   Widget build(BuildContext context) {
+    final languageCode = context.watch<LocaleState>().languageCode;
+    final l10n = AppLocalizations.of(context)!;
+
     return Scaffold(
-      appBar: AppBar(title: const Text('Select OT Book (39 books)')),
+      appBar: AppBar(title: Text(l10n.oldTestamentHeader)),
       body: Column(
         children: [
           Padding(
@@ -335,10 +336,10 @@ class _OtBookPickerPageState extends State<_OtBookPickerPage> {
             child: TextField(
               controller: _searchController,
               autofocus: true,
-              decoration: const InputDecoration(
-                hintText: 'Search Old Testament book...',
-                prefixIcon: Icon(Icons.search),
-                border: OutlineInputBorder(),
+              decoration: InputDecoration(
+                hintText: l10n.searchBooks,
+                prefixIcon: const Icon(Icons.search),
+                border: const OutlineInputBorder(),
               ),
             ),
           ),
@@ -347,10 +348,14 @@ class _OtBookPickerPageState extends State<_OtBookPickerPage> {
               itemCount: _filtered.length,
               itemBuilder: (context, i) {
                 final book = _filtered[i];
-                final isSelected = book.name == widget.initial;
+                final isSelected = book.name == widget.initial ||
+                    book.amharicName == widget.initial;
+                final displayName = book.localizedName(languageCode);
+                final altName = languageCode == 'am' ? book.name : book.amharicName;
+
                 return ListTile(
-                  title: Text(book.name),
-                  subtitle: Text('${book.chapterCount} chapters'),
+                  title: Text(displayName),
+                  subtitle: Text('$altName • ${l10n.chaptersCount(book.chapterCount)}'),
                   trailing: isSelected
                       ? Icon(Icons.check, color: Theme.of(context).colorScheme.primary)
                       : null,

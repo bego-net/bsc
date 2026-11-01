@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import '../l10n/app_localizations.dart';
+
 /// Help screen shown when the user taps "Forgot password?".
 /// Explains that the leader must reset the password and provides
 /// a convenient "Copy request message" button.
@@ -31,11 +33,16 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
     super.dispose();
   }
 
-  Future<void> _copyMessage() async {
+  Future<void> _copyMessage(BuildContext context) async {
     final username = _usernameController.text.trim();
-    final message = username.isEmpty
-        ? 'Please reset my Bible Study password.'
-        : 'Please reset my Bible Study password. My username is $username.';
+    final isAm = Localizations.localeOf(context).languageCode == 'am';
+    final message = isAm
+        ? (username.isEmpty
+            ? 'እባክዎ የመጽሐፍ ቅዱስ ጥናት የይለፍ ቃሌን ዳግም ያስጀምሩ።'
+            : 'እባክዎ የመጽሐፍ ቅዱስ ጥናት የይለፍ ቃሌን ዳግም ያስጀምሩ። የተጠቃሚ ስሜ $username ነው።')
+        : (username.isEmpty
+            ? 'Please reset my Bible Study password.'
+            : 'Please reset my Bible Study password. My username is $username.');
     await Clipboard.setData(ClipboardData(text: message));
     if (mounted) {
       setState(() => _copied = true);
@@ -48,9 +55,10 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
+    final l10n = AppLocalizations.of(context)!;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Forgot Password')),
+      appBar: AppBar(title: Text(l10n.forgotPassword)),
       body: Center(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(24.0),
@@ -75,7 +83,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                         size: 48, color: colorScheme.primary),
                     const SizedBox(height: 16),
                     Text(
-                      'Need help?',
+                      l10n.needHelp,
                       style: theme.textTheme.headlineSmall?.copyWith(
                         fontWeight: FontWeight.bold,
                       ),
@@ -83,9 +91,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                     ),
                     const SizedBox(height: 12),
                     Text(
-                      'Password resets are handled by your Bible Study leader. '
-                      'Send them a message using the button below and they will '
-                      'give you a temporary password.',
+                      l10n.forgotPasswordHelp,
                       style: theme.textTheme.bodyMedium?.copyWith(
                         color: colorScheme.onSurfaceVariant,
                       ),
@@ -99,7 +105,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                       keyboardType: TextInputType.text,
                       textInputAction: TextInputAction.done,
                       decoration: InputDecoration(
-                        labelText: 'Your username',
+                        labelText: l10n.yourUsername,
                         prefixIcon: const Icon(Icons.person_outline),
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
@@ -110,12 +116,12 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
 
                     // Copy button
                     OutlinedButton.icon(
-                      onPressed: _copyMessage,
+                      onPressed: () => _copyMessage(context),
                       icon: Icon(
                           _copied ? Icons.check : Icons.copy_outlined,
                           size: 18),
                       label: Text(
-                          _copied ? 'Copied!' : 'Copy request message'),
+                          _copied ? l10n.copied : l10n.copyRequestMessage),
                       style: OutlinedButton.styleFrom(
                         padding: const EdgeInsets.symmetric(vertical: 14),
                         shape: RoundedRectangleBorder(
@@ -125,8 +131,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                     ),
                     const SizedBox(height: 12),
                     Text(
-                      'The message will be: '
-                      '"Please reset my Bible Study password. My username is <your username>."',
+                      l10n.requestMessagePreview,
                       style: theme.textTheme.bodySmall?.copyWith(
                         color: colorScheme.outline,
                         fontStyle: FontStyle.italic,

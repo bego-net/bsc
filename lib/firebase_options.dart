@@ -34,22 +34,22 @@ class DefaultFirebaseOptions {
   }
 
   static const FirebaseOptions web = FirebaseOptions(
-    apiKey: 'AIzaSyPlaceholderApiKeyForWeb',
-    appId: '1:1234567890:web:abcdef123456',
-    messagingSenderId: '1234567890',
-    projectId: 'bible-study-app',
-    authDomain: 'bible-study-app.firebaseapp.com',
-    storageBucket: 'bible-study-app.appspot.com',
+    apiKey: 'AIzaSyCbmoBSiRccthOPxRxydxL8h0I2MJsCx2E',
+    appId: '1:80127109437:web:2ae8f1ac649e81d60dfd54',
+    messagingSenderId: '80127109437',
+    projectId: 'bible-study-74bc1',
+    authDomain: 'bible-study-74bc1.firebaseapp.com',
+    storageBucket: 'bible-study-74bc1.firebasestorage.app',
+    measurementId: 'G-3KJMVY178G',
   );
 
   static const FirebaseOptions android = FirebaseOptions(
-    apiKey: 'AIzaSyPlaceholderApiKeyForAndroid',
-    appId: '1:1234567890:android:abcdef123456',
-    messagingSenderId: '1234567890',
-    projectId: 'bible-study-app',
-    storageBucket: 'bible-study-app.appspot.com',
+    apiKey: 'AIzaSyAEC7uZ1ijFieM8ywpUA1dUrZCDMSYDCbc',
+    appId: '1:80127109437:android:949f2e595859b48f0dfd54',
+    messagingSenderId: '80127109437',
+    projectId: 'bible-study-74bc1',
+    storageBucket: 'bible-study-74bc1.firebasestorage.app',
   );
-
   static const FirebaseOptions ios = FirebaseOptions(
     apiKey: 'AIzaSyPlaceholderApiKeyForIOS',
     appId: '1:1234567890:ios:abcdef123456',

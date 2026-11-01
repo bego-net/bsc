@@ -1,3 +1,5 @@
+import '../data/bible_books.dart';
+
 /// Represents a weekly group Bible study session and assignment.
 class StudyWeek {
   final String id;
@@ -32,6 +34,12 @@ class StudyWeek {
 
   /// Complete passage reference, e.g. "Matthew 5:1-8" or "Matthew 5:3".
   String get passageText => '$book $chapter:$verseRangeText';
+
+  /// Complete passage reference localized to [languageCode] (e.g., "ማቴዎስ 5:1-8").
+  String localizedPassageText([String languageCode = 'am']) {
+    final localizedBook = BibleBooks.getLocalizedName(book, languageCode);
+    return '$localizedBook $chapter:$verseRangeText';
+  }
 
   Map<String, dynamic> toMap() {
     return {

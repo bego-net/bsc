@@ -2,17 +2,19 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../l10n/app_localizations.dart';
+import '../l10n/app_localizations_en.dart';
 import '../models/material_item.dart';
 import '../models/question.dart';
+import '../models/study_week.dart';
 import '../state/auth_state.dart';
+import '../state/locale_state.dart';
 import '../state/team_state.dart';
 import '../widgets/profile_avatar_button.dart';
 import 'admin/admin_home_screen.dart';
 
-/// The Team BS tab — shown to all authenticated users.
-///
-/// Members see published questions and materials, plus a "Mark as prepared" toggle.
-/// Admins see the same plus an "Admin" button in the app bar.
+/// Screen displaying the active [StudyWeek] information, questions,
+/// materials, and member's prepared checkbox.
 class TeamScreen extends StatefulWidget {
   const TeamScreen({super.key});
 
@@ -24,7 +26,6 @@ class _TeamScreenState extends State<TeamScreen> {
   @override
   void initState() {
     super.initState();
-    // Defer data load until after first frame so the Provider tree is ready.
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
         context.read<TeamState>().loadData();
@@ -34,15 +35,8 @@ class _TeamScreenState extends State<TeamScreen> {
 
   Future<void> _openUrl(String url) async {
     final uri = Uri.tryParse(url);
-    if (uri == null) return;
-    if (await canLaunchUrl(uri)) {
+    if (uri != null && await canLaunchUrl(uri)) {
       await launchUrl(uri, mode: LaunchMode.externalApplication);
-    } else {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Could not open: $url')),
-        );
-      }
     }
   }
 
@@ -50,16 +44,19 @@ class _TeamScreenState extends State<TeamScreen> {
   Widget build(BuildContext context) {
     final authState = context.watch<AuthState>();
     final teamState = context.watch<TeamState>();
+    final localeState = Provider.of<LocaleState?>(context);
+    final l10n = AppLocalizations.of(context) ?? AppLocalizationsEn();
+    final languageCode = localeState?.languageCode ?? l10n.localeName;
     final colorScheme = Theme.of(context).colorScheme;
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Team BS'),
+        title: Text(l10n.teamBsTitle),
         actions: [
           if (authState.isAdmin)
             IconButton(
               icon: const Icon(Icons.admin_panel_settings_outlined),
-              tooltip: 'Admin Tools',
+              tooltip: l10n.adminTools,
               onPressed: () {
                 Navigator.of(context).push(
                   MaterialPageRoute<void>(
@@ -70,13 +67,13 @@ class _TeamScreenState extends State<TeamScreen> {
             ),
           IconButton(
             icon: const Icon(Icons.refresh_outlined),
-            tooltip: 'Refresh',
+            tooltip: l10n.refresh,
             onPressed: () => teamState.loadData(),
           ),
           const ProfileAvatarButton(),
         ],
       ),
-      body: _buildBody(context, teamState, colorScheme),
+      body: _buildBody(context, teamState, colorScheme, languageCode, l10n),
     );
   }
 
@@ -84,6 +81,8 @@ class _TeamScreenState extends State<TeamScreen> {
     BuildContext context,
     TeamState teamState,
     ColorScheme colorScheme,
+    String languageCode,
+    AppLocalizations l10n,
   ) {
     if (teamState.isLoading) {
       return const Center(child: CircularProgressIndicator());
@@ -109,7 +108,7 @@ class _TeamScreenState extends State<TeamScreen> {
                   teamState.clearError();
                   teamState.loadData();
                 },
-                child: const Text('Retry'),
+                child: Text(l10n.retry),
               ),
             ],
           ),
@@ -132,13 +131,13 @@ class _TeamScreenState extends State<TeamScreen> {
               ),
               const SizedBox(height: 16),
               Text(
-                'No study week published yet',
+                l10n.noActiveWeek,
                 style: Theme.of(context).textTheme.titleMedium,
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 8),
               Text(
-                'Your group leader will publish this week\'s passage and questions soon.',
+                l10n.checkBackLater,
                 style: Theme.of(context).textTheme.bodySmall,
                 textAlign: TextAlign.center,
               ),
@@ -147,6 +146,8 @@ class _TeamScreenState extends State<TeamScreen> {
         ),
       );
     }
+
+    final localizedPassage = week.localizedPassageText(languageCode);
 
     return RefreshIndicator(
       onRefresh: teamState.loadData,
@@ -163,7 +164,7 @@ class _TeamScreenState extends State<TeamScreen> {
                     Icon(Icons.book_outlined, color: colorScheme.primary),
                     const SizedBox(width: 8),
                     Text(
-                      'This Week\'s Study',
+                      l10n.thisWeeksPassage,
                       style: Theme.of(context).textTheme.titleMedium?.copyWith(
                             color: colorScheme.primary,
                             fontWeight: FontWeight.bold,
@@ -173,7 +174,7 @@ class _TeamScreenState extends State<TeamScreen> {
                 ),
                 const SizedBox(height: 12),
                 Text(
-                  week.passageText,
+                  localizedPassage,
                   style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                         fontWeight: FontWeight.bold,
                       ),
@@ -200,17 +201,25 @@ class _TeamScreenState extends State<TeamScreen> {
           _PreparedButton(
             isPrepared: teamState.isPrepared,
             onTap: () => teamState.togglePrepared(),
+            l10n: l10n,
           ),
           const SizedBox(height: 16),
 
           // ── Questions ────────────────────────────────────────────────────
-          _QuestionsSection(questions: teamState.questions),
+          _QuestionsSection(
+            questions: teamState.questions,
+            title: l10n.discussionQuestions,
+            emptyText: l10n.checkBackLater,
+          ),
           const SizedBox(height: 16),
 
           // ── Materials ────────────────────────────────────────────────────
           _MaterialsSection(
             materials: teamState.materials,
             onOpenUrl: _openUrl,
+            title: l10n.studyMaterials,
+            emptyText: l10n.checkBackLater,
+            openLinkText: languageCode == 'am' ? 'ሊንኩን ክፈት →' : 'Open link →',
           ),
           const SizedBox(height: 32),
         ],
@@ -269,9 +278,14 @@ class _InfoRow extends StatelessWidget {
 }
 
 class _PreparedButton extends StatelessWidget {
-  const _PreparedButton({required this.isPrepared, required this.onTap});
+  const _PreparedButton({
+    required this.isPrepared,
+    required this.onTap,
+    required this.l10n,
+  });
   final bool isPrepared;
   final VoidCallback onTap;
+  final AppLocalizations l10n;
 
   @override
   Widget build(BuildContext context) {
@@ -282,7 +296,7 @@ class _PreparedButton extends StatelessWidget {
           ? OutlinedButton.icon(
               onPressed: onTap,
               icon: const Icon(Icons.check_circle_outline),
-              label: const Text('Prepared ✓  (tap to undo)'),
+              label: Text('${l10n.preparedBadge} (${l10n.undoRead})'),
               style: OutlinedButton.styleFrom(
                 foregroundColor: colorScheme.primary,
                 side: BorderSide(color: colorScheme.primary),
@@ -292,7 +306,7 @@ class _PreparedButton extends StatelessWidget {
           : FilledButton.icon(
               onPressed: onTap,
               icon: const Icon(Icons.check_circle_outline),
-              label: const Text('Mark as prepared'),
+              label: Text(l10n.markAsPrepared),
               style: FilledButton.styleFrom(
                 padding: const EdgeInsets.symmetric(vertical: 14),
               ),
@@ -302,8 +316,14 @@ class _PreparedButton extends StatelessWidget {
 }
 
 class _QuestionsSection extends StatelessWidget {
-  const _QuestionsSection({required this.questions});
+  const _QuestionsSection({
+    required this.questions,
+    required this.title,
+    required this.emptyText,
+  });
   final List<Question> questions;
+  final String title;
+  final String emptyText;
 
   @override
   Widget build(BuildContext context) {
@@ -312,7 +332,7 @@ class _QuestionsSection extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Discussion Questions',
+            title,
             style: Theme.of(context).textTheme.titleMedium?.copyWith(
                   fontWeight: FontWeight.bold,
                 ),
@@ -320,7 +340,7 @@ class _QuestionsSection extends StatelessWidget {
           const SizedBox(height: 12),
           if (questions.isEmpty)
             Text(
-              'No questions published yet.',
+              emptyText,
               style: Theme.of(context).textTheme.bodySmall,
             )
           else
@@ -362,9 +382,15 @@ class _MaterialsSection extends StatelessWidget {
   const _MaterialsSection({
     required this.materials,
     required this.onOpenUrl,
+    required this.title,
+    required this.emptyText,
+    required this.openLinkText,
   });
   final List<MaterialItem> materials;
   final Future<void> Function(String url) onOpenUrl;
+  final String title;
+  final String emptyText;
+  final String openLinkText;
 
   @override
   Widget build(BuildContext context) {
@@ -373,7 +399,7 @@ class _MaterialsSection extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Study Materials',
+            title,
             style: Theme.of(context).textTheme.titleMedium?.copyWith(
                   fontWeight: FontWeight.bold,
                 ),
@@ -381,7 +407,7 @@ class _MaterialsSection extends StatelessWidget {
           const SizedBox(height: 12),
           if (materials.isEmpty)
             Text(
-              'No materials published yet.',
+              emptyText,
               style: Theme.of(context).textTheme.bodySmall,
             )
           else
@@ -409,7 +435,7 @@ class _MaterialsSection extends StatelessWidget {
                       InkWell(
                         onTap: () => onOpenUrl(m.url!),
                         child: Text(
-                          'Open link →',
+                          openLinkText,
                           style: TextStyle(
                             color: Theme.of(context).colorScheme.primary,
                             decoration: TextDecoration.underline,

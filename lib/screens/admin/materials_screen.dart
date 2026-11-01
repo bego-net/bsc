@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../../l10n/app_localizations.dart';
 import '../../models/material_item.dart';
 import '../../state/team_state.dart';
 
@@ -11,16 +12,17 @@ class MaterialsScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final teamState = context.watch<TeamState>();
+    final l10n = AppLocalizations.of(context)!;
     final materials = teamState.materials;
     final week = teamState.currentWeek;
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Manage Materials'),
+        title: Text(l10n.manageMaterials),
         actions: [
           IconButton(
             icon: const Icon(Icons.add),
-            tooltip: 'Add material',
+            tooltip: l10n.addMaterial,
             onPressed: week == null
                 ? null
                 : () => _showEditDialog(context, null, teamState),
@@ -28,11 +30,9 @@ class MaterialsScreen extends StatelessWidget {
         ],
       ),
       body: week == null
-          ? const Center(child: Text('Publish a week first.'))
+          ? Center(child: Text(l10n.publishWeekFirst))
           : materials.isEmpty
-              ? const Center(
-                  child: Text('No materials yet. Tap + to add.'),
-                )
+              ? Center(child: Text(l10n.noMaterialsYet))
               : ListView.separated(
                   padding: const EdgeInsets.only(bottom: 80),
                   itemCount: materials.length,
@@ -42,7 +42,7 @@ class MaterialsScreen extends StatelessWidget {
                     return ListTile(
                       title: Text(m.title),
                       subtitle: Text(
-                        m.published ? 'Published' : 'Draft',
+                        m.published ? l10n.published : l10n.draft,
                         style: TextStyle(
                           color: m.published ? Colors.green : Colors.orange,
                           fontSize: 12,
@@ -75,6 +75,7 @@ class MaterialsScreen extends StatelessWidget {
     MaterialItem? existing,
     TeamState teamState,
   ) async {
+    final l10n = AppLocalizations.of(context)!;
     final titleController =
         TextEditingController(text: existing?.title ?? '');
     final bodyController =
@@ -87,40 +88,39 @@ class MaterialsScreen extends StatelessWidget {
       context: context,
       builder: (ctx) => StatefulBuilder(
         builder: (ctx, setDialogState) => AlertDialog(
-          title:
-              Text(existing == null ? 'Add Material' : 'Edit Material'),
+          title: Text(existing == null ? l10n.addMaterial : l10n.editMaterial),
           content: SingleChildScrollView(
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
                 TextField(
                   controller: titleController,
-                  decoration: const InputDecoration(
-                    labelText: 'Title',
-                    border: OutlineInputBorder(),
+                  decoration: InputDecoration(
+                    labelText: l10n.title,
+                    border: const OutlineInputBorder(),
                   ),
                 ),
                 const SizedBox(height: 12),
                 TextField(
                   controller: bodyController,
                   maxLines: 3,
-                  decoration: const InputDecoration(
-                    labelText: 'Body / description (optional)',
-                    border: OutlineInputBorder(),
+                  decoration: InputDecoration(
+                    labelText: l10n.bodyDescription,
+                    border: const OutlineInputBorder(),
                   ),
                 ),
                 const SizedBox(height: 12),
                 TextField(
                   controller: urlController,
-                  decoration: const InputDecoration(
-                    labelText: 'URL (optional)',
+                  decoration: InputDecoration(
+                    labelText: l10n.urlOptional,
                     hintText: 'https://…',
-                    border: OutlineInputBorder(),
+                    border: const OutlineInputBorder(),
                   ),
                   keyboardType: TextInputType.url,
                 ),
                 SwitchListTile(
-                  title: const Text('Published'),
+                  title: Text(l10n.published),
                   value: published,
                   onChanged: (v) =>
                       setDialogState(() => published = v),
@@ -131,7 +131,7 @@ class MaterialsScreen extends StatelessWidget {
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(ctx),
-              child: const Text('Cancel'),
+              child: Text(l10n.cancel),
             ),
             FilledButton(
               onPressed: () async {
@@ -149,7 +149,7 @@ class MaterialsScreen extends StatelessWidget {
                 Navigator.pop(ctx);
                 await teamState.saveMaterial(next);
               },
-              child: const Text('Save'),
+              child: Text(l10n.save),
             ),
           ],
         ),
@@ -165,20 +165,21 @@ class MaterialsScreen extends StatelessWidget {
     MaterialItem m,
     TeamState teamState,
   ) async {
+    final l10n = AppLocalizations.of(context)!;
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Delete Material?'),
+        title: Text(l10n.deleteMaterial),
         content: Text('"${m.title}"'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('Cancel'),
+            child: Text(l10n.cancel),
           ),
           TextButton(
             onPressed: () => Navigator.pop(ctx, true),
             style: TextButton.styleFrom(foregroundColor: Colors.red),
-            child: const Text('Delete'),
+            child: Text(l10n.delete),
           ),
         ],
       ),

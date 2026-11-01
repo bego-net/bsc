@@ -12,6 +12,7 @@ class AppUser {
   final int verseTo;
   final String reminderTime; // e.g., '07:00'
   final bool mustChangePassword;
+  final String language; // 'am' or 'en'
 
   const AppUser({
     required this.uid,
@@ -27,6 +28,7 @@ class AppUser {
     int? verseTo,
     this.reminderTime = '07:00',
     this.mustChangePassword = false,
+    this.language = 'am',
   })  : verseFrom = verseFrom ?? currentVerse ?? 1,
         verseTo = verseTo ?? currentVerse ?? verseFrom ?? 1;
 
@@ -49,6 +51,7 @@ class AppUser {
       'verseTo': verseTo,
       'reminderTime': reminderTime,
       'mustChangePassword': mustChangePassword,
+      'language': language,
     };
   }
 
@@ -78,6 +81,7 @@ class AppUser {
       verseTo: vTo,
       reminderTime: map['reminderTime'] as String? ?? '07:00',
       mustChangePassword: map['mustChangePassword'] as bool? ?? false,
+      language: map['language'] as String? ?? 'am',
     );
   }
 
@@ -94,6 +98,7 @@ class AppUser {
     int? verseTo,
     String? reminderTime,
     bool? mustChangePassword,
+    String? language,
   }) {
     return AppUser(
       uid: uid,
@@ -108,6 +113,7 @@ class AppUser {
       verseTo: verseTo ?? currentVerse ?? this.verseTo,
       reminderTime: reminderTime ?? this.reminderTime,
       mustChangePassword: mustChangePassword ?? this.mustChangePassword,
+      language: language ?? this.language,
     );
   }
 }

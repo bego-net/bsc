@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../l10n/app_localizations.dart';
 import '../state/auth_state.dart';
 import '../utils/auth_utils.dart';
 
@@ -30,7 +31,7 @@ class _SignupScreenState extends State<SignupScreen> {
     super.dispose();
   }
 
-  Future<void> _submit() async {
+  Future<void> _submit(AppLocalizations l10n) async {
     if (!_formKey.currentState!.validate()) return;
 
     final authState = context.read<AuthState>();
@@ -43,8 +44,7 @@ class _SignupScreenState extends State<SignupScreen> {
     if (success && mounted) {
       Navigator.of(context).pop();
     } else if (mounted) {
-      final error =
-          authState.errorMessage ?? 'Sign up failed. Please try again.';
+      final error = authState.errorMessage ?? l10n.error;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(error),
@@ -60,10 +60,11 @@ class _SignupScreenState extends State<SignupScreen> {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
     final authState = context.watch<AuthState>();
+    final l10n = AppLocalizations.of(context)!;
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Create Account'),
+        title: Text(l10n.createAccount),
       ),
       body: Center(
         child: SingleChildScrollView(
@@ -94,7 +95,7 @@ class _SignupScreenState extends State<SignupScreen> {
                       ),
                       const SizedBox(height: 16),
                       Text(
-                        'Join Bible Study',
+                        l10n.joinBibleStudy,
                         style: theme.textTheme.headlineMedium?.copyWith(
                           fontWeight: FontWeight.bold,
                           color: colorScheme.onSurface,
@@ -103,7 +104,7 @@ class _SignupScreenState extends State<SignupScreen> {
                       ),
                       const SizedBox(height: 6),
                       Text(
-                        'Sign up as a study member to begin your daily journey',
+                        l10n.signupSubtitle,
                         style: theme.textTheme.bodyMedium?.copyWith(
                           color: colorScheme.onSurfaceVariant,
                         ),
@@ -117,7 +118,7 @@ class _SignupScreenState extends State<SignupScreen> {
                         textInputAction: TextInputAction.next,
                         textCapitalization: TextCapitalization.words,
                         decoration: InputDecoration(
-                          labelText: 'Full Name',
+                          labelText: l10n.fullName,
                           prefixIcon: const Icon(Icons.person_outline),
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(12),
@@ -125,7 +126,7 @@ class _SignupScreenState extends State<SignupScreen> {
                         ),
                         validator: (value) {
                           if (value == null || value.trim().isEmpty) {
-                            return 'Please enter your name';
+                            return l10n.enterName;
                           }
                           return null;
                         },
@@ -139,7 +140,7 @@ class _SignupScreenState extends State<SignupScreen> {
                         textInputAction: TextInputAction.next,
                         autocorrect: false,
                         decoration: InputDecoration(
-                          labelText: 'Username (3–20 chars, a–z, 0–9, _)',
+                          labelText: l10n.usernameHint,
                           prefixIcon: const Icon(Icons.alternate_email),
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(12),
@@ -147,11 +148,11 @@ class _SignupScreenState extends State<SignupScreen> {
                         ),
                         validator: (value) {
                           if (value == null || value.trim().isEmpty) {
-                            return 'Please choose a username';
+                            return l10n.chooseUsername;
                           }
                           final normalized = value.trim().toLowerCase();
                           if (!isValidUsername(normalized)) {
-                            return 'Use 3–20 lowercase letters, digits, or underscores';
+                            return l10n.invalidUsername;
                           }
                           return null;
                         },
@@ -164,7 +165,7 @@ class _SignupScreenState extends State<SignupScreen> {
                         obscureText: _obscurePassword,
                         textInputAction: TextInputAction.next,
                         decoration: InputDecoration(
-                          labelText: 'Password (min 6 characters)',
+                          labelText: l10n.passwordHint,
                           prefixIcon: const Icon(Icons.lock_outline),
                           suffixIcon: IconButton(
                             icon: Icon(
@@ -184,7 +185,7 @@ class _SignupScreenState extends State<SignupScreen> {
                         ),
                         validator: (value) {
                           if (value == null || value.length < 6) {
-                            return 'Password must be at least 6 characters';
+                            return l10n.passwordMinLength;
                           }
                           return null;
                         },
@@ -196,9 +197,9 @@ class _SignupScreenState extends State<SignupScreen> {
                         controller: _confirmController,
                         obscureText: _obscureConfirm,
                         textInputAction: TextInputAction.done,
-                        onFieldSubmitted: (_) => _submit(),
+                        onFieldSubmitted: (_) => _submit(l10n),
                         decoration: InputDecoration(
-                          labelText: 'Confirm password',
+                          labelText: l10n.confirmPassword,
                           prefixIcon: const Icon(Icons.lock_outline),
                           suffixIcon: IconButton(
                             icon: Icon(
@@ -218,7 +219,7 @@ class _SignupScreenState extends State<SignupScreen> {
                         ),
                         validator: (value) {
                           if (value != _passwordController.text) {
-                            return 'Passwords do not match';
+                            return l10n.passwordsDoNotMatch;
                           }
                           return null;
                         },
@@ -227,7 +228,7 @@ class _SignupScreenState extends State<SignupScreen> {
 
                       // Submit button
                       FilledButton(
-                        onPressed: authState.isLoading ? null : _submit,
+                        onPressed: authState.isLoading ? null : () => _submit(l10n),
                         style: FilledButton.styleFrom(
                           padding: const EdgeInsets.symmetric(vertical: 16),
                           shape: RoundedRectangleBorder(
@@ -243,9 +244,9 @@ class _SignupScreenState extends State<SignupScreen> {
                                   color: Colors.white,
                                 ),
                               )
-                            : const Text(
-                                'Sign up',
-                                style: TextStyle(
+                            : Text(
+                                l10n.signUp,
+                                style: const TextStyle(
                                   fontSize: 16,
                                   fontWeight: FontWeight.bold,
                                 ),
@@ -259,14 +260,14 @@ class _SignupScreenState extends State<SignupScreen> {
                         crossAxisAlignment: WrapCrossAlignment.center,
                         children: [
                           Text(
-                            'Already have an account?',
+                            l10n.alreadyHaveAccount,
                             style: theme.textTheme.bodyMedium?.copyWith(
                               color: colorScheme.onSurfaceVariant,
                             ),
                           ),
                           TextButton(
                             onPressed: () => Navigator.of(context).pop(),
-                            child: const Text('Log in'),
+                            child: Text(l10n.logIn),
                           ),
                         ],
                       ),

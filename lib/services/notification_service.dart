@@ -12,7 +12,7 @@ abstract class NotificationService {
   Future<void> initialize();
 
   /// Schedules the weekly Thursday reminder for [week].
-  Future<void> scheduleThursdayReminder(StudyWeek week);
+  Future<void> scheduleThursdayReminder(StudyWeek week, [String languageCode = 'am']);
 
   /// Cancels any scheduled Thursday reminder.
   Future<void> cancelThursdayReminder();
@@ -22,6 +22,7 @@ abstract class NotificationService {
     required OtWeek week,
     required String reminderTime,
     required bool enabled,
+    String languageCode = 'am',
   });
 
   /// Cancels any scheduled Old Testament reminders.

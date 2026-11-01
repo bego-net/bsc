@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../data/bible_books.dart';
+import '../../l10n/app_localizations.dart';
 import '../../models/study_week.dart';
 import '../../state/auth_state.dart';
+import '../../state/locale_state.dart';
 import '../../state/team_state.dart';
 
 /// Admin screen to edit and publish the current week's study passage and session info.
@@ -124,28 +126,38 @@ class _EditWeekScreenState extends State<EditWeekScreen> {
     setState(() => _isSaving = false);
 
     if (result != null) {
+      final languageCode = context.read<LocaleState>().languageCode;
+      final l10n = AppLocalizations.of(context)!;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Published: ${result.passageText}')),
+        SnackBar(
+          content: Text(
+            l10n.publishedFor(result.localizedPassageText(languageCode)),
+          ),
+        ),
       );
       Navigator.of(context).pop();
     } else {
+      final l10n = AppLocalizations.of(context)!;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Could not publish. Please try again.')),
+        SnackBar(content: Text(l10n.couldNotPublish)),
       );
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final languageCode = context.watch<LocaleState>().languageCode;
+
     return Scaffold(
-      appBar: AppBar(title: const Text('Edit This Week\'s Study')),
+      appBar: AppBar(title: Text(l10n.editThisWeeksStudy)),
       body: Form(
         key: _formKey,
         child: ListView(
           padding: const EdgeInsets.all(16),
           children: [
             // ── Book picker ────────────────────────────────────────────────
-            _SectionLabel('Book'),
+            _SectionLabel(l10n.book),
             InkWell(
               onTap: () async {
                 final picked = await Navigator.of(context).push<String>(
@@ -167,13 +179,13 @@ class _EditWeekScreenState extends State<EditWeekScreen> {
                   border: OutlineInputBorder(),
                   suffixIcon: Icon(Icons.arrow_drop_down),
                 ),
-                child: Text(_book),
+                child: Text(BibleBooks.getLocalizedName(_book, languageCode)),
               ),
             ),
             const SizedBox(height: 16),
 
             // ── Chapter stepper ────────────────────────────────────────────
-            _SectionLabel('Chapter  (1 – $_maxChapter)'),
+            _SectionLabel(l10n.chapterRange(_maxChapter)),
             _Stepper(
               value: _chapter,
               min: 1,
@@ -188,7 +200,7 @@ class _EditWeekScreenState extends State<EditWeekScreen> {
             const SizedBox(height: 16),
 
             // ── Verse range ────────────────────────────────────────────────
-            _SectionLabel('Verse From'),
+            _SectionLabel(l10n.verseFrom),
             _Stepper(
               value: _verseFrom,
               min: 1,
@@ -204,7 +216,7 @@ class _EditWeekScreenState extends State<EditWeekScreen> {
               }),
             ),
             const SizedBox(height: 12),
-            _SectionLabel('Verse To'),
+            _SectionLabel(l10n.verseTo),
             _Stepper(
               value: _verseTo,
               min: _verseFrom,
@@ -219,7 +231,7 @@ class _EditWeekScreenState extends State<EditWeekScreen> {
             const SizedBox(height: 16),
 
             // ── Session day ────────────────────────────────────────────────
-            _SectionLabel('Session Day'),
+            _SectionLabel(l10n.sessionDay),
             DropdownButtonFormField<String>(
               initialValue: _sessionDay,
               decoration: const InputDecoration(border: OutlineInputBorder()),
@@ -231,7 +243,7 @@ class _EditWeekScreenState extends State<EditWeekScreen> {
             const SizedBox(height: 16),
 
             // ── Session time ────────────────────────────────────────────────
-            _SectionLabel('Session Time'),
+            _SectionLabel(l10n.sessionTime),
             ListTile(
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(4),
@@ -250,20 +262,20 @@ class _EditWeekScreenState extends State<EditWeekScreen> {
             const SizedBox(height: 16),
 
             // ── Place ──────────────────────────────────────────────────────
-            _SectionLabel('Place'),
+            _SectionLabel(l10n.place),
             TextFormField(
               controller: _placeController,
-              decoration: const InputDecoration(
-                hintText: 'e.g. Church hall, Room 2',
-                border: OutlineInputBorder(),
+              decoration: InputDecoration(
+                hintText: l10n.placeHint,
+                border: const OutlineInputBorder(),
               ),
               validator: (v) =>
-                  (v == null || v.trim().isEmpty) ? 'Enter a place' : null,
+                  (v == null || v.trim().isEmpty) ? l10n.placeRequired : null,
             ),
             const SizedBox(height: 16),
 
             // ── Thursday reminder time ─────────────────────────────────────
-            _SectionLabel('Thursday Reminder Time'),
+            _SectionLabel(l10n.thursdayReminderTimeLabel),
             ListTile(
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(4),
@@ -281,12 +293,10 @@ class _EditWeekScreenState extends State<EditWeekScreen> {
             ),
             const SizedBox(height: 24),
 
-            // ── New week toggle ────────────────────────────────────────────
+            // ── New week toggle ────────────────────────────────────
             CheckboxListTile(
-              title: const Text('Start as a new week document'),
-              subtitle: const Text(
-                'Turn on if the passage has changed and you want a clean history entry.',
-              ),
+              title: Text(l10n.startAsNewWeek),
+              subtitle: Text(l10n.startAsNewWeekSubtitle),
               value: _isNewWeek,
               onChanged: (v) => setState(() => _isNewWeek = v ?? false),
             ),
@@ -303,7 +313,7 @@ class _EditWeekScreenState extends State<EditWeekScreen> {
                         height: 20,
                         child: CircularProgressIndicator(strokeWidth: 2),
                       )
-                    : const Text('Publish'),
+                    : Text(l10n.publish),
               ),
             ),
           ],
@@ -387,21 +397,16 @@ class _BookPickerPageState extends State<_BookPickerPage> {
 
   @override
   Widget build(BuildContext context) {
-    final all = BibleBooks.all;
-    final filtered = _query.isEmpty
-        ? all
-        : all
-            .where(
-              (b) => b.name.toLowerCase().contains(_query.toLowerCase()),
-            )
-            .toList();
+    final l10n = AppLocalizations.of(context)!;
+    final languageCode = context.watch<LocaleState>().languageCode;
+    final filtered = BibleBooks.search(_query);
 
     return Scaffold(
       appBar: AppBar(
         title: TextField(
           autofocus: true,
-          decoration: const InputDecoration(
-            hintText: 'Search book…',
+          decoration: InputDecoration(
+            hintText: l10n.searchBookHint,
             border: InputBorder.none,
           ),
           onChanged: (v) => setState(() => _query = v),
@@ -411,8 +416,9 @@ class _BookPickerPageState extends State<_BookPickerPage> {
         itemCount: filtered.length,
         itemBuilder: (_, i) {
           final book = filtered[i];
+          final localizedName = book.localizedName(languageCode);
           return ListTile(
-            title: Text(book.name),
+            title: Text(localizedName),
             selected: book.name == widget.initial,
             onTap: () => Navigator.of(context).pop(book.name),
           );

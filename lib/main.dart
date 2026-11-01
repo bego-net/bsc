@@ -24,6 +24,7 @@ import 'services/fake_notification_service.dart';
 import 'services/local_notification_service.dart';
 import 'services/notification_service.dart';
 import 'state/auth_state.dart';
+import 'state/locale_state.dart';
 import 'state/dashboard_state.dart';
 import 'state/ot_state.dart';
 import 'state/study_state.dart';
@@ -116,6 +117,9 @@ void main() async {
         Provider<OtRepository>.value(value: otRepository),
         Provider<DashboardRepository>.value(value: dashboardRepository),
         Provider<NotificationService>.value(value: notificationService),
+        ChangeNotifierProvider<LocaleState>(
+          create: (_) => LocaleState(),
+        ),
         ChangeNotifierProvider<AuthState>(
           create: (_) => AuthState(authRepository: authRepository),
         ),

@@ -2,20 +2,23 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 
+import '../data/bible_books.dart';
+import '../l10n/app_localizations.dart';
+import '../l10n/app_localizations_en.dart';
 import '../models/reading_entry.dart';
 import '../state/auth_state.dart';
+import '../state/locale_state.dart';
 import '../state/study_state.dart';
-import 'book_picker_screen.dart';
 import '../widgets/profile_avatar_button.dart';
+import 'book_picker_screen.dart';
 
 /// Screen for the member's daily individual Bible study, chapter & verse controls,
 /// reading confirmation, streak tracking, reminder setting, and reading history.
 class IndividualScreen extends StatelessWidget {
   const IndividualScreen({super.key});
 
-  /// The font family used for the "Individual BS" heading.
-  /// Change this variable anytime to easily switch fonts (e.g. 'Playfair Display', 'Lora', 'Merriweather').
-  static const String headingFontFamily = 'Playfair Display';
+  /// The font family used for headings supporting Ethiopic and Latin scripts.
+  static const String headingFontFamily = 'Noto Sans Ethiopic';
 
   @override
   Widget build(BuildContext context) {
@@ -23,14 +26,17 @@ class IndividualScreen extends StatelessWidget {
     final colorScheme = theme.colorScheme;
     final authState = context.watch<AuthState>();
     final studyState = context.watch<StudyState>();
+    final localeState = Provider.of<LocaleState?>(context);
+    final l10n = AppLocalizations.of(context) ?? AppLocalizationsEn();
+    final languageCode = localeState?.languageCode ?? l10n.localeName;
 
     return Scaffold(
       appBar: AppBar(
         title: Text(
-          'Individual BS',
+          l10n.individualBsTitle,
           style: GoogleFonts.getFont(
             headingFontFamily,
-            fontSize: 24,
+            fontSize: 22,
             fontWeight: FontWeight.bold,
           ),
         ),
@@ -38,7 +44,7 @@ class IndividualScreen extends StatelessWidget {
           // Streak indicator
           Center(
             child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
               margin: const EdgeInsets.only(right: 8),
               decoration: BoxDecoration(
                 color: colorScheme.primaryContainer,
@@ -47,14 +53,16 @@ class IndividualScreen extends StatelessWidget {
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const Text('🔥', style: TextStyle(fontSize: 16)),
+                  const Text('🔥', style: TextStyle(fontSize: 15)),
                   const SizedBox(width: 4),
                   Text(
-                    '${studyState.streak} ${studyState.streak == 1 ? 'day' : 'days'}',
+                    studyState.streak == 1
+                        ? l10n.streakDay(studyState.streak)
+                        : l10n.streakDays(studyState.streak),
                     style: TextStyle(
                       fontWeight: FontWeight.bold,
                       color: colorScheme.onPrimaryContainer,
-                      fontSize: 13,
+                      fontSize: 12,
                     ),
                   ),
                 ],
@@ -65,8 +73,8 @@ class IndividualScreen extends StatelessWidget {
           // Log out button
           IconButton(
             icon: const Icon(Icons.logout),
-            tooltip: 'Log out',
-            onPressed: () => _confirmLogout(context, authState),
+            tooltip: l10n.logOut,
+            onPressed: () => _confirmLogout(context, authState, l10n),
           ),
           const ProfileAvatarButton(),
         ],
@@ -78,19 +86,15 @@ class IndividualScreen extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
             children: [
               // Top Card: "Currently studying"
-              _buildCurrentlyStudyingCard(context, studyState),
+              _buildCurrentlyStudyingCard(context, studyState, languageCode, l10n),
               const SizedBox(height: 14),
 
               // Mark as read today button & Next chapter action
-              _buildMarkTodaySection(context, studyState),
-              const SizedBox(height: 14),
-
-              // Daily Reminder Card
-              _buildReminderCard(context, studyState),
+              _buildMarkTodaySection(context, studyState, languageCode, l10n),
               const SizedBox(height: 20),
 
               // History Section
-              _buildHistorySection(context, studyState),
+              _buildHistorySection(context, studyState, languageCode, l10n),
               const SizedBox(height: 24),
             ],
           ),
@@ -101,9 +105,15 @@ class IndividualScreen extends StatelessWidget {
 
   /// The top card showing ONLY the book and chapter, with verse number below it,
   /// plus chapter and verse navigation.
-  Widget _buildCurrentlyStudyingCard(BuildContext context, StudyState state) {
+  Widget _buildCurrentlyStudyingCard(
+    BuildContext context,
+    StudyState state,
+    String languageCode,
+    AppLocalizations l10n,
+  ) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
+    final localizedBook = BibleBooks.getLocalizedName(state.currentBook, languageCode);
 
     return Card(
       elevation: 0,
@@ -143,7 +153,7 @@ class IndividualScreen extends StatelessWidget {
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Text(
-                          'Currently studying',
+                          l10n.currentlyStudying,
                           style: theme.textTheme.labelMedium?.copyWith(
                             color: colorScheme.onSurfaceVariant,
                             fontWeight: FontWeight.w600,
@@ -153,7 +163,7 @@ class IndividualScreen extends StatelessWidget {
                         Row(
                           children: [
                             Text(
-                              'Change book',
+                              l10n.selectBook,
                               style: theme.textTheme.labelSmall?.copyWith(
                                 color: colorScheme.primary,
                                 fontWeight: FontWeight.w600,
@@ -171,7 +181,7 @@ class IndividualScreen extends StatelessWidget {
                     const SizedBox(height: 10),
                     // Large book and chapter title
                     Text(
-                      '${state.currentBook} ${state.currentChapter}',
+                      '$localizedBook ${state.currentChapter}',
                       style: theme.textTheme.headlineMedium?.copyWith(
                         fontWeight: FontWeight.bold,
                         color: colorScheme.onSurface,
@@ -181,8 +191,8 @@ class IndividualScreen extends StatelessWidget {
                     // Verse range below it
                     Text(
                       state.verseFrom == state.verseTo
-                          ? 'Verse ${state.verseFrom}'
-                          : 'Verses ${state.verseFrom}-${state.verseTo}',
+                          ? '${l10n.verse} ${state.verseFrom}'
+                          : '${l10n.verses} ${state.verseFrom}-${state.verseTo}',
                       style: theme.textTheme.titleMedium?.copyWith(
                         color: colorScheme.primary,
                         fontWeight: FontWeight.w600,
@@ -199,7 +209,7 @@ class IndividualScreen extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Chapter (${state.maxChapters} total)',
+                  '${l10n.chapter} (${l10n.chaptersCount(state.maxChapters)})',
                   style: theme.textTheme.labelSmall?.copyWith(
                     color: colorScheme.onSurfaceVariant,
                     fontWeight: FontWeight.w600,
@@ -225,11 +235,11 @@ class IndividualScreen extends StatelessWidget {
                         visualDensity: VisualDensity.compact,
                       ),
                       InkWell(
-                        onTap: () => _showChapterPicker(context, state),
+                        onTap: () => _showChapterPicker(context, state, localizedBook, l10n),
                         child: Padding(
                           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
                           child: Text(
-                            'Ch. ${state.currentChapter}',
+                            '${l10n.chapter} ${state.currentChapter}',
                             style: const TextStyle(fontWeight: FontWeight.bold),
                           ),
                         ),
@@ -257,7 +267,7 @@ class IndividualScreen extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'From verse',
+                        l10n.fromVerse,
                         style: theme.textTheme.labelSmall?.copyWith(
                           color: colorScheme.onSurfaceVariant,
                           fontWeight: FontWeight.w600,
@@ -283,11 +293,11 @@ class IndividualScreen extends StatelessWidget {
                               visualDensity: VisualDensity.compact,
                             ),
                             InkWell(
-                              onTap: () => _showVerseFromInputDialog(context, state),
+                              onTap: () => _showVerseFromInputDialog(context, state, l10n),
                               child: Padding(
                                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
                                 child: Text(
-                                  'V. ${state.verseFrom}',
+                                  '${state.verseFrom}',
                                   style: const TextStyle(fontWeight: FontWeight.bold),
                                 ),
                               ),
@@ -313,7 +323,7 @@ class IndividualScreen extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'To verse',
+                        l10n.toVerse,
                         style: theme.textTheme.labelSmall?.copyWith(
                           color: colorScheme.onSurfaceVariant,
                           fontWeight: FontWeight.w600,
@@ -333,18 +343,17 @@ class IndividualScreen extends StatelessWidget {
                           children: [
                             IconButton(
                               icon: const Icon(Icons.remove),
-                              // "To" can never be lower than "From"
                               onPressed: state.verseTo > state.verseFrom
                                   ? () => state.decrementVerseTo()
                                   : null,
                               visualDensity: VisualDensity.compact,
                             ),
                             InkWell(
-                              onTap: () => _showVerseToInputDialog(context, state),
+                              onTap: () => _showVerseToInputDialog(context, state, l10n),
                               child: Padding(
                                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
                                 child: Text(
-                                  'V. ${state.verseTo}',
+                                  '${state.verseTo}',
                                   style: const TextStyle(fontWeight: FontWeight.bold),
                                 ),
                               ),
@@ -371,10 +380,16 @@ class IndividualScreen extends StatelessWidget {
   }
 
   /// Big "Mark as read today" button and one-tap "Next chapter" continuation.
-  Widget _buildMarkTodaySection(BuildContext context, StudyState state) {
+  Widget _buildMarkTodaySection(
+    BuildContext context,
+    StudyState state,
+    String languageCode,
+    AppLocalizations l10n,
+  ) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
     final isRead = state.isReadToday;
+    final nextBookName = BibleBooks.getLocalizedName(state.currentBook, languageCode);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -383,9 +398,9 @@ class IndividualScreen extends StatelessWidget {
           FilledButton.icon(
             onPressed: () => state.toggleMarkToday(),
             icon: const Icon(Icons.check_circle_outline, size: 22),
-            label: const Text(
-              'Mark as read today',
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+            label: Text(
+              l10n.markAsReadToday,
+              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
             ),
             style: FilledButton.styleFrom(
               padding: const EdgeInsets.symmetric(vertical: 18),
@@ -398,9 +413,9 @@ class IndividualScreen extends StatelessWidget {
           OutlinedButton.icon(
             onPressed: () => state.toggleMarkToday(),
             icon: Icon(Icons.check_circle, color: colorScheme.primary, size: 22),
-            label: const Text(
-              'Read ✓ (tap to undo)',
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+            label: Text(
+              '${l10n.readTodayCompleted} (${l10n.undoRead})',
+              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
             ),
             style: OutlinedButton.styleFrom(
               padding: const EdgeInsets.symmetric(vertical: 16),
@@ -417,7 +432,7 @@ class IndividualScreen extends StatelessWidget {
               onPressed: () => state.nextChapter(),
               icon: const Icon(Icons.arrow_forward),
               label: Text(
-                'Next chapter: ${state.currentBook} ${state.currentChapter + 1}',
+                '${l10n.advance}: $nextBookName ${state.currentChapter + 1}',
                 style: const TextStyle(fontWeight: FontWeight.w600),
               ),
               style: FilledButton.styleFrom(
@@ -432,71 +447,13 @@ class IndividualScreen extends StatelessWidget {
     );
   }
 
-  /// Daily reminder picker card.
-  Widget _buildReminderCard(BuildContext context, StudyState state) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
-    final formattedTime = state.reminderTime.format(context);
-
-    return Card(
-      elevation: 0,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-        side: BorderSide(
-          color: colorScheme.outlineVariant.withValues(alpha: 0.6),
-        ),
-      ),
-      color: Colors.white,
-      child: InkWell(
-        borderRadius: BorderRadius.circular(16),
-        onTap: () => _pickReminderTime(context, state),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
-          child: Row(
-            children: [
-              Icon(Icons.alarm, color: colorScheme.primary, size: 24),
-              const SizedBox(width: 14),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Daily Reminder',
-                      style: theme.textTheme.labelMedium?.copyWith(
-                        color: colorScheme.onSurfaceVariant,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    Text(
-                      formattedTime,
-                      style: theme.textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
-                        color: colorScheme.onSurface,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              OutlinedButton.icon(
-                onPressed: () => _pickReminderTime(context, state),
-                icon: const Icon(Icons.edit_outlined, size: 16),
-                label: const Text('Change'),
-                style: OutlinedButton.styleFrom(
-                  visualDensity: VisualDensity.compact,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
   /// Reading history list, newest days first.
-  Widget _buildHistorySection(BuildContext context, StudyState state) {
+  Widget _buildHistorySection(
+    BuildContext context,
+    StudyState state,
+    String languageCode,
+    AppLocalizations l10n,
+  ) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
     final entries = state.history;
@@ -505,7 +462,7 @@ class IndividualScreen extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Reading History',
+          l10n.readingHistory,
           style: theme.textTheme.titleMedium?.copyWith(
             fontWeight: FontWeight.bold,
             color: colorScheme.onSurface,
@@ -535,7 +492,7 @@ class IndividualScreen extends StatelessWidget {
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      'No reading history yet',
+                      l10n.noHistoryYet,
                       style: theme.textTheme.bodyMedium?.copyWith(
                         fontWeight: FontWeight.bold,
                         color: colorScheme.onSurfaceVariant,
@@ -543,7 +500,7 @@ class IndividualScreen extends StatelessWidget {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      'Complete your first study today to build your streak!',
+                      l10n.firstStudyPrompt,
                       style: theme.textTheme.bodySmall?.copyWith(
                         color: colorScheme.outline,
                       ),
@@ -563,6 +520,7 @@ class IndividualScreen extends StatelessWidget {
             itemBuilder: (context, index) {
               final entry = entries[index];
               final isToday = entry.date == state.todayDateKey;
+              final localizedRef = entry.localizedReferenceText(languageCode);
 
               return Card(
                 elevation: 0,
@@ -576,7 +534,7 @@ class IndividualScreen extends StatelessWidget {
                 ),
                 color: Colors.white,
                 child: ListTile(
-                  onTap: () => _showEntryDetails(context, entry),
+                  onTap: () => _showEntryDetails(context, entry, languageCode, l10n),
                   leading: CircleAvatar(
                     backgroundColor: entry.completed
                         ? colorScheme.primaryContainer
@@ -590,11 +548,11 @@ class IndividualScreen extends StatelessWidget {
                     ),
                   ),
                   title: Text(
-                    entry.referenceText,
+                    localizedRef,
                     style: const TextStyle(fontWeight: FontWeight.bold),
                   ),
                   subtitle: Text(
-                    entry.date + (isToday ? ' (Today)' : ''),
+                    entry.date + (isToday ? ' (${l10n.today})' : ''),
                     style: theme.textTheme.bodySmall?.copyWith(
                       color: colorScheme.onSurfaceVariant,
                     ),
@@ -609,30 +567,37 @@ class IndividualScreen extends StatelessWidget {
   }
 
   /// Opens dialog showing full details of a past reading.
-  void _showEntryDetails(BuildContext context, ReadingEntry entry) {
+  void _showEntryDetails(
+    BuildContext context,
+    ReadingEntry entry,
+    String languageCode,
+    AppLocalizations l10n,
+  ) {
+    final localizedRef = entry.localizedReferenceText(languageCode);
+
     showDialog(
       context: context,
       builder: (context) {
         return AlertDialog(
-          title: Text(entry.referenceText),
+          title: Text(localizedRef),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('Portion: ${entry.referenceText}'),
-              Text('Date: ${entry.date}'),
+              Text('${l10n.portion}: $localizedRef'),
+              Text('${l10n.date}: ${entry.date}'),
               const SizedBox(height: 6),
-              Text('Status: ${entry.completed ? 'Completed ✓' : 'Undone'}'),
+              Text('${l10n.status}: ${entry.completed ? l10n.completedStatus : l10n.undoneStatus}'),
               const SizedBox(height: 6),
               Text(
-                'Recorded: ${entry.updatedAt.toLocal().toString().split('.').first}',
+                '${l10n.recordedTime}: ${entry.updatedAt.toLocal().toString().split('.').first}',
               ),
             ],
           ),
           actions: [
             TextButton(
               onPressed: () => Navigator.of(context).pop(),
-              child: const Text('Close'),
+              child: Text(l10n.close),
             ),
           ],
         );
@@ -641,7 +606,12 @@ class IndividualScreen extends StatelessWidget {
   }
 
   /// Opens a bottom sheet grid picker to quickly select a chapter.
-  void _showChapterPicker(BuildContext context, StudyState state) {
+  void _showChapterPicker(
+    BuildContext context,
+    StudyState state,
+    String localizedBook,
+    AppLocalizations l10n,
+  ) {
     final max = state.maxChapters;
 
     showModalBottomSheet(
@@ -671,7 +641,7 @@ class IndividualScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: 12),
                   Text(
-                    'Select Chapter for ${state.currentBook}',
+                    l10n.selectChapterForBook(localizedBook),
                     style: Theme.of(context).textTheme.titleMedium?.copyWith(
                           fontWeight: FontWeight.bold,
                         ),
@@ -725,13 +695,17 @@ class IndividualScreen extends StatelessWidget {
   }
 
   /// Opens a dialog to enter the "From" verse directly.
-  void _showVerseFromInputDialog(BuildContext context, StudyState state) {
+  void _showVerseFromInputDialog(
+    BuildContext context,
+    StudyState state,
+    AppLocalizations l10n,
+  ) {
     final controller = TextEditingController(text: '${state.verseFrom}');
     showDialog(
       context: context,
       builder: (context) {
         return AlertDialog(
-          title: const Text('Enter "From" Verse'),
+          title: Text(l10n.enterFromVerse),
           content: TextField(
             controller: controller,
             keyboardType: TextInputType.number,
@@ -744,7 +718,7 @@ class IndividualScreen extends StatelessWidget {
           actions: [
             TextButton(
               onPressed: () => Navigator.of(context).pop(),
-              child: const Text('Cancel'),
+              child: Text(l10n.cancel),
             ),
             FilledButton(
               onPressed: () {
@@ -754,7 +728,7 @@ class IndividualScreen extends StatelessWidget {
                 }
                 Navigator.of(context).pop();
               },
-              child: const Text('Save'),
+              child: Text(l10n.save),
             ),
           ],
         );
@@ -763,27 +737,31 @@ class IndividualScreen extends StatelessWidget {
   }
 
   /// Opens a dialog to enter the "To" verse directly.
-  void _showVerseToInputDialog(BuildContext context, StudyState state) {
+  void _showVerseToInputDialog(
+    BuildContext context,
+    StudyState state,
+    AppLocalizations l10n,
+  ) {
     final controller = TextEditingController(text: '${state.verseTo}');
     showDialog(
       context: context,
       builder: (context) {
         return AlertDialog(
-          title: const Text('Enter "To" Verse'),
+          title: Text(l10n.enterToVerse),
           content: TextField(
             controller: controller,
             keyboardType: TextInputType.number,
             autofocus: true,
             decoration: InputDecoration(
               hintText: '${state.verseFrom} to 176',
-              helperText: 'Cannot be lower than "From" verse (${state.verseFrom})',
+              helperText: l10n.cannotBeLowerThanFrom(state.verseFrom),
               border: const OutlineInputBorder(),
             ),
           ),
           actions: [
             TextButton(
               onPressed: () => Navigator.of(context).pop(),
-              child: const Text('Cancel'),
+              child: Text(l10n.cancel),
             ),
             FilledButton(
               onPressed: () {
@@ -793,7 +771,7 @@ class IndividualScreen extends StatelessWidget {
                 }
                 Navigator.of(context).pop();
               },
-              child: const Text('Save'),
+              child: Text(l10n.save),
             ),
           ],
         );
@@ -801,37 +779,29 @@ class IndividualScreen extends StatelessWidget {
     );
   }
 
-
-  /// Opens time picker to set daily reminder.
-  Future<void> _pickReminderTime(BuildContext context, StudyState state) async {
-    final selected = await showTimePicker(
-      context: context,
-      initialTime: state.reminderTime,
-    );
-    if (selected != null) {
-      await state.setReminderTime(selected);
-    }
-  }
-
   /// Confirmation dialog before logging out.
-  void _confirmLogout(BuildContext context, AuthState authState) {
+  void _confirmLogout(
+    BuildContext context,
+    AuthState authState,
+    AppLocalizations l10n,
+  ) {
     showDialog(
       context: context,
       builder: (context) {
         return AlertDialog(
-          title: const Text('Log out'),
-          content: const Text('Are you sure you want to sign out of your account?'),
+          title: Text(l10n.logoutConfirmTitle),
+          content: Text(l10n.logoutConfirmMessage),
           actions: [
             TextButton(
               onPressed: () => Navigator.of(context).pop(),
-              child: const Text('Cancel'),
+              child: Text(l10n.cancel),
             ),
             FilledButton(
               onPressed: () {
                 Navigator.of(context).pop();
                 authState.logOut();
               },
-              child: const Text('Log out'),
+              child: Text(l10n.logOut),
             ),
           ],
         );

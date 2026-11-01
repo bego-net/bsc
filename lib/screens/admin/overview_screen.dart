@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../../l10n/app_localizations.dart';
 import '../../models/member_overview_item.dart';
 import '../../repositories/team_repository.dart';
 import '../../state/team_state.dart';
@@ -50,7 +51,7 @@ class _OverviewScreenState extends State<OverviewScreen> {
       });
     } catch (e) {
       setState(() {
-        _error = 'Could not load member overview.';
+        _error = 'error';
         _loading = false;
       });
     }
@@ -58,12 +59,13 @@ class _OverviewScreenState extends State<OverviewScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final members = _members ?? [];
     final preparedCount = members.where((m) => m.isPrepared).length;
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Member Overview'),
+        title: Text(l10n.memberOverview),
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh_outlined),
@@ -78,17 +80,17 @@ class _OverviewScreenState extends State<OverviewScreen> {
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Text(_error!),
+                      Text(l10n.couldNotLoadMemberOverview),
                       const SizedBox(height: 12),
                       FilledButton(
                         onPressed: _load,
-                        child: const Text('Retry'),
+                        child: Text(l10n.retry),
                       ),
                     ],
                   ),
                 )
               : members.isEmpty
-                  ? const Center(child: Text('No members found.'))
+                  ? Center(child: Text(l10n.noMembersFound))
                   : Column(
                       children: [
                         // Summary banner
@@ -101,7 +103,7 @@ class _OverviewScreenState extends State<OverviewScreen> {
                           padding: const EdgeInsets.symmetric(
                               vertical: 12, horizontal: 16),
                           child: Text(
-                            '$preparedCount of ${members.length} prepared',
+                            l10n.preparedOf(preparedCount, members.length),
                             style: Theme.of(context)
                                 .textTheme
                                 .titleMedium
@@ -126,7 +128,7 @@ class _OverviewScreenState extends State<OverviewScreen> {
                                 title: Text(m.name),
                                 subtitle: m.lastReadingDate != null
                                     ? Text(
-                                        'Last reading: ${m.lastReadingDate}',
+                                        l10n.lastReadingDate(m.lastReadingDate!),
                                         style: const TextStyle(fontSize: 12),
                                       )
                                     : null,

@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../../l10n/app_localizations.dart';
+import '../../l10n/app_localizations_en.dart';
+import '../../state/locale_state.dart';
 import '../../state/team_state.dart';
 import 'dashboard_screen.dart';
 import 'edit_week_screen.dart';
@@ -16,16 +19,20 @@ class AdminHomeScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final teamState = context.watch<TeamState>();
+    final l10n = AppLocalizations.of(context) ?? AppLocalizationsEn();
+    final languageCode =
+        Provider.of<LocaleState?>(context)?.languageCode ?? l10n.localeName;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Admin Tools')),
+      appBar: AppBar(title: Text(l10n.adminTools)),
       body: ListView(
         children: [
           ListTile(
             leading: const Icon(Icons.edit_calendar_outlined),
-            title: const Text('Edit This Week\'s Study'),
+            title: Text(l10n.editThisWeeksStudy),
             subtitle: Text(
-              teamState.currentWeek?.passageText ?? 'No week published',
+              teamState.currentWeek?.localizedPassageText(languageCode) ??
+                  l10n.noWeekPublished,
             ),
             trailing: const Icon(Icons.chevron_right),
             onTap: () {
@@ -39,8 +46,8 @@ class AdminHomeScreen extends StatelessWidget {
           const Divider(height: 1),
           ListTile(
             leading: const Icon(Icons.quiz_outlined),
-            title: const Text('Manage Questions'),
-            subtitle: Text('${teamState.questions.length} question(s)'),
+            title: Text(l10n.manageQuestions),
+            subtitle: Text(l10n.questionsCount(teamState.questions.length)),
             trailing: const Icon(Icons.chevron_right),
             onTap: () {
               Navigator.of(context).push(
@@ -53,8 +60,8 @@ class AdminHomeScreen extends StatelessWidget {
           const Divider(height: 1),
           ListTile(
             leading: const Icon(Icons.library_books_outlined),
-            title: const Text('Manage Materials'),
-            subtitle: Text('${teamState.materials.length} material(s)'),
+            title: Text(l10n.manageMaterials),
+            subtitle: Text(l10n.materialsCount(teamState.materials.length)),
             trailing: const Icon(Icons.chevron_right),
             onTap: () {
               Navigator.of(context).push(
@@ -67,7 +74,7 @@ class AdminHomeScreen extends StatelessWidget {
           const Divider(height: 1),
           ListTile(
             leading: const Icon(Icons.people_outline),
-            title: const Text('Member Overview'),
+            title: Text(l10n.memberOverview),
             trailing: const Icon(Icons.chevron_right),
             onTap: () {
               Navigator.of(context).push(
@@ -80,8 +87,8 @@ class AdminHomeScreen extends StatelessWidget {
           const Divider(height: 1),
           ListTile(
             leading: const Icon(Icons.dashboard_outlined),
-            title: const Text('Admin Dashboard'),
-            subtitle: const Text('Stats, rankings, and weekly summary'),
+            title: Text(l10n.adminDashboard),
+            subtitle: Text(l10n.adminDashboardSubtitle),
             trailing: const Icon(Icons.chevron_right),
             onTap: () {
               Navigator.of(context).push(
@@ -100,9 +107,9 @@ class AdminHomeScreen extends StatelessWidget {
           Center(
             child: TextButton.icon(
               icon: const Icon(Icons.notifications_outlined, size: 16),
-              label: const Text(
-                '🔔 Test notification',
-                style: TextStyle(fontSize: 12),
+              label: Text(
+                l10n.testNotification,
+                style: const TextStyle(fontSize: 12),
               ),
               style: TextButton.styleFrom(foregroundColor: Colors.grey),
               onPressed: () async {
@@ -113,8 +120,10 @@ class AdminHomeScreen extends StatelessWidget {
                     SnackBar(
                       content: Text(
                         week != null
-                            ? 'Test notification sent for ${week.passageText}'
-                            : 'No week published — nothing to test.',
+                            ? l10n.testNotificationSent(
+                                week.localizedPassageText(languageCode),
+                              )
+                            : l10n.noWeekToTest,
                       ),
                     ),
                   );

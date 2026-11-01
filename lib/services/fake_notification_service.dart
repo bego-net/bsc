@@ -26,7 +26,7 @@ class FakeNotificationService implements NotificationService {
   }
 
   @override
-  Future<void> scheduleThursdayReminder(StudyWeek week) async {
+  Future<void> scheduleThursdayReminder(StudyWeek week, [String languageCode = 'am']) async {
     scheduledWeek = week;
     final (hour, minute) = parseReminderHourMinute(week.thursdayReminderTime);
     scheduledDateTime = calculateNextThursday(DateTime.now(), hour, minute);
@@ -43,6 +43,7 @@ class FakeNotificationService implements NotificationService {
     required OtWeek week,
     required String reminderTime,
     required bool enabled,
+    String languageCode = 'am',
   }) async {
     scheduledOtWeek = week;
     otRemindersEnabled = enabled;

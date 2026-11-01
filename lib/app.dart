@@ -9,7 +9,10 @@ import 'screens/login_screen.dart';
 import 'screens/old_testament_screen.dart';
 import 'screens/team_screen.dart';
 import 'services/notification_service.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'l10n/app_localizations.dart';
 import 'state/auth_state.dart';
+import 'state/locale_state.dart';
 
 
 /// The root application widget configuring the Material 3 light theme
@@ -29,12 +32,20 @@ class BibleStudyApp extends StatelessWidget {
       surface: backgroundColor,
     );
 
+    final localeState = Provider.of<LocaleState?>(context);
+
     return MaterialApp(
       title: 'Bible Study',
       debugShowCheckedModeBanner: false,
+      locale: localeState?.locale ?? const Locale('en'),
+      supportedLocales: AppLocalizations.supportedLocales,
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
       theme: ThemeData(
         useMaterial3: true,
         colorScheme: colorScheme,
+        textTheme: GoogleFonts.notoSansEthiopicTextTheme(
+          ThemeData(useMaterial3: true, colorScheme: colorScheme).textTheme,
+        ),
         scaffoldBackgroundColor: backgroundColor,
         appBarTheme: const AppBarTheme(
           backgroundColor: backgroundColor,
@@ -58,6 +69,12 @@ class AuthGate extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final authState = context.watch<AuthState>();
+    final localeState = Provider.of<LocaleState?>(context);
+    if (authState.user != null && localeState != null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        localeState.syncWithUser(authState.user);
+      });
+    }
 
     if (authState.isLoading) {
       return const Scaffold(
@@ -140,32 +157,33 @@ class _AppShellState extends State<AppShell> {
       if (isAdmin) const DashboardScreen(),
     ];
 
+    final l10n = AppLocalizations.of(context)!;
     final destinations = [
-      const NavigationDestination(
-        icon: Icon(Icons.person_outline),
-        selectedIcon: Icon(Icons.person),
-        label: 'Individual BS',
+      NavigationDestination(
+        icon: const Icon(Icons.person_outline),
+        selectedIcon: const Icon(Icons.person),
+        label: l10n.individualBs,
       ),
-      const NavigationDestination(
-        icon: Icon(Icons.group_outlined),
-        selectedIcon: Icon(Icons.group),
-        label: 'Team BS',
+      NavigationDestination(
+        icon: const Icon(Icons.group_outlined),
+        selectedIcon: const Icon(Icons.group),
+        label: l10n.teamBs,
       ),
-      const NavigationDestination(
-        icon: Icon(Icons.menu_book_outlined),
-        selectedIcon: Icon(Icons.menu_book),
-        label: 'Old Testament',
+      NavigationDestination(
+        icon: const Icon(Icons.menu_book_outlined),
+        selectedIcon: const Icon(Icons.menu_book),
+        label: l10n.oldTestament,
       ),
-      const NavigationDestination(
-        icon: Icon(Icons.leaderboard_outlined),
-        selectedIcon: Icon(Icons.leaderboard),
-        label: 'Leaderboard',
+      NavigationDestination(
+        icon: const Icon(Icons.leaderboard_outlined),
+        selectedIcon: const Icon(Icons.leaderboard),
+        label: l10n.leaderboard,
       ),
       if (isAdmin)
-        const NavigationDestination(
-          icon: Icon(Icons.dashboard_outlined),
-          selectedIcon: Icon(Icons.dashboard),
-          label: 'Dashboard',
+        NavigationDestination(
+          icon: const Icon(Icons.dashboard_outlined),
+          selectedIcon: const Icon(Icons.dashboard),
+          label: l10n.dashboard,
         ),
     ];
 

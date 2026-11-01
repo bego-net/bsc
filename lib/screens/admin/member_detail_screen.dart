@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../../data/bible_books.dart';
+import '../../l10n/app_localizations.dart';
 import '../../models/member_summary.dart';
 import '../../state/dashboard_state.dart';
+import '../../state/locale_state.dart';
 
 /// Read-only member detail screen. Opens by tapping in list or encouragement card.
 class MemberDetailScreen extends StatefulWidget {
@@ -25,8 +28,9 @@ class _MemberDetailScreenState extends State<MemberDetailScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Scaffold(
-      appBar: AppBar(title: const Text('Member Detail')),
+      appBar: AppBar(title: Text(l10n.memberDetail)),
       body: FutureBuilder<MemberSummary>(
         future: _detailFuture,
         builder: (context, snapshot) {
@@ -34,7 +38,7 @@ class _MemberDetailScreenState extends State<MemberDetailScreen> {
             return const Center(child: CircularProgressIndicator());
           }
           if (snapshot.hasError) {
-            return Center(child: Text('Error: ${snapshot.error}'));
+            return Center(child: Text('${l10n.error}: ${snapshot.error}'));
           }
           final m = snapshot.data!;
           return _MemberDetailBody(member: m);
@@ -51,6 +55,8 @@ class _MemberDetailBody extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context)!;
+    final languageCode = context.watch<LocaleState>().languageCode;
 
     return ListView(
       padding: const EdgeInsets.all(16),
@@ -75,10 +81,12 @@ class _MemberDetailBody extends StatelessWidget {
                           ?.copyWith(fontWeight: FontWeight.bold)),
                   Text(member.email,
                       style: theme.textTheme.bodySmall),
-                  Text('Role: ${member.role}',
-                      style: theme.textTheme.bodySmall),
                   Text(
-                    'Joined: ${_fmtDate(member.joinDate)}',
+                    '${l10n.role}: ${member.role == "admin" ? l10n.adminBadge : l10n.memberBadge}',
+                    style: theme.textTheme.bodySmall,
+                  ),
+                  Text(
+                    '${l10n.joined}: ${_fmtDate(member.joinDate)}',
                     style: theme.textTheme.bodySmall,
                   ),
                 ],
@@ -91,11 +99,14 @@ class _MemberDetailBody extends StatelessWidget {
 
         // ── Current study ──────────────────────────────────────────────────
         _Section(
-          title: 'Current Study',
+          title: l10n.currentStudy,
           children: [
-            _Row('Book', member.currentBook),
-            _Row('Chapter', '${member.currentChapter}'),
-            _Row('Verse range',
+            _Row(
+              l10n.book,
+              BibleBooks.getLocalizedName(member.currentBook, languageCode),
+            ),
+            _Row(l10n.chapter, '${member.currentChapter}'),
+            _Row(l10n.verses,
                 '${member.currentVerseFrom}–${member.currentVerseTo}'),
           ],
         ),
@@ -103,43 +114,46 @@ class _MemberDetailBody extends StatelessWidget {
 
         // ── Streaks ────────────────────────────────────────────────────────
         _Section(
-          title: 'Streaks',
+          title: l10n.streaks,
           children: [
-            _Row('Individual BS streak', '${member.ibsStreak} days'),
-            _Row('Old Testament streak', '${member.otStreak} days'),
+            _Row(l10n.ibsStreakLabel, l10n.daysCount(member.ibsStreak)),
+            _Row(l10n.otStreakLabel, l10n.daysCount(member.otStreak)),
           ],
         ),
         const SizedBox(height: 8),
 
         // ── IBS History ────────────────────────────────────────────────────
         _Section(
-          title: 'Individual BS – last 30 days',
+          title: l10n.ibsHistory30,
           children: member.ibsHistory.isEmpty
-              ? [const Text('No readings recorded.')]
+              ? [Text(l10n.noReadingsRecorded)]
               : member.ibsHistory
-                  .map((e) => _Row(e.date, e.referenceText))
+                  .map((e) => _Row(e.date, e.localizedReferenceText(languageCode)))
                   .toList(),
         ),
         const SizedBox(height: 8),
 
         // ── OT History ────────────────────────────────────────────────────
         _Section(
-          title: 'Old Testament – last 30 days',
+          title: l10n.otHistory30,
           children: member.otReadingDates.isEmpty
-              ? [const Text('No readings recorded.')]
+              ? [Text(l10n.noReadingsRecorded)]
               : member.otReadingDates
-                  .map((d) => _Row(d, '✓ Completed'))
+                  .map((d) => _Row(d, l10n.completedCheck))
                   .toList(),
         ),
         const SizedBox(height: 8),
 
         // ── Team BS History ───────────────────────────────────────────────
         _Section(
-          title: 'Team BS – prepared per week',
+          title: l10n.teamBsHistory,
           children: member.teamPrepHistory.isEmpty
-              ? [const Text('No data available.')]
+              ? [Text(l10n.noDataAvailable)]
               : member.teamPrepHistory.entries
-                  .map((e) => _Row(e.key, e.value ? '✓ Prepared' : '– Not prepared'))
+                  .map((e) => _Row(
+                        e.key,
+                        e.value ? l10n.preparedCheck : l10n.notPrepared,
+                      ))
                   .toList(),
         ),
       ],

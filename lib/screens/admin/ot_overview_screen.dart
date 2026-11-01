@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../../l10n/app_localizations.dart';
 import '../../state/ot_state.dart';
 
 /// Read-only admin overview of member progress for the current Old Testament week.
@@ -25,15 +26,16 @@ class _OtOverviewScreenState extends State<OtOverviewScreen> {
   @override
   Widget build(BuildContext context) {
     final otState = context.watch<OtState>();
+    final l10n = AppLocalizations.of(context)!;
     final overview = otState.overview;
     final week = otState.currentWeek;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('OT Member Overview')),
+      appBar: AppBar(title: Text(l10n.otMemberOverview)),
       body: otState.overviewLoading
           ? const Center(child: CircularProgressIndicator())
           : week == null
-              ? const Center(child: Text('No active week published.'))
+              ? Center(child: Text(l10n.noActiveWeekPublishedDot))
               : Column(
                   children: [
                     Container(
@@ -55,7 +57,10 @@ class _OtOverviewScreenState extends State<OtOverviewScreen> {
                           ),
                           const SizedBox(height: 4),
                           Text(
-                            'Week starting ${week.startDate} • Total members: ${overview.length}',
+                            l10n.weekStartingTotal(
+                              week.startDate,
+                              overview.length,
+                            ),
                             style: Theme.of(context).textTheme.bodySmall,
                           ),
                         ],
@@ -63,7 +68,7 @@ class _OtOverviewScreenState extends State<OtOverviewScreen> {
                     ),
                     Expanded(
                       child: overview.isEmpty
-                          ? const Center(child: Text('No members registered.'))
+                          ? Center(child: Text(l10n.noMembersRegistered))
                           : ListView.separated(
                               padding: const EdgeInsets.symmetric(vertical: 8),
                               itemCount: overview.length,

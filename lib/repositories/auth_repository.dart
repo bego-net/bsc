@@ -38,4 +38,7 @@ abstract class AuthRepository {
 
   /// Completes a forced password change (no re-auth needed, sets mustChangePassword=false).
   Future<void> completePasswordChange(String newPassword);
+
+  /// Updates the preferred language ('am' or 'en') in the profile.
+  Future<void> updateLanguage(String language);
 }

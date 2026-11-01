@@ -1,16 +1,21 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../data/bible_books.dart';
+import '../l10n/app_localizations.dart';
+import '../l10n/app_localizations_en.dart';
 import '../models/ot_day.dart';
+import '../models/ot_week.dart';
 import '../state/auth_state.dart';
+import '../state/locale_state.dart';
 import '../state/ot_state.dart';
 import '../widgets/profile_avatar_button.dart';
 import 'admin/ot_admin_home_screen.dart';
 import 'admin/ot_edit_week_screen.dart';
 import 'ot_history_screen.dart';
 
-/// The Old Testament tab — displays the weekly topic plan, daily reading,
-/// catch-up list, streak, reminder toggle, and history.
+/// Screen displaying the active [OtWeek] reading plan for the current week,
+/// today's assigned reading with one-tap completion, and streak count.
 class OldTestamentScreen extends StatefulWidget {
   const OldTestamentScreen({super.key});
 
@@ -33,17 +38,19 @@ class _OldTestamentScreenState extends State<OldTestamentScreen> {
   Widget build(BuildContext context) {
     final authState = context.watch<AuthState>();
     final otState = context.watch<OtState>();
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
+    final localeState = Provider.of<LocaleState?>(context);
+    final l10n = AppLocalizations.of(context) ?? AppLocalizationsEn();
+    final languageCode = localeState?.languageCode ?? l10n.localeName;
+    final colorScheme = Theme.of(context).colorScheme;
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Old Testament'),
+        title: Text(l10n.otTitle),
         actions: [
           if (authState.isAdmin)
             IconButton(
               icon: const Icon(Icons.admin_panel_settings_outlined),
-              tooltip: 'Admin Tools',
+              tooltip: l10n.adminTools,
               onPressed: () {
                 Navigator.of(context).push(
                   MaterialPageRoute<void>(
@@ -54,7 +61,7 @@ class _OldTestamentScreenState extends State<OldTestamentScreen> {
             ),
           IconButton(
             icon: const Icon(Icons.history_outlined),
-            tooltip: 'Past Weeks',
+            tooltip: l10n.pastWeeks,
             onPressed: () {
               Navigator.of(context).push(
                 MaterialPageRoute<void>(
@@ -65,13 +72,13 @@ class _OldTestamentScreenState extends State<OldTestamentScreen> {
           ),
           IconButton(
             icon: const Icon(Icons.refresh_outlined),
-            tooltip: 'Refresh',
+            tooltip: l10n.refresh,
             onPressed: () => otState.loadData(),
           ),
           const ProfileAvatarButton(),
         ],
       ),
-      body: _buildBody(context, otState, colorScheme),
+      body: _buildBody(context, otState, colorScheme, languageCode, l10n),
     );
   }
 
@@ -79,6 +86,8 @@ class _OldTestamentScreenState extends State<OldTestamentScreen> {
     BuildContext context,
     OtState otState,
     ColorScheme colorScheme,
+    String languageCode,
+    AppLocalizations l10n,
   ) {
     if (otState.isLoading) {
       return const Center(child: CircularProgressIndicator());
@@ -104,7 +113,7 @@ class _OldTestamentScreenState extends State<OldTestamentScreen> {
                   otState.clearError();
                   otState.loadData();
                 },
-                child: const Text('Retry'),
+                child: Text(l10n.retry),
               ),
             ],
           ),
@@ -127,13 +136,13 @@ class _OldTestamentScreenState extends State<OldTestamentScreen> {
               ),
               const SizedBox(height: 16),
               Text(
-                'No Old Testament plan published yet',
+                l10n.noOtWeek,
                 style: Theme.of(context).textTheme.titleMedium,
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 8),
               Text(
-                'Your church leaders will publish this week\'s topic and passages soon.',
+                l10n.contactAdminPlan,
                 style: Theme.of(context).textTheme.bodySmall,
                 textAlign: TextAlign.center,
               ),
@@ -145,6 +154,13 @@ class _OldTestamentScreenState extends State<OldTestamentScreen> {
 
     final isFinished = otState.isBookFinished;
     final todayDay = otState.todayDay;
+    final localizedBook = week.book != null
+        ? BibleBooks.getLocalizedName(week.book!, languageCode)
+        : '';
+    final defaultTopic = localizedBook.isNotEmpty
+        ? (languageCode == 'am' ? '$localizedBook የዕለት ንባብ' : '$localizedBook Daily Reading')
+        : l10n.otPlan;
+    final weekTopic = week.topic.isNotEmpty ? week.topic : defaultTopic;
 
     return RefreshIndicator(
       onRefresh: otState.loadData,
@@ -154,38 +170,43 @@ class _OldTestamentScreenState extends State<OldTestamentScreen> {
           // ── Topic & Progress Card ─────────────────────────────────────────
           _TopicProgressCard(
             otState: otState,
-            weekTopic: week.topic.isNotEmpty
-                ? week.topic
-                : (week.book != null
-                    ? '${week.book} Daily Reading'
-                    : 'Old Testament Reading'),
+            weekTopic: weekTopic,
+            l10n: l10n,
           ),
           const SizedBox(height: 16),
 
           // ── Today's Reading Highlighted Card / Book Finished ──────────────
           if (isFinished)
             _BookFinishedCard(
-              book: week.book ?? 'Book',
+              book: localizedBook.isNotEmpty ? localizedBook : (week.book ?? ''),
               isAdmin: context.watch<AuthState>().isAdmin,
+              l10n: l10n,
             )
           else if (todayDay != null)
             _TodayHighlightCard(
               todayDay: todayDay,
               isCompleted: otState.isTodayCompleted,
               onToggle: () => otState.toggleDay(todayDay.date),
+              languageCode: languageCode,
+              l10n: l10n,
             )
           else
-            _NoReadingTodayCard(),
+            _NoReadingTodayCard(l10n: l10n),
           const SizedBox(height: 16),
 
           // ── The Week List (with catch-up & locked future days) ───────────
-          _WeekDaysList(otState: otState),
+          _WeekDaysList(
+            otState: otState,
+            languageCode: languageCode,
+            l10n: l10n,
+          ),
           const SizedBox(height: 16),
 
           // ── Reminder Switch ───────────────────────────────────────────────
           _ReminderSwitchCard(
             enabled: otState.remindersEnabled,
             onChanged: (val) => otState.setRemindersEnabled(val),
+            l10n: l10n,
           ),
           const SizedBox(height: 24),
         ],
@@ -199,10 +220,12 @@ class _OldTestamentScreenState extends State<OldTestamentScreen> {
 class _TopicProgressCard extends StatelessWidget {
   final OtState otState;
   final String weekTopic;
+  final AppLocalizations l10n;
 
   const _TopicProgressCard({
     required this.otState,
     required this.weekTopic,
+    required this.l10n,
   });
 
   @override
@@ -227,7 +250,7 @@ class _TopicProgressCard extends StatelessWidget {
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
-                    'This Week\'s Topic',
+                    l10n.otPlan,
                     style: theme.textTheme.labelLarge?.copyWith(
                       color: colorScheme.primary,
                       fontWeight: FontWeight.bold,
@@ -248,7 +271,7 @@ class _TopicProgressCard extends StatelessWidget {
                           size: 16, color: Colors.deepOrange),
                       const SizedBox(width: 4),
                       Text(
-                        '${otState.streak}d streak',
+                        '${otState.streak}d ${l10n.streakFormatted(otState.streak)}',
                         style: const TextStyle(
                           fontSize: 12,
                           fontWeight: FontWeight.bold,
@@ -278,7 +301,7 @@ class _TopicProgressCard extends StatelessWidget {
             ),
             const SizedBox(height: 8),
             Text(
-              otState.progressText,
+              l10n.completedDaysProgress(otState.completedDaysCount, otState.totalDaysCount),
               style: theme.textTheme.bodySmall?.copyWith(
                 color: theme.textTheme.bodySmall?.color?.withValues(alpha: 0.8),
               ),
@@ -294,17 +317,22 @@ class _TodayHighlightCard extends StatelessWidget {
   final OtDay todayDay;
   final bool isCompleted;
   final VoidCallback onToggle;
+  final String languageCode;
+  final AppLocalizations l10n;
 
   const _TodayHighlightCard({
     required this.todayDay,
     required this.isCompleted,
     required this.onToggle,
+    required this.languageCode,
+    required this.l10n,
   });
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
+    final passage = todayDay.localizedPassageText(languageCode);
 
     return Card(
       elevation: 0,
@@ -323,7 +351,7 @@ class _TodayHighlightCard extends StatelessWidget {
                 Icon(Icons.today_outlined, color: colorScheme.primary, size: 20),
                 const SizedBox(width: 6),
                 Text(
-                  'Today\'s Reading',
+                  l10n.todayReading,
                   style: theme.textTheme.labelLarge?.copyWith(
                     color: colorScheme.primary,
                     fontWeight: FontWeight.bold,
@@ -333,7 +361,7 @@ class _TodayHighlightCard extends StatelessWidget {
             ),
             const SizedBox(height: 10),
             Text(
-              todayDay.passageText,
+              passage,
               style: theme.textTheme.headlineSmall?.copyWith(
                 fontWeight: FontWeight.bold,
               ),
@@ -345,7 +373,7 @@ class _TodayHighlightCard extends StatelessWidget {
                   ? OutlinedButton.icon(
                       onPressed: onToggle,
                       icon: const Icon(Icons.check_circle),
-                      label: const Text('Completed ✓  (tap to undo)'),
+                      label: Text('${l10n.completedStatus} (${l10n.undoRead})'),
                       style: OutlinedButton.styleFrom(
                         foregroundColor: colorScheme.primary,
                         side: BorderSide(color: colorScheme.primary),
@@ -355,7 +383,7 @@ class _TodayHighlightCard extends StatelessWidget {
                   : FilledButton.icon(
                       onPressed: onToggle,
                       icon: const Icon(Icons.check_circle_outline),
-                      label: const Text('Mark as read'),
+                      label: Text(l10n.markAsReadToday),
                       style: FilledButton.styleFrom(
                         padding: const EdgeInsets.symmetric(vertical: 12),
                       ),
@@ -371,10 +399,12 @@ class _TodayHighlightCard extends StatelessWidget {
 class _BookFinishedCard extends StatelessWidget {
   final String book;
   final bool isAdmin;
+  final AppLocalizations l10n;
 
   const _BookFinishedCard({
     required this.book,
     required this.isAdmin,
+    required this.l10n,
   });
 
   @override
@@ -399,7 +429,7 @@ class _BookFinishedCard extends StatelessWidget {
                 Icon(Icons.check_circle_outline, color: colorScheme.secondary, size: 24),
                 const SizedBox(width: 8),
                 Text(
-                  'Book finished',
+                  l10n.bookFinished,
                   style: theme.textTheme.titleMedium?.copyWith(
                     fontWeight: FontWeight.bold,
                     color: colorScheme.secondary,
@@ -409,14 +439,14 @@ class _BookFinishedCard extends StatelessWidget {
             ),
             const SizedBox(height: 8),
             Text(
-              'All chapters for $book have been completed! Great job reading daily.',
+              l10n.bookFinishedNotice,
               style: theme.textTheme.bodyMedium,
             ),
             if (isAdmin) ...[
               const SizedBox(height: 14),
               FilledButton.icon(
                 icon: const Icon(Icons.menu_book),
-                label: const Text('Pick a new book'),
+                label: Text(l10n.pickBook),
                 onPressed: () {
                   Navigator.of(context).push(
                     MaterialPageRoute<void>(
@@ -434,6 +464,10 @@ class _BookFinishedCard extends StatelessWidget {
 }
 
 class _NoReadingTodayCard extends StatelessWidget {
+  final AppLocalizations l10n;
+
+  const _NoReadingTodayCard({required this.l10n});
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -445,15 +479,15 @@ class _NoReadingTodayCard extends StatelessWidget {
           color: theme.colorScheme.outline.withValues(alpha: 0.2),
         ),
       ),
-      child: const Padding(
-        padding: EdgeInsets.all(16),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
         child: Row(
           children: [
-            Icon(Icons.event_available_outlined, color: Colors.grey),
-            SizedBox(width: 12),
+            const Icon(Icons.event_available_outlined, color: Colors.grey),
+            const SizedBox(width: 12),
             Expanded(
               child: Text(
-                'No reading scheduled for today. Catch up on earlier days below!',
+                l10n.checkBackLater,
               ),
             ),
           ],
@@ -465,8 +499,14 @@ class _NoReadingTodayCard extends StatelessWidget {
 
 class _WeekDaysList extends StatelessWidget {
   final OtState otState;
+  final String languageCode;
+  final AppLocalizations l10n;
 
-  const _WeekDaysList({required this.otState});
+  const _WeekDaysList({
+    required this.otState,
+    required this.languageCode,
+    required this.l10n,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -488,7 +528,7 @@ class _WeekDaysList extends StatelessWidget {
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 6),
               child: Text(
-                'Weekly Reading Schedule',
+                l10n.otPlan,
                 style: theme.textTheme.titleSmall?.copyWith(
                   fontWeight: FontWeight.bold,
                 ),
@@ -499,6 +539,8 @@ class _WeekDaysList extends StatelessWidget {
               final isCompleted = otState.readings[day.date] == true;
               final isToday = day.date == today;
               final isFuture = otState.isFutureDay(day.date);
+              final localizedPassage = day.localizedPassageText(languageCode);
+              final dayDisplayName = day.localizedDayName(languageCode);
 
               return ListTile(
                 dense: true,
@@ -525,14 +567,14 @@ class _WeekDaysList extends StatelessWidget {
                   ),
                 ),
                 title: Text(
-                  '${day.dayName}: ${day.passageText}',
+                  '$dayDisplayName: $localizedPassage',
                   style: TextStyle(
                     fontWeight: isToday ? FontWeight.bold : FontWeight.normal,
                     color: isFuture ? Colors.grey : null,
                   ),
                 ),
                 subtitle: Text(
-                  isFuture ? '${day.date} (Locked)' : day.date,
+                  isFuture ? '${day.date} (Locked)' : (isToday ? '${day.date} (${l10n.today})' : day.date),
                   style: TextStyle(
                     fontSize: 11,
                     color: isFuture ? Colors.grey.shade400 : null,
@@ -561,10 +603,12 @@ class _WeekDaysList extends StatelessWidget {
 class _ReminderSwitchCard extends StatelessWidget {
   final bool enabled;
   final ValueChanged<bool> onChanged;
+  final AppLocalizations l10n;
 
   const _ReminderSwitchCard({
     required this.enabled,
     required this.onChanged,
+    required this.l10n,
   });
 
   @override
@@ -579,8 +623,8 @@ class _ReminderSwitchCard extends StatelessWidget {
         ),
       ),
       child: SwitchListTile(
-        title: const Text('Old Testament reminders'),
-        subtitle: const Text('Daily reminder on days with assigned reading'),
+        title: Text(l10n.otReminders),
+        subtitle: Text(l10n.otReminderBody),
         value: enabled,
         onChanged: onChanged,
       ),
