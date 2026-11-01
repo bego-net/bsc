@@ -1,0 +1,365 @@
+{
+  "@@locale": "en",
+  "appTitle": "Bible Study",
+  "individualBs": "Individual BS",
+  "teamBs": "Team BS",
+  "oldTestament": "Old Testament",
+  "leaderboard": "Leaderboard",
+  "dashboard": "Dashboard",
+  "cancel": "Cancel",
+  "save": "Save",
+  "close": "Close",
+  "delete": "Delete",
+  "edit": "Edit",
+  "add": "Add",
+  "back": "Back",
+  "done": "Done",
+  "change": "Change",
+  "refresh": "Refresh",
+  "logIn": "Log in",
+  "logOut": "Log out",
+  "signUp": "Sign up",
+  "loading": "Loading...",
+  "error": "Error",
+  "retry": "Retry",
+  "language": "Language",
+  "amharic": "አማርኛ",
+  "english": "English",
+  "welcomeBack": "Welcome Back",
+  "loginSubtitle": "Sign in to continue your daily Bible study",
+  "username": "Username",
+  "password": "Password",
+  "enterUsername": "Please enter your username",
+  "enterPassword": "Please enter your password",
+  "forgotPassword": "Forgot password?",
+  "dontHaveAccount": "Don't have an account?",
+  "createAccount": "Create Account",
+  "joinBibleStudy": "Join Bible Study",
+  "signupSubtitle": "Sign up as a study member to begin your daily journey",
+  "fullName": "Full Name",
+  "enterName": "Please enter your name",
+  "usernameHint": "Username (3–20 chars, a–z, 0–9, _)",
+  "chooseUsername": "Please choose a username",
+  "invalidUsername": "Use 3–20 lowercase letters, digits, or underscores",
+  "passwordHint": "Password (min 6 characters)",
+  "passwordMinLength": "Password must be at least 6 characters",
+  "confirmPassword": "Confirm password",
+  "passwordsDoNotMatch": "Passwords do not match",
+  "alreadyHaveAccount": "Already have an account?",
+  "needHelp": "Need help?",
+  "forgotPasswordHelp": "Password resets are handled by your Bible Study leader. Send them a message using the button below and they will give you a temporary password.",
+  "yourUsername": "Your username",
+  "copyRequestMessage": "Copy request message",
+  "copied": "Copied!",
+  "requestMessagePreview": "The message will be: \"Please reset my Bible Study password. My username is <your username>.\"",
+  "setNewPassword": "Set a New Password",
+  "forceChangeSubtitle": "Your leader has set a temporary password.\nPlease choose a new one before continuing.",
+  "newPasswordHint": "New password (min 6 characters)",
+  "confirmNewPassword": "Confirm new password",
+  "setPassword": "Set Password",
+  "profile": "Profile",
+  "memberBadge": "Member",
+  "adminBadge": "Admin",
+  "usernameReadOnly": "Username (cannot be changed)",
+  "memberSince": "Member since",
+  "displayName": "Display Name",
+  "saveName": "Save Name",
+  "nameUpdated": "Name updated ✓",
+  "nameCannotBeEmpty": "Name cannot be empty",
+  "stats": "Stats",
+  "ibsStreakLabel": "Individual BS streak",
+  "ibsReadingDaysLabel": "Individual reading days",
+  "otStreakLabel": "OT streak",
+  "otReadingDaysLabel": "OT reading days",
+  "teamBsPreparedLabel": "Team BS prepared",
+  "yesCheck": "Yes ✓",
+  "notYet": "Not yet",
+  "daysCount": "{count} days",
+  "@daysCount": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "settings": "Settings",
+  "dailyReminder": "Daily Reminder",
+  "otReminders": "Old Testament Reminders",
+  "changePasswordTitle": "Change Password",
+  "currentPassword": "Current password",
+  "passwordUpdatedSuccess": "Password updated successfully ✓",
+  "updatePassword": "Update Password",
+  "logoutConfirmTitle": "Log out",
+  "logoutConfirmMessage": "Are you sure you want to sign out of your account?",
+  "individualBsTitle": "Individual BS",
+  "currentlyStudying": "Currently studying",
+  "markAsReadToday": "Mark as read today",
+  "readTodayCompleted": "Read ✓",
+  "undoRead": "tap to undo",
+  "nextChapterPrompt": "Great job! Advance to next chapter?",
+  "advance": "Next chapter",
+  "readingHistory": "Reading History",
+  "noHistoryYet": "No reading history yet",
+  "firstStudyPrompt": "Complete your first study today to build your streak!",
+  "today": "Today",
+  "selectBook": "Select Book",
+  "selectChapter": "Select Chapter",
+  "selectChapterForBook": "Select Chapter for {book}",
+  "@selectChapterForBook": {
+    "placeholders": {
+      "book": { "type": "String" }
+    }
+  },
+  "chapter": "Chapter",
+  "verse": "Verse",
+  "verses": "Verses",
+  "fromVerse": "From verse",
+  "toVerse": "To verse",
+  "wholeChapter": "Whole Chapter",
+  "streakDay": "{count} day",
+  "@streakDay": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "streakDays": "{count} days",
+  "@streakDays": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "portionDetails": "Reading Details",
+  "portion": "Portion",
+  "date": "Date",
+  "status": "Status",
+  "completedStatus": "Completed ✓",
+  "undoneStatus": "Undone",
+  "recordedTime": "Recorded",
+  "searchBooks": "Search books...",
+  "oldTestamentHeader": "Old Testament (39 Books)",
+  "newTestamentHeader": "New Testament (27 Books)",
+  "noBooksFound": "No books found",
+  "chaptersCount": "{count} chapters",
+  "@chaptersCount": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "teamBsTitle": "Team BS",
+  "thisWeeksPassage": "This Week's Passage",
+  "studyTimeAndPlace": "Study Time & Place",
+  "discussionQuestions": "Discussion Questions",
+  "studyMaterials": "Study Materials",
+  "iAmPrepared": "I am prepared for this week",
+  "preparedBadge": "Prepared ✓",
+  "markAsPrepared": "Mark as prepared",
+  "adminTools": "Admin Tools",
+  "noActiveWeek": "No study scheduled for this week",
+  "checkBackLater": "Check back later or contact your study leader.",
+  "otTitle": "Old Testament",
+  "otPlan": "Reading Plan",
+  "todayReading": "Today's Reading",
+  "completedDaysProgress": "{completed} of {total} readings done",
+  "@completedDaysProgress": {
+    "placeholders": {
+      "completed": { "type": "int" },
+      "total": { "type": "int" }
+    }
+  },
+  "bookFinished": "Book finished",
+  "bookFinishedNotice": "The reading of this book is finished. Admin can select a new book.",
+  "pastWeeks": "Past Weeks",
+  "noOtWeek": "No Old Testament plan active",
+  "contactAdminPlan": "Ask your leader to publish a plan.",
+  "leaderboardTitle": "Leaderboard",
+  "overall": "Overall",
+  "thisWeek": "This Week",
+  "individualCategory": "Individual",
+  "teamCategory": "Team",
+  "otCategory": "Old Testament",
+  "points": "{points} pts",
+  "@points": {
+    "placeholders": {
+      "points": { "type": "int" }
+    }
+  },
+  "streakFormatted": "{streak} streak",
+  "@streakFormatted": {
+    "placeholders": {
+      "streak": { "type": "int" }
+    }
+  },
+  "rank": "Rank",
+  "noLeaderboardData": "No members to display yet",
+  "dashboardTitle": "Dashboard",
+  "membersList": "Members list",
+  "copySummary": "Copy weekly summary",
+  "summaryCopied": "Weekly summary copied to clipboard",
+  "totalMembers": "Total Members",
+  "preparedThisWeek": "Prepared this week",
+  "activeReaders": "Active readers",
+  "needsEncouragement": "Needs Encouragement",
+  "lastActive": "Last active: {date}",
+  "@lastActive": {
+    "placeholders": {
+      "date": { "type": "String" }
+    }
+  },
+  "noMembersNeedsEncouragement": "Everyone is actively reading! 🎉",
+  "thursdayReminderTitle": "Friday study tomorrow: {passage}",
+  "@thursdayReminderTitle": {
+    "placeholders": {
+      "passage": { "type": "String" }
+    }
+  },
+  "thursdayReminderBody": "{time}, {place}. Have you read the questions?",
+  "@thursdayReminderBody": {
+    "placeholders": {
+      "time": { "type": "String" },
+      "place": { "type": "String" }
+    }
+  },
+  "otReminderTitle": "Old Testament today: {passage}",
+  "@otReminderTitle": {
+    "placeholders": {
+      "passage": { "type": "String" }
+    }
+  },
+  "otReminderBody": "Daily reading",
+  "adminHome": "Admin Tools",
+  "publish": "Publish",
+  "unpublish": "Unpublish",
+  "published": "Published",
+  "draft": "Draft",
+  "questions": "Questions",
+  "materials": "Materials",
+  "sessionDetails": "Session Details",
+  "startDate": "Start Date",
+  "startChapter": "Start Chapter",
+  "topic": "Topic (Optional)",
+  "pickBook": "Pick Book",
+  "saveChanges": "Save Changes",
+  "enterFromVerse": "Enter \"From\" Verse",
+  "enterToVerse": "Enter \"To\" Verse",
+  "cannotBeLowerThanFrom": "Cannot be lower than \"From\" verse ({from})",
+  "editThisWeeksStudy": "Edit This Week's Study",
+  "noWeekPublished": "No week published",
+  "manageQuestions": "Manage Questions",
+  "questionsCount": "{count} question(s)",
+  "@questionsCount": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "manageMaterials": "Manage Materials",
+  "materialsCount": "{count} material(s)",
+  "@materialsCount": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "memberOverview": "Member Overview",
+  "adminDashboard": "Admin Dashboard",
+  "adminDashboardSubtitle": "Stats, rankings, and weekly summary",
+  "testNotification": "🔔 Test notification",
+  "testNotificationSent": "Test notification sent for {passage}",
+  "@testNotificationSent": {
+    "placeholders": {
+      "passage": { "type": "String" }
+    }
+  },
+  "noWeekToTest": "No week published — nothing to test.",
+  "book": "Book",
+  "chapterRange": "Chapter  (1 – {max})",
+  "@chapterRange": {
+    "placeholders": {
+      "max": { "type": "int" }
+    }
+  },
+  "verseFrom": "Verse From",
+  "verseTo": "Verse To",
+  "sessionDay": "Session Day",
+  "sessionTime": "Session Time",
+  "place": "Place",
+  "placeHint": "e.g. Church hall, Room 2",
+  "placeRequired": "Enter a place",
+  "thursdayReminderTimeLabel": "Thursday Reminder Time",
+  "startAsNewWeek": "Start as a new week document",
+  "startAsNewWeekSubtitle": "Turn on if the passage has changed and you want a clean history entry.",
+  "publishedFor": "Published: {passage}",
+  "@publishedFor": {
+    "placeholders": {
+      "passage": { "type": "String" }
+    }
+  },
+  "couldNotPublish": "Could not publish. Please try again.",
+  "searchBookHint": "Search book…",
+  "addMaterial": "Add Material",
+  "editMaterial": "Edit Material",
+  "title": "Title",
+  "bodyDescription": "Body / description (optional)",
+  "urlOptional": "URL (optional)",
+  "deleteMaterial": "Delete Material?",
+  "addQuestion": "Add Question",
+  "editQuestion": "Edit Question",
+  "questionText": "Question text",
+  "deleteQuestion": "Delete Question?",
+  "publishWeekFirst": "Publish a week first.",
+  "noMaterialsYet": "No materials yet. Tap + to add.",
+  "noQuestionsYet": "No questions yet. Tap + to add.",
+  "members": "Members",
+  "searchByNameOrUsername": "Search by name or username…",
+  "sortByName": "Name",
+  "sortByLastActive": "Last active",
+  "sortByMostActive": "Most active",
+  "needsEncouragementFilter": "Needs encouragement",
+  "noMembersFound": "No members found.",
+  "lastReadDate": "Last read: {date}",
+  "@lastReadDate": {
+    "placeholders": {
+      "date": { "type": "String" }
+    }
+  },
+  "noReadingRecorded": "No reading recorded",
+  "memberDetail": "Member Detail",
+  "role": "Role",
+  "joined": "Joined",
+  "currentStudy": "Current Study",
+  "streaks": "Streaks",
+  "ibsHistory30": "Individual BS – last 30 days",
+  "otHistory30": "Old Testament – last 30 days",
+  "teamBsHistory": "Team BS – prepared per week",
+  "noReadingsRecorded": "No readings recorded.",
+  "noDataAvailable": "No data available.",
+  "completedCheck": "✓ Completed",
+  "preparedCheck": "✓ Prepared",
+  "notPrepared": "– Not prepared",
+  "otAdminTools": "OT Admin Tools",
+  "editWeekTopicPlan": "Edit This Week's Topic & Plan",
+  "noActiveWeekPublished": "No active week published",
+  "otMemberOverview": "OT Member Overview",
+  "viewCompletionStats": "View completion stats for this week",
+  "weekStartingTotal": "Week starting {date} • Total members: {count}",
+  "@weekStartingTotal": {
+    "placeholders": {
+      "date": { "type": "String" },
+      "count": { "type": "int" }
+    }
+  },
+  "noMembersRegistered": "No members registered.",
+  "noActiveWeekPublishedDot": "No active week published.",
+  "preparedOf": "{prepared} of {total} prepared",
+  "@preparedOf": {
+    "placeholders": {
+      "prepared": { "type": "int" },
+      "total": { "type": "int" }
+    }
+  },
+  "lastReadingDate": "Last reading: {date}",
+  "@lastReadingDate": {
+    "placeholders": {
+      "date": { "type": "String" }
+    }
+  },
+  "couldNotLoadMemberOverview": "Could not load member overview.",
+  "bookFinishedStatus": "Book finished",
+  "comingSoon": "Coming soon"
+}

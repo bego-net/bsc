@@ -1,7 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
+import '../l10n/app_localizations.dart';
+import '../repositories/auth_repository.dart';
 import '../state/auth_state.dart';
+import '../state/locale_state.dart';
 import '../state/ot_state.dart';
 import '../state/study_state.dart';
 import '../state/team_state.dart';
@@ -49,10 +53,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   // ── Name save ────────────────────────────────────────────────────────────────
-  Future<void> _saveName() async {
+  Future<void> _saveName(AppLocalizations l10n) async {
     final name = _nameController.text.trim();
     if (name.isEmpty) {
-      setState(() => _nameError = 'Name cannot be empty');
+      setState(() => _nameError = l10n.nameCannotBeEmpty);
       return;
     }
     setState(() {
@@ -64,12 +68,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
     if (mounted) {
       setState(() {
         _nameSaving = false;
-        _nameError = ok ? null : (authState.errorMessage ?? 'Failed to save.');
+        _nameError = ok ? null : (authState.errorMessage ?? l10n.error);
       });
       if (ok) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Name updated ✓'),
+          SnackBar(
+            content: Text(l10n.nameUpdated),
             behavior: SnackBarBehavior.floating,
           ),
         );
@@ -78,7 +82,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   // ── Change password ──────────────────────────────────────────────────────────
-  Future<void> _changePassword() async {
+  Future<void> _changePassword(AppLocalizations l10n) async {
     if (!_changePasswordKey.currentState!.validate()) return;
     setState(() {
       _pwSaving = true;
@@ -99,7 +103,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           _newPwController.clear();
           _confirmPwController.clear();
         } else {
-          _pwError = authState.errorMessage ?? 'Failed to change password.';
+          _pwError = authState.errorMessage ?? l10n.error;
         }
       });
     }
@@ -118,24 +122,23 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   // ── Logout ───────────────────────────────────────────────────────────────────
-  void _logout(BuildContext context) {
+  void _logout(BuildContext context, AppLocalizations l10n) {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Log out'),
-        content:
-            const Text('Are you sure you want to sign out of your account?'),
+        title: Text(l10n.logoutConfirmTitle),
+        content: Text(l10n.logoutConfirmMessage),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(),
-            child: const Text('Cancel'),
+            child: Text(l10n.cancel),
           ),
           FilledButton(
             onPressed: () {
               Navigator.of(ctx).pop();
               context.read<AuthState>().logOut();
             },
-            child: const Text('Log out'),
+            child: Text(l10n.logOut),
           ),
         ],
       ),
@@ -156,9 +159,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
     final authState = context.watch<AuthState>();
+    final localeState = context.watch<LocaleState>();
     final studyState = context.watch<StudyState>();
     final otState = context.watch<OtState>();
     final teamState = context.watch<TeamState>();
+    final l10n = AppLocalizations.of(context)!;
 
     final user = authState.user;
     if (user == null) {
@@ -166,7 +171,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     }
 
     final initials = _initials(user.name);
-    final joinDate = '${user.createdAt.day}/${user.createdAt.month}/${user.createdAt.year}';
+    final joinDate = DateFormat.yMMMd(localeState.languageCode).format(user.createdAt);
     final ibsStreak = studyState.streak;
     final ibsReadingDays =
         studyState.history.where((e) => e.completed).length;
@@ -176,7 +181,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     final reminderTime = studyState.reminderTime.format(context);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Profile')),
+      appBar: AppBar(title: Text(l10n.profile)),
       body: Center(
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 640),
@@ -219,7 +224,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         ),
                       ),
                       child: Text(
-                        user.isAdmin ? 'Admin' : 'Member',
+                        user.isAdmin ? l10n.adminBadge : l10n.memberBadge,
                         style: theme.textTheme.labelMedium?.copyWith(
                           fontWeight: FontWeight.bold,
                           color: user.isAdmin
@@ -237,14 +242,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         user.username.isEmpty ? '—' : user.username,
                         style: const TextStyle(fontWeight: FontWeight.w500),
                       ),
-                      subtitle: const Text('Username (cannot be changed)'),
+                      subtitle: Text(l10n.usernameReadOnly),
                     ),
                     // Join date
                     ListTile(
                       dense: true,
                       leading: const Icon(Icons.calendar_today_outlined),
                       title: Text(joinDate),
-                      subtitle: const Text('Member since'),
+                      subtitle: Text(l10n.memberSince),
                     ),
                   ],
                 ),
@@ -254,7 +259,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               // ── Edit name ────────────────────────────────────────────────────
               _buildCard(
                 context,
-                title: 'Display Name',
+                title: l10n.displayName,
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
@@ -262,7 +267,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       controller: _nameController,
                       textCapitalization: TextCapitalization.words,
                       decoration: InputDecoration(
-                        labelText: 'Full Name',
+                        labelText: l10n.fullName,
                         prefixIcon: const Icon(Icons.person_outline),
                         errorText: _nameError,
                         border: OutlineInputBorder(
@@ -272,13 +277,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     ),
                     const SizedBox(height: 12),
                     FilledButton.tonal(
-                      onPressed: _nameSaving ? null : _saveName,
+                      onPressed: _nameSaving ? null : () => _saveName(l10n),
                       child: _nameSaving
                           ? const SizedBox(
                               height: 18,
                               width: 18,
                               child: CircularProgressIndicator(strokeWidth: 2))
-                          : const Text('Save Name'),
+                          : Text(l10n.saveName),
                     ),
                   ],
                 ),
@@ -288,21 +293,21 @@ class _ProfileScreenState extends State<ProfileScreen> {
               // ── Stats ────────────────────────────────────────────────────────
               _buildCard(
                 context,
-                title: 'Stats',
+                title: l10n.stats,
                 child: Column(
                   children: [
                     _buildStatRow(
-                        context, 'Individual BS streak', '$ibsStreak days', '🔥'),
+                        context, l10n.ibsStreakLabel, l10n.daysCount(ibsStreak), '🔥'),
                     _buildStatRow(
-                        context, 'Individual reading days', '$ibsReadingDays', '📖'),
+                        context, l10n.ibsReadingDaysLabel, '$ibsReadingDays', '📖'),
                     _buildStatRow(
-                        context, 'OT streak', '$otStreak days', '🕊️'),
+                        context, l10n.otStreakLabel, l10n.daysCount(otStreak), '🕊️'),
                     _buildStatRow(
-                        context, 'OT reading days', '$otReadingDays', '📜'),
+                        context, l10n.otReadingDaysLabel, '$otReadingDays', '📜'),
                     _buildStatRow(
                         context,
-                        'Team BS prepared',
-                        isPrepared ? 'Yes ✓' : 'Not yet',
+                        l10n.teamBsPreparedLabel,
+                        isPrepared ? l10n.yesCheck : l10n.notYet,
                         '👥'),
                   ],
                 ),
@@ -312,18 +317,51 @@ class _ProfileScreenState extends State<ProfileScreen> {
               // ── Settings ─────────────────────────────────────────────────────
               _buildCard(
                 context,
-                title: 'Settings',
+                title: l10n.settings,
                 child: Column(
                   children: [
+                    // Language setting
+                    ListTile(
+                      leading: Icon(Icons.language, color: colorScheme.primary),
+                      title: Text(l10n.language),
+                      trailing: SegmentedButton<String>(
+                        segments: const [
+                          ButtonSegment(
+                            value: 'am',
+                            label: Text('አማርኛ', style: TextStyle(fontSize: 12)),
+                          ),
+                          ButtonSegment(
+                            value: 'en',
+                            label: Text('English', style: TextStyle(fontSize: 12)),
+                          ),
+                        ],
+                        selected: {localeState.languageCode},
+                        onSelectionChanged: (selected) {
+                          localeState.setLanguage(
+                            selected.first,
+                            user: user,
+                            authRepo: context.read<AuthRepository>(),
+                            teamState: teamState,
+                            otState: otState,
+                          );
+                        },
+                        showSelectedIcon: false,
+                        style: const ButtonStyle(
+                          visualDensity: VisualDensity.compact,
+                          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                        ),
+                      ),
+                    ),
+                    const Divider(height: 1),
                     // Daily reminder time
                     ListTile(
                       leading: Icon(Icons.alarm, color: colorScheme.primary),
-                      title: const Text('Daily Reminder'),
+                      title: Text(l10n.dailyReminder),
                       subtitle: Text(reminderTime),
                       trailing: OutlinedButton.icon(
                         onPressed: () => _pickReminderTime(context),
                         icon: const Icon(Icons.edit_outlined, size: 16),
-                        label: const Text('Change'),
+                        label: Text(l10n.change),
                         style: OutlinedButton.styleFrom(
                           visualDensity: VisualDensity.compact,
                           shape: RoundedRectangleBorder(
@@ -336,7 +374,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     SwitchListTile(
                       secondary:
                           Icon(Icons.menu_book_outlined, color: colorScheme.primary),
-                      title: const Text('Old Testament Reminders'),
+                      title: Text(l10n.otReminders),
                       value: otState.remindersEnabled,
                       onChanged: (val) => otState.setRemindersEnabled(val),
                     ),
@@ -348,7 +386,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               // ── Change password ──────────────────────────────────────────────
               _buildCard(
                 context,
-                title: 'Change Password',
+                title: l10n.changePasswordTitle,
                 child: Form(
                   key: _changePasswordKey,
                   child: Column(
@@ -363,8 +401,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             borderRadius: BorderRadius.circular(10),
                             border: Border.all(color: Colors.green.shade300),
                           ),
-                          child: const Text('Password updated successfully ✓',
-                              style: TextStyle(color: Colors.green)),
+                          child: Text(l10n.passwordUpdatedSuccess,
+                              style: const TextStyle(color: Colors.green)),
                         ),
                       if (_pwError != null)
                         Container(
@@ -383,23 +421,23 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         ),
                       _buildPasswordField(
                         controller: _currentPwController,
-                        label: 'Current password',
+                        label: l10n.currentPassword,
                         obscure: _obscureCurrent,
                         toggle: () =>
                             setState(() => _obscureCurrent = !_obscureCurrent),
                         validator: (v) =>
-                            (v == null || v.isEmpty) ? 'Required' : null,
+                            (v == null || v.isEmpty) ? l10n.error : null,
                       ),
                       const SizedBox(height: 12),
                       _buildPasswordField(
                         controller: _newPwController,
-                        label: 'New password (min 6 characters)',
+                        label: l10n.newPasswordHint,
                         obscure: _obscureNew,
                         toggle: () =>
                             setState(() => _obscureNew = !_obscureNew),
                         validator: (v) {
                           if (v == null || v.length < 6) {
-                            return 'Password must be at least 6 characters';
+                            return l10n.passwordMinLength;
                           }
                           return null;
                         },
@@ -407,26 +445,26 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       const SizedBox(height: 12),
                       _buildPasswordField(
                         controller: _confirmPwController,
-                        label: 'Confirm new password',
+                        label: l10n.confirmNewPassword,
                         obscure: _obscureConfirm,
                         toggle: () => setState(
                             () => _obscureConfirm = !_obscureConfirm),
                         validator: (v) => v != _newPwController.text
-                            ? 'Passwords do not match'
+                            ? l10n.passwordsDoNotMatch
                             : null,
                         action: TextInputAction.done,
-                        onSubmit: (_) => _changePassword(),
+                        onSubmit: (_) => _changePassword(l10n),
                       ),
                       const SizedBox(height: 16),
                       FilledButton.tonal(
-                        onPressed: _pwSaving ? null : _changePassword,
+                        onPressed: _pwSaving ? null : () => _changePassword(l10n),
                         child: _pwSaving
                             ? const SizedBox(
                                 height: 18,
                                 width: 18,
                                 child:
                                     CircularProgressIndicator(strokeWidth: 2))
-                            : const Text('Update Password'),
+                            : Text(l10n.updatePassword),
                       ),
                     ],
                   ),
@@ -436,9 +474,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
               // ── Log out ──────────────────────────────────────────────────────
               OutlinedButton.icon(
-                onPressed: () => _logout(context),
+                onPressed: () => _logout(context, l10n),
                 icon: const Icon(Icons.logout),
-                label: const Text('Log out'),
+                label: Text(l10n.logOut),
                 style: OutlinedButton.styleFrom(
                   foregroundColor: colorScheme.error,
                   side: BorderSide(color: colorScheme.error),

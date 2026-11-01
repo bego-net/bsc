@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "80127109437",
+    "project_id": "bible-study-74bc1",
+    "storage_bucket": "bible-study-74bc1.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:80127109437:android:949f2e595859b48f0dfd54",
+        "android_client_info": {
+          "package_name": "com.example.bible_study"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAEC7uZ1ijFieM8ywpUA1dUrZCDMSYDCbc"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

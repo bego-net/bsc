@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../l10n/app_localizations.dart';
 import '../state/auth_state.dart';
 
 /// Shown immediately after login when [AppUser.mustChangePassword] is true.
@@ -28,7 +29,7 @@ class _ForcePasswordChangeScreenState
     super.dispose();
   }
 
-  Future<void> _submit() async {
+  Future<void> _submit(AppLocalizations l10n) async {
     if (!_formKey.currentState!.validate()) return;
 
     final authState = context.read<AuthState>();
@@ -38,13 +39,12 @@ class _ForcePasswordChangeScreenState
     if (!success && mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(authState.errorMessage ?? 'Failed. Please try again.'),
+          content: Text(authState.errorMessage ?? l10n.error),
           backgroundColor: Theme.of(context).colorScheme.error,
           behavior: SnackBarBehavior.floating,
         ),
       );
     }
-    // On success AuthGate re-evaluates mustChangePassword and shows AppShell.
   }
 
   @override
@@ -52,6 +52,7 @@ class _ForcePasswordChangeScreenState
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
     final authState = context.watch<AuthState>();
+    final l10n = AppLocalizations.of(context)!;
 
     return PopScope(
       canPop: false, // Cannot navigate back or skip
@@ -82,7 +83,7 @@ class _ForcePasswordChangeScreenState
                             size: 48, color: colorScheme.primary),
                         const SizedBox(height: 16),
                         Text(
-                          'Set a New Password',
+                          l10n.setNewPassword,
                           style: theme.textTheme.headlineSmall?.copyWith(
                             fontWeight: FontWeight.bold,
                           ),
@@ -90,8 +91,7 @@ class _ForcePasswordChangeScreenState
                         ),
                         const SizedBox(height: 8),
                         Text(
-                          'Your leader has set a temporary password.\n'
-                          'Please choose a new one before continuing.',
+                          l10n.forceChangeSubtitle,
                           style: theme.textTheme.bodyMedium?.copyWith(
                             color: colorScheme.onSurfaceVariant,
                           ),
@@ -105,7 +105,7 @@ class _ForcePasswordChangeScreenState
                           obscureText: _obscureNew,
                           textInputAction: TextInputAction.next,
                           decoration: InputDecoration(
-                            labelText: 'New password (min 6 characters)',
+                            labelText: l10n.newPasswordHint,
                             prefixIcon: const Icon(Icons.lock_outline),
                             suffixIcon: IconButton(
                               icon: Icon(_obscureNew
@@ -120,7 +120,7 @@ class _ForcePasswordChangeScreenState
                           ),
                           validator: (v) {
                             if (v == null || v.length < 6) {
-                              return 'Password must be at least 6 characters';
+                              return l10n.passwordMinLength;
                             }
                             return null;
                           },
@@ -132,9 +132,9 @@ class _ForcePasswordChangeScreenState
                           controller: _confirmController,
                           obscureText: _obscureConfirm,
                           textInputAction: TextInputAction.done,
-                          onFieldSubmitted: (_) => _submit(),
+                          onFieldSubmitted: (_) => _submit(l10n),
                           decoration: InputDecoration(
-                            labelText: 'Confirm new password',
+                            labelText: l10n.confirmNewPassword,
                             prefixIcon: const Icon(Icons.lock_outline),
                             suffixIcon: IconButton(
                               icon: Icon(_obscureConfirm
@@ -149,7 +149,7 @@ class _ForcePasswordChangeScreenState
                           ),
                           validator: (v) {
                             if (v != _newController.text) {
-                              return 'Passwords do not match';
+                              return l10n.passwordsDoNotMatch;
                             }
                             return null;
                           },
@@ -157,7 +157,7 @@ class _ForcePasswordChangeScreenState
                         const SizedBox(height: 24),
 
                         FilledButton(
-                          onPressed: authState.isLoading ? null : _submit,
+                          onPressed: authState.isLoading ? null : () => _submit(l10n),
                           style: FilledButton.styleFrom(
                             padding: const EdgeInsets.symmetric(vertical: 16),
                             shape: RoundedRectangleBorder(
@@ -171,9 +171,9 @@ class _ForcePasswordChangeScreenState
                                   child: CircularProgressIndicator(
                                       strokeWidth: 2, color: Colors.white),
                                 )
-                              : const Text(
-                                  'Set Password',
-                                  style: TextStyle(
+                              : Text(
+                                  l10n.setPassword,
+                                  style: const TextStyle(
                                       fontSize: 16,
                                       fontWeight: FontWeight.bold),
                                 ),

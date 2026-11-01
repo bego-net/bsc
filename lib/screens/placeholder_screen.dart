@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../l10n/app_localizations.dart';
+
 /// Reusable placeholder screen for features coming in subsequent phases.
 class PlaceholderScreen extends StatelessWidget {
   final String title;
@@ -17,6 +19,7 @@ class PlaceholderScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
+    final l10n = AppLocalizations.of(context);
 
     return Scaffold(
       appBar: AppBar(
@@ -64,7 +67,7 @@ class PlaceholderScreen extends StatelessWidget {
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: Text(
-                        'Coming soon',
+                        l10n?.comingSoon ?? 'Coming soon',
                         style: TextStyle(
                           fontSize: 13,
                           fontWeight: FontWeight.w600,

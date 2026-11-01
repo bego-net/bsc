@@ -78,7 +78,7 @@ class LocalNotificationService implements NotificationService {
   }
 
   @override
-  Future<void> scheduleThursdayReminder(StudyWeek week) async {
+  Future<void> scheduleThursdayReminder(StudyWeek week, [String languageCode = 'am']) async {
     // flutter_local_notifications does not work on web (Chrome). Skip silently.
     if (kIsWeb || !_initialized) return;
 
@@ -96,9 +96,13 @@ class LocalNotificationService implements NotificationService {
     );
     const notificationDetails = NotificationDetails(android: androidDetails);
 
-    final title = 'Friday study tomorrow: ${week.passageText}';
-    final body =
-        '${week.sessionTime}, ${week.place}. Have you read the questions?';
+    final passage = week.localizedPassageText(languageCode);
+    final title = languageCode == 'am'
+        ? 'የነገ የዓርብ ጥናት፡ $passage'
+        : 'Friday study tomorrow: $passage';
+    final body = languageCode == 'am'
+        ? '${week.sessionTime}፣ ${week.place}። ጥያቄዎቹን አንብበዋል?'
+        : '${week.sessionTime}, ${week.place}. Have you read the questions?';
 
     await _plugin.zonedSchedule(
       id: _kThursdayNotificationId,
@@ -129,6 +133,7 @@ class LocalNotificationService implements NotificationService {
     required OtWeek week,
     required String reminderTime,
     required bool enabled,
+    String languageCode = 'am',
   }) async {
     if (kIsWeb || !_initialized) return;
 
@@ -167,8 +172,13 @@ class LocalNotificationService implements NotificationService {
       final targetDate = DateTime(dt.year, dt.month, dt.day, hour, minute);
       if (targetDate.isAfter(now)) {
         final tzTime = tz.TZDateTime.from(targetDate, tz.local);
-        final title = 'Old Testament today: ${day.passageText}';
-        final body = week.topic.isNotEmpty ? '(${week.topic})' : 'Daily reading';
+        final passage = day.localizedPassageText(languageCode);
+        final title = languageCode == 'am'
+            ? 'የዛሬ የብሉይ ኪዳን ንባብ፡ $passage'
+            : 'Old Testament today: $passage';
+        final body = week.topic.isNotEmpty
+            ? '(${week.topic})'
+            : (languageCode == 'am' ? 'የዕለት ንባብ' : 'Daily reading');
 
         await _plugin.zonedSchedule(
           id: _kOtBaseNotificationId + i,

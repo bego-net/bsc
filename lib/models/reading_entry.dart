@@ -1,3 +1,5 @@
+import '../data/bible_books.dart';
+
 /// Represents a daily reading log entry for a member.
 class ReadingEntry {
   /// The date key in format 'yyyy-MM-dd'.
@@ -30,6 +32,12 @@ class ReadingEntry {
 
   /// Complete reference text, e.g. "Matthew 5:1-8" or "Matthew 5:3".
   String get referenceText => '$book $chapter:$verseRangeText';
+
+  /// Complete reference text localized to [languageCode] (e.g., "ዮሐንስ 3:1-8").
+  String localizedReferenceText([String languageCode = 'am']) {
+    final localizedBook = BibleBooks.getLocalizedName(book, languageCode);
+    return '$localizedBook $chapter:$verseRangeText';
+  }
 
   Map<String, dynamic> toMap() {
     return {

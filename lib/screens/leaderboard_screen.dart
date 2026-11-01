@@ -1,13 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import '../models/member_summary.dart';
+import '../l10n/app_localizations.dart';
 import '../services/points.dart';
+import '../models/member_summary.dart';
 import '../state/auth_state.dart';
 import '../state/dashboard_state.dart';
 import '../widgets/profile_avatar_button.dart';
 
-/// Weekly Leaderboard displaying community rankings with category filters.
+/// Screen displaying the member leaderboard with categories and weekly points.
 class LeaderboardScreen extends StatefulWidget {
   const LeaderboardScreen({super.key});
 
@@ -33,12 +34,13 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
     final dash = context.watch<DashboardState>();
     final currentUid = context.watch<AuthState>().user?.uid;
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context)!;
 
     final ranked = rankedMembers(dash.allMembers, category: _selectedCategory);
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Leaderboard'),
+        title: Text(l10n.leaderboardTitle),
         actions: const [ProfileAvatarButton()],
       ),
       body: Column(
@@ -48,26 +50,26 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
             child: SingleChildScrollView(
               scrollDirection: Axis.horizontal,
               child: SegmentedButton<LeaderboardCategory>(
-                segments: const [
+                segments: [
                   ButtonSegment(
                     value: LeaderboardCategory.overall,
-                    label: Text('Overall'),
-                    icon: Icon(Icons.stars_outlined, size: 16),
+                    label: Text(l10n.overall),
+                    icon: const Icon(Icons.stars_outlined, size: 16),
                   ),
                   ButtonSegment(
                     value: LeaderboardCategory.individual,
-                    label: Text('Individual'),
-                    icon: Icon(Icons.person_outline, size: 16),
+                    label: Text(l10n.individualCategory),
+                    icon: const Icon(Icons.person_outline, size: 16),
                   ),
                   ButtonSegment(
                     value: LeaderboardCategory.team,
-                    label: Text('Team'),
-                    icon: Icon(Icons.group_outlined, size: 16),
+                    label: Text(l10n.teamCategory),
+                    icon: const Icon(Icons.group_outlined, size: 16),
                   ),
                   ButtonSegment(
                     value: LeaderboardCategory.oldTestament,
-                    label: Text('Old Testament'),
-                    icon: Icon(Icons.menu_book_outlined, size: 16),
+                    label: Text(l10n.otCategory),
+                    icon: const Icon(Icons.menu_book_outlined, size: 16),
                   ),
                 ],
                 selected: {_selectedCategory},
@@ -91,19 +93,19 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Text('Error: ${dash.error}'),
+                        Text('${l10n.error}: ${dash.error}'),
                         const SizedBox(height: 12),
                         ElevatedButton(
                           onPressed: () => dash.refresh(),
-                          child: const Text('Retry'),
+                          child: Text(l10n.retry),
                         ),
                       ],
                     ),
                   );
                 }
                 if (ranked.isEmpty) {
-                  return const Center(
-                    child: Text('No activity recorded for this week yet.'),
+                  return Center(
+                    child: Text(l10n.noLeaderboardData),
                   );
                 }
 
@@ -126,6 +128,7 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
                         isMe: isMe,
                         category: _selectedCategory,
                         theme: theme,
+                        l10n: l10n,
                       );
                     },
                   ),
@@ -146,6 +149,7 @@ class _LeaderboardRow extends StatelessWidget {
   final bool isMe;
   final LeaderboardCategory category;
   final ThemeData theme;
+  final AppLocalizations l10n;
 
   const _LeaderboardRow({
     required this.rank,
@@ -154,6 +158,7 @@ class _LeaderboardRow extends StatelessWidget {
     required this.isMe,
     required this.category,
     required this.theme,
+    required this.l10n,
   });
 
   @override
@@ -178,6 +183,8 @@ class _LeaderboardRow extends StatelessWidget {
         : (isTop3
             ? theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.25)
             : null);
+
+    final isAm = Localizations.localeOf(context).languageCode == 'am';
 
     return Container(
       color: rowBg,
@@ -206,7 +213,7 @@ class _LeaderboardRow extends StatelessWidget {
           children: [
             Expanded(
               child: Text(
-                member.name.isNotEmpty ? member.name : 'Member',
+                member.name.isNotEmpty ? member.name : l10n.memberBadge,
                 style: TextStyle(
                   fontWeight: (isTop3 || isMe) ? FontWeight.bold : FontWeight.normal,
                 ),
@@ -222,7 +229,7 @@ class _LeaderboardRow extends StatelessWidget {
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: Text(
-                  'You',
+                  isAm ? 'እርስዎ' : 'You',
                   style: TextStyle(
                     color: theme.colorScheme.onPrimary,
                     fontSize: 10,
@@ -233,8 +240,9 @@ class _LeaderboardRow extends StatelessWidget {
           ],
         ),
         subtitle: Text(
-          _subtitleText(member),
+          _subtitleText(member, isAm),
           style: theme.textTheme.bodySmall,
+          overflow: TextOverflow.ellipsis,
         ),
         trailing: Container(
           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
@@ -245,7 +253,7 @@ class _LeaderboardRow extends StatelessWidget {
             borderRadius: BorderRadius.circular(12),
           ),
           child: Text(
-            '$points pts',
+            l10n.points(points),
             style: TextStyle(
               fontWeight: FontWeight.bold,
               color: isTop3 ? rankColor : theme.colorScheme.primary,
@@ -257,20 +265,26 @@ class _LeaderboardRow extends StatelessWidget {
     );
   }
 
-  String _subtitleText(MemberSummary m) {
+  String _subtitleText(MemberSummary m, bool isAm) {
     switch (category) {
       case LeaderboardCategory.overall:
         final parts = <String>[];
-        if (m.ibsDaysThisWeek > 0) parts.add('${m.ibsDaysThisWeek}d IBS');
-        if (m.otDaysThisWeek > 0) parts.add('${m.otDaysThisWeek}d OT');
-        if (m.preparedThisWeek) parts.add('Prepared');
-        return parts.isEmpty ? 'No activity yet' : parts.join(' • ');
+        if (m.ibsDaysThisWeek > 0) parts.add('${m.ibsDaysThisWeek}d ${l10n.individualCategory}');
+        if (m.otDaysThisWeek > 0) parts.add('${m.otDaysThisWeek}d ${l10n.otCategory}');
+        if (m.preparedThisWeek) parts.add(l10n.preparedBadge);
+        return parts.isEmpty ? (isAm ? 'ምንም እንቅስቃሴ የለም' : 'No activity yet') : parts.join(' • ');
       case LeaderboardCategory.individual:
-        return '${m.ibsDaysThisWeek} day(s) read this week';
+        return isAm
+            ? 'በዚህ ሳምንት ${m.ibsDaysThisWeek} ቀን ተነቧል'
+            : '${m.ibsDaysThisWeek} day(s) read this week';
       case LeaderboardCategory.team:
-        return m.preparedThisWeek ? 'Prepared for session' : 'Not yet prepared';
+        return m.preparedThisWeek
+            ? (isAm ? 'ለጥናት ተዘጋጅቷል' : 'Prepared for session')
+            : (isAm ? 'ገና አልተዘጋጀም' : 'Not yet prepared');
       case LeaderboardCategory.oldTestament:
-        return '${m.otDaysThisWeek} day(s) completed this week';
+        return isAm
+            ? 'በዚህ ሳምንት ${m.otDaysThisWeek} ቀን ተጠናቋል'
+            : '${m.otDaysThisWeek} day(s) completed this week';
     }
   }
 }

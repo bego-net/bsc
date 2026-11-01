@@ -169,6 +169,13 @@ class FakeAuthRepository implements AuthRepository {
         user.copyWith(mustChangePassword: false);
   }
 
+  @override
+  Future<void> updateLanguage(String language) async {
+    if (_currentUserId == null) return;
+    final user = _users[_currentUserId]!;
+    _users[_currentUserId!] = user.copyWith(language: language);
+  }
+
   void dispose() {
     _authStreamController.close();
   }

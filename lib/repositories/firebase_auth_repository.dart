@@ -175,6 +175,15 @@ class FirebaseAuthRepository implements AuthRepository {
   }
 
   @override
+  Future<void> updateLanguage(String language) async {
+    final firebaseUser = _auth.currentUser;
+    if (firebaseUser == null) return;
+    await _firestore.collection('users').doc(firebaseUser.uid).update({
+      'language': language,
+    });
+  }
+
+  @override
   Future<void> completePasswordChange(String newPassword) async {
     final firebaseUser = _auth.currentUser;
     if (firebaseUser == null) throw const AuthException('Not signed in.');

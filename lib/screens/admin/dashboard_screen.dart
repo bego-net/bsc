@@ -2,15 +2,18 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 
+import '../../l10n/app_localizations.dart';
 import '../../models/member_summary.dart';
 import '../../services/points.dart';
 import '../../services/weekly_summary.dart';
 import '../../state/dashboard_state.dart';
-import 'members_list_screen.dart';
+import '../../state/locale_state.dart';
 import '../../widgets/profile_avatar_button.dart';
 import 'member_detail_screen.dart';
+import 'members_list_screen.dart';
 
-/// Admin-only home for the Dashboard tab: summary cards + top readers.
+/// Admin dashboard screen showing study metrics, team prepared counts,
+/// encouragement lists, and top reader leaderboards.
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
 
@@ -22,7 +25,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
   @override
   void initState() {
     super.initState();
-    // Load on first open; respects 2-min cache.
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
         context.read<DashboardState>().load();
@@ -33,15 +35,17 @@ class _DashboardScreenState extends State<DashboardScreen> {
   @override
   Widget build(BuildContext context) {
     final dash = context.watch<DashboardState>();
+    final languageCode = context.watch<LocaleState>().languageCode;
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context)!;
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Dashboard'),
+        title: Text(l10n.dashboardTitle),
         actions: [
           IconButton(
             icon: const Icon(Icons.people_outline),
-            tooltip: 'Members list',
+            tooltip: l10n.membersList,
             onPressed: () => Navigator.push(
               context,
               MaterialPageRoute(builder: (_) => const MembersListScreen()),
@@ -49,8 +53,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
           ),
           IconButton(
             icon: const Icon(Icons.copy_outlined),
-            tooltip: 'Copy weekly summary',
-            onPressed: dash.isLoading ? null : () => _copySummary(context, dash),
+            tooltip: l10n.copySummary,
+            onPressed: dash.isLoading ? null : () => _copySummary(context, dash, languageCode, l10n),
           ),
           const ProfileAvatarButton(),
         ],
@@ -64,11 +68,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Text('Error: ${dash.error}'),
+                Text('${l10n.error}: ${dash.error}'),
                 const SizedBox(height: 12),
                 ElevatedButton(
                   onPressed: () => dash.refresh(),
-                  child: const Text('Retry'),
+                  child: Text(l10n.retry),
                 ),
               ],
             ),
@@ -79,21 +83,21 @@ class _DashboardScreenState extends State<DashboardScreen> {
           child: ListView(
             padding: const EdgeInsets.all(16),
             children: [
-              _sectionLabel(theme, 'This week at a glance'),
+              _sectionLabel(theme, l10n.thisWeek),
               const SizedBox(height: 8),
-              _MembersCard(dash: dash),
+              _MembersCard(dash: dash, l10n: l10n),
               const SizedBox(height: 8),
-              _IbsCard(dash: dash),
+              _IbsCard(dash: dash, l10n: l10n),
               const SizedBox(height: 8),
-              _TeamCard(dash: dash),
+              _TeamCard(dash: dash, languageCode: languageCode, l10n: l10n),
               const SizedBox(height: 8),
-              _OtCard(dash: dash),
+              _OtCard(dash: dash, l10n: l10n),
               const SizedBox(height: 8),
-              _EncouragementCard(dash: dash),
+              _EncouragementCard(dash: dash, l10n: l10n),
               const SizedBox(height: 20),
-              _sectionLabel(theme, 'Top readers this week'),
+              _sectionLabel(theme, l10n.leaderboardTitle),
               const SizedBox(height: 8),
-              _TopReadersList(members: dash.allMembers),
+              _TopReadersList(members: dash.allMembers, l10n: l10n),
             ],
           ),
         );
@@ -109,15 +113,21 @@ class _DashboardScreenState extends State<DashboardScreen> {
         ),
       );
 
-  void _copySummary(BuildContext context, DashboardState dash) {
+  void _copySummary(
+    BuildContext context,
+    DashboardState dash,
+    String languageCode,
+    AppLocalizations l10n,
+  ) {
     final text = buildWeeklySummary(
       teamWeek: dash.currentTeamWeek,
       members: dash.allMembers,
       otTopic: dash.otTopic,
+      languageCode: languageCode,
     );
     Clipboard.setData(ClipboardData(text: text));
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Weekly summary copied to clipboard!')),
+      SnackBar(content: Text(l10n.summaryCopied)),
     );
   }
 }
@@ -146,11 +156,16 @@ class _SummaryCard extends StatelessWidget {
             Row(children: [
               Icon(icon, size: 18, color: Theme.of(context).colorScheme.primary),
               const SizedBox(width: 8),
-              Text(title,
+              Expanded(
+                child: Text(
+                  title,
                   style: Theme.of(context)
                       .textTheme
                       .titleSmall
-                      ?.copyWith(fontWeight: FontWeight.bold)),
+                      ?.copyWith(fontWeight: FontWeight.bold),
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
             ]),
             const SizedBox(height: 10),
             ...children,
@@ -173,7 +188,14 @@ class _Stat extends StatelessWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(label, style: Theme.of(context).textTheme.bodyMedium),
+          Expanded(
+            child: Text(
+              label,
+              style: Theme.of(context).textTheme.bodyMedium,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+          const SizedBox(width: 8),
           Text(value,
               style: Theme.of(context)
                   .textTheme
@@ -187,16 +209,21 @@ class _Stat extends StatelessWidget {
 
 class _MembersCard extends StatelessWidget {
   final DashboardState dash;
-  const _MembersCard({required this.dash});
+  final AppLocalizations l10n;
+  const _MembersCard({required this.dash, required this.l10n});
 
   @override
   Widget build(BuildContext context) {
+    final isAm = Localizations.localeOf(context).languageCode == 'am';
     return _SummaryCard(
       icon: Icons.group_outlined,
-      title: 'Members',
+      title: l10n.totalMembers,
       children: [
-        _Stat(label: 'Total', value: '${dash.totalMembers}'),
-        _Stat(label: 'Active this week', value: '${dash.activeThisWeek}'),
+        _Stat(label: l10n.totalMembers, value: '${dash.totalMembers}'),
+        _Stat(
+          label: isAm ? 'በዚህ ሳምንት ንቁ የሆኑ' : 'Active this week',
+          value: '${dash.activeThisWeek}',
+        ),
       ],
     );
   }
@@ -204,18 +231,24 @@ class _MembersCard extends StatelessWidget {
 
 class _IbsCard extends StatelessWidget {
   final DashboardState dash;
-  const _IbsCard({required this.dash});
+  final AppLocalizations l10n;
+  const _IbsCard({required this.dash, required this.l10n});
 
   @override
   Widget build(BuildContext context) {
+    final isAm = Localizations.localeOf(context).languageCode == 'am';
     return _SummaryCard(
       icon: Icons.person_outline,
-      title: 'Individual Bible Study',
+      title: l10n.individualBsTitle,
       children: [
         _Stat(
-            label: 'Avg days read this week',
-            value: dash.avgIbsDaysThisWeek.toStringAsFixed(1)),
-        _Stat(label: 'Read today', value: '${dash.readTodayCount}'),
+          label: isAm ? 'አማካይ የንባብ ቀናት' : 'Avg days read this week',
+          value: dash.avgIbsDaysThisWeek.toStringAsFixed(1),
+        ),
+        _Stat(
+          label: isAm ? 'ዛሬ ያነበቡ' : 'Read today',
+          value: '${dash.readTodayCount}',
+        ),
       ],
     );
   }
@@ -223,20 +256,33 @@ class _IbsCard extends StatelessWidget {
 
 class _TeamCard extends StatelessWidget {
   final DashboardState dash;
-  const _TeamCard({required this.dash});
+  final String languageCode;
+  final AppLocalizations l10n;
+  const _TeamCard({
+    required this.dash,
+    required this.languageCode,
+    required this.l10n,
+  });
 
   @override
   Widget build(BuildContext context) {
     final week = dash.currentTeamWeek;
+    final isAm = languageCode == 'am';
     return _SummaryCard(
       icon: Icons.group_outlined,
-      title: 'Team Bible Study',
+      title: l10n.teamBsTitle,
       children: [
         if (week != null)
-          _Stat(label: 'Passage', value: week.passageText),
+          _Stat(
+            label: l10n.portion,
+            value: week.localizedPassageText(languageCode),
+          ),
         _Stat(
-            label: 'Prepared',
-            value: '${dash.preparedCount} of ${dash.totalMembers}'),
+          label: isAm ? 'የተዘጋጁ' : 'Prepared',
+          value: isAm
+              ? 'ከ${dash.totalMembers} ${dash.preparedCount}'
+              : '${dash.preparedCount} of ${dash.totalMembers}',
+        ),
       ],
     );
   }
@@ -244,19 +290,22 @@ class _TeamCard extends StatelessWidget {
 
 class _OtCard extends StatelessWidget {
   final DashboardState dash;
-  const _OtCard({required this.dash});
+  final AppLocalizations l10n;
+  const _OtCard({required this.dash, required this.l10n});
 
   @override
   Widget build(BuildContext context) {
+    final isAm = Localizations.localeOf(context).languageCode == 'am';
     return _SummaryCard(
       icon: Icons.menu_book_outlined,
-      title: 'Old Testament',
+      title: l10n.otTitle,
       children: [
         if (dash.otTopic.isNotEmpty)
-          _Stat(label: 'Topic', value: dash.otTopic),
+          _Stat(label: isAm ? 'ርዕስ' : 'Topic', value: dash.otTopic),
         _Stat(
-            label: 'Avg readings this week',
-            value: dash.avgOtDaysThisWeek.toStringAsFixed(1)),
+          label: isAm ? 'አማካይ ንባቦች' : 'Avg readings this week',
+          value: dash.avgOtDaysThisWeek.toStringAsFixed(1),
+        ),
       ],
     );
   }
@@ -264,19 +313,20 @@ class _OtCard extends StatelessWidget {
 
 class _EncouragementCard extends StatelessWidget {
   final DashboardState dash;
-  const _EncouragementCard({required this.dash});
+  final AppLocalizations l10n;
+  const _EncouragementCard({required this.dash, required this.l10n});
 
   @override
   Widget build(BuildContext context) {
     final list = dash.needsEncouragementList;
     return _SummaryCard(
       icon: Icons.favorite_border,
-      title: 'Needs encouragement (3+ days without reading)',
+      title: l10n.needsEncouragement,
       children: [
         if (list.isEmpty)
-          const Text('Everyone is on track! 🎉')
+          Text(l10n.noMembersNeedsEncouragement)
         else ...[
-          _Stat(label: 'Count', value: '${list.length}'),
+          _Stat(label: '${list.length}', value: ''),
           const SizedBox(height: 4),
           ...list.map(
             (m) => _MemberTile(member: m),
@@ -318,18 +368,19 @@ class _MemberTile extends StatelessWidget {
 
 class _TopReadersList extends StatelessWidget {
   final List<MemberSummary> members;
-  const _TopReadersList({required this.members});
+  final AppLocalizations l10n;
+  const _TopReadersList({required this.members, required this.l10n});
 
   @override
   Widget build(BuildContext context) {
     final top = topReaders(members);
     if (top.isEmpty) {
-      return const Text('No reading data yet.');
+      return Text(l10n.noLeaderboardData);
     }
     return Column(
       children: [
         for (int i = 0; i < top.length; i++)
-          _TopReaderTile(rank: i + 1, member: top[i]),
+          _TopReaderTile(rank: i + 1, member: top[i], l10n: l10n),
       ],
     );
   }
@@ -338,7 +389,12 @@ class _TopReadersList extends StatelessWidget {
 class _TopReaderTile extends StatelessWidget {
   final int rank;
   final MemberSummary member;
-  const _TopReaderTile({required this.rank, required this.member});
+  final AppLocalizations l10n;
+  const _TopReaderTile({
+    required this.rank,
+    required this.member,
+    required this.l10n,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -357,12 +413,14 @@ class _TopReaderTile extends StatelessWidget {
       title: Text(member.name),
       subtitle: Text(
           'IBS: ${member.ibsDaysThisWeek}d  OT: ${member.otDaysThisWeek}d'
-          '${member.preparedThisWeek ? '  ✓ Prepared' : ''}'),
-      trailing: Text('$pts pts',
-          style: Theme.of(context)
-              .textTheme
-              .bodyLarge
-              ?.copyWith(fontWeight: FontWeight.bold)),
+          '${member.preparedThisWeek ? '  ✓ ${l10n.preparedBadge}' : ''}'),
+      trailing: Text(
+        l10n.points(pts),
+        style: Theme.of(context)
+            .textTheme
+            .bodyLarge
+            ?.copyWith(fontWeight: FontWeight.bold),
+      ),
       onTap: () => Navigator.push(
         context,
         MaterialPageRoute(

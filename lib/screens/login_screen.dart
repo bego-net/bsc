@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../l10n/app_localizations.dart';
+import '../l10n/app_localizations_en.dart';
 import '../state/auth_state.dart';
+import '../state/locale_state.dart';
 import 'forgot_password_screen.dart';
 import 'signup_screen.dart';
 
@@ -26,7 +29,7 @@ class _LoginScreenState extends State<LoginScreen> {
     super.dispose();
   }
 
-  Future<void> _submit() async {
+  Future<void> _submit(AppLocalizations l10n) async {
     if (!_formKey.currentState!.validate()) return;
 
     final authState = context.read<AuthState>();
@@ -36,8 +39,7 @@ class _LoginScreenState extends State<LoginScreen> {
     );
 
     if (!success && mounted) {
-      final error =
-          authState.errorMessage ?? 'Sign in failed. Please try again.';
+      final error = authState.errorMessage ?? l10n.error;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(error),
@@ -53,6 +55,9 @@ class _LoginScreenState extends State<LoginScreen> {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
     final authState = context.watch<AuthState>();
+    final localeState = Provider.of<LocaleState?>(context);
+    final l10n = AppLocalizations.of(context) ?? AppLocalizationsEn();
+    final languageCode = localeState?.languageCode ?? l10n.localeName;
 
     return Scaffold(
       body: Center(
@@ -77,6 +82,33 @@ class _LoginScreenState extends State<LoginScreen> {
                     mainAxisSize: MainAxisSize.min,
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
+                      // Language Switch
+                      Align(
+                        alignment: Alignment.topRight,
+                        child: SegmentedButton<String>(
+                          segments: const [
+                            ButtonSegment(
+                              value: 'am',
+                              label: Text('አማርኛ', style: TextStyle(fontSize: 12)),
+                            ),
+                            ButtonSegment(
+                              value: 'en',
+                              label: Text('English', style: TextStyle(fontSize: 12)),
+                            ),
+                          ],
+                          selected: {languageCode},
+                          onSelectionChanged: (selected) {
+                            localeState?.setLanguage(selected.first);
+                          },
+                          showSelectedIcon: false,
+                          style: const ButtonStyle(
+                            visualDensity: VisualDensity.compact,
+                            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+
                       // Header
                       Icon(
                         Icons.auto_stories,
@@ -85,7 +117,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
                       const SizedBox(height: 16),
                       Text(
-                        'Welcome Back',
+                        l10n.welcomeBack,
                         style: theme.textTheme.headlineMedium?.copyWith(
                           fontWeight: FontWeight.bold,
                           color: colorScheme.onSurface,
@@ -94,7 +126,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
                       const SizedBox(height: 6),
                       Text(
-                        'Sign in to continue your daily Bible study',
+                        l10n.loginSubtitle,
                         style: theme.textTheme.bodyMedium?.copyWith(
                           color: colorScheme.onSurfaceVariant,
                         ),
@@ -109,7 +141,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         textInputAction: TextInputAction.next,
                         autocorrect: false,
                         decoration: InputDecoration(
-                          labelText: 'Username',
+                          labelText: l10n.username,
                           prefixIcon: const Icon(Icons.person_outline),
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(12),
@@ -117,7 +149,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         ),
                         validator: (value) {
                           if (value == null || value.trim().isEmpty) {
-                            return 'Please enter your username';
+                            return l10n.enterUsername;
                           }
                           return null;
                         },
@@ -129,9 +161,9 @@ class _LoginScreenState extends State<LoginScreen> {
                         controller: _passwordController,
                         obscureText: _obscurePassword,
                         textInputAction: TextInputAction.done,
-                        onFieldSubmitted: (_) => _submit(),
+                        onFieldSubmitted: (_) => _submit(l10n),
                         decoration: InputDecoration(
-                          labelText: 'Password',
+                          labelText: l10n.password,
                           prefixIcon: const Icon(Icons.lock_outline),
                           suffixIcon: IconButton(
                             icon: Icon(
@@ -151,7 +183,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         ),
                         validator: (value) {
                           if (value == null || value.isEmpty) {
-                            return 'Please enter your password';
+                            return l10n.enterPassword;
                           }
                           return null;
                         },
@@ -172,14 +204,14 @@ class _LoginScreenState extends State<LoginScreen> {
                               ),
                             );
                           },
-                          child: const Text('Forgot password?'),
+                          child: Text(l10n.forgotPassword),
                         ),
                       ),
                       const SizedBox(height: 8),
 
                       // Submit button
                       FilledButton(
-                        onPressed: authState.isLoading ? null : _submit,
+                        onPressed: authState.isLoading ? null : () => _submit(l10n),
                         style: FilledButton.styleFrom(
                           padding: const EdgeInsets.symmetric(vertical: 16),
                           shape: RoundedRectangleBorder(
@@ -195,9 +227,9 @@ class _LoginScreenState extends State<LoginScreen> {
                                   color: Colors.white,
                                 ),
                               )
-                            : const Text(
-                                'Log in',
-                                style: TextStyle(
+                            : Text(
+                                l10n.logIn,
+                                style: const TextStyle(
                                   fontSize: 16,
                                   fontWeight: FontWeight.bold,
                                 ),
@@ -211,7 +243,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         crossAxisAlignment: WrapCrossAlignment.center,
                         children: [
                           Text(
-                            "Don't have an account?",
+                            l10n.dontHaveAccount,
                             style: theme.textTheme.bodyMedium?.copyWith(
                               color: colorScheme.onSurfaceVariant,
                             ),
@@ -224,7 +256,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                 ),
                               );
                             },
-                            child: const Text('Sign up'),
+                            child: Text(l10n.signUp),
                           ),
                         ],
                       ),

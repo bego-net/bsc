@@ -20,6 +20,7 @@ class TeamState extends ChangeNotifier {
   List<Question> _questions = [];
   List<MaterialItem> _materials = [];
   bool _isPrepared = false;
+  String _languageCode = 'am';
   bool _isLoading = false;
   String? _errorMessage;
 
@@ -38,6 +39,7 @@ class TeamState extends ChangeNotifier {
   List<Question> get questions => List.unmodifiable(_questions);
   List<MaterialItem> get materials => List.unmodifiable(_materials);
   bool get isPrepared => _isPrepared;
+  String get languageCode => _languageCode;
   bool get isLoading => _isLoading;
   String? get errorMessage => _errorMessage;
   bool get isAdmin => _isAdmin;
@@ -74,7 +76,7 @@ class TeamState extends ChangeNotifier {
         }
 
         // Schedule Thursday reminder on each data load.
-        await _notificationService.scheduleThursdayReminder(week);
+        await _notificationService.scheduleThursdayReminder(week, _languageCode);
       } else {
         _questions = [];
         _materials = [];
@@ -91,6 +93,14 @@ class TeamState extends ChangeNotifier {
   }
 
   // ── Member Actions ────────────────────────────────────────────────────────────
+
+  Future<void> setLanguageCode(String code) async {
+    _languageCode = code;
+    if (_currentWeek != null) {
+      await _notificationService.scheduleThursdayReminder(_currentWeek!, _languageCode);
+    }
+    _safeNotify();
+  }
 
   /// Toggles the "prepared" status for the current user.
   Future<void> togglePrepared() async {

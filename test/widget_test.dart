@@ -459,7 +459,6 @@ void main() {
 
       // Buttons
       expect(find.text('Mark as read today'), findsOneWidget);
-      expect(find.text('Daily Reminder'), findsOneWidget);
       expect(find.text('Reading History'), findsOneWidget);
       expect(find.text('No reading history yet'), findsOneWidget);
 

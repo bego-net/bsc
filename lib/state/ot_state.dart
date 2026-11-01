@@ -28,6 +28,7 @@ class OtState extends ChangeNotifier {
   bool _overviewLoading = false;
 
   bool _disposed = false;
+  String _languageCode = 'am';
 
   OtState({
     required OtRepository repository,
@@ -48,6 +49,7 @@ class OtState extends ChangeNotifier {
   String? get errorMessage => _errorMessage;
   bool get isAdmin => _isAdmin;
   String? get uid => _uid;
+  String get languageCode => _languageCode;
 
   List<OtWeek> get history => List.unmodifiable(_history);
   List<OtMemberOverviewItem> get overview => List.unmodifiable(_overview);
@@ -141,6 +143,7 @@ class OtState extends ChangeNotifier {
           week: week.copyWith(days: _days),
           reminderTime: _reminderTime,
           enabled: _remindersEnabled,
+          languageCode: _languageCode,
         );
       } else {
         _days = [];
@@ -188,6 +191,19 @@ class OtState extends ChangeNotifier {
     }
   }
 
+  Future<void> setLanguageCode(String code) async {
+    _languageCode = code;
+    if (_currentWeek != null) {
+      await _notificationService.scheduleOtReminders(
+        week: _currentWeek!.copyWith(days: _days),
+        reminderTime: _reminderTime,
+        enabled: _remindersEnabled,
+        languageCode: _languageCode,
+      );
+    }
+    _safeNotify();
+  }
+
   // ── Reminders Toggle ────────────────────────────────────────────────────────
 
   Future<void> setRemindersEnabled(bool enabled) async {
@@ -207,6 +223,7 @@ class OtState extends ChangeNotifier {
         week: _currentWeek!.copyWith(days: _days),
         reminderTime: _reminderTime,
         enabled: enabled,
+        languageCode: _languageCode,
       );
     }
   }

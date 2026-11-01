@@ -38,7 +38,7 @@ service cloud.firestore {
         (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['mustChangePassword']) ||
           (resource.data.get('mustChangePassword', false) == true && request.resource.data.mustChangePassword == false)) &&
         request.resource.data.diff(resource.data).affectedKeys().hasOnly([
-          'name', 'reminderTime', 'otRemindersEnabled', 'mustChangePassword',
+          'name', 'reminderTime', 'otRemindersEnabled', 'mustChangePassword', 'language',
           'currentBook', 'currentChapter', 'currentVerse', 'verseFrom', 'verseTo'
         ]);
 

@@ -1,3 +1,7 @@
+import 'package:intl/intl.dart';
+
+import '../data/bible_books.dart';
+
 /// Represents a daily Old Testament assigned reading for a week.
 class OtDay {
   /// The date string in yyyy-MM-dd format.
@@ -19,6 +23,33 @@ class OtDay {
   /// - "Genesis 12" (whole chapter)
   /// - "Psalms 23:1" (single verse)
   /// - "Psalms 23:1-6" (verse range)
+  /// Formatted passage string localized to [languageCode].
+  String localizedPassageText([String languageCode = 'am']) {
+    final localizedBook = BibleBooks.getLocalizedName(book, languageCode);
+    if (verseFrom == null && verseTo == null) {
+      return '$localizedBook $chapter';
+    }
+    final from = verseFrom;
+    final to = verseTo ?? from;
+    if (from == null) {
+      return '$localizedBook $chapter';
+    }
+    if (from == to) {
+      return '$localizedBook $chapter:$from';
+    }
+    return '$localizedBook $chapter:$from-$to';
+  }
+
+  /// Day of week display name localized to [languageCode] (e.g., ሰኞ or Monday).
+  String localizedDayName([String languageCode = 'am']) {
+    try {
+      final dt = DateTime.parse(date);
+      return DateFormat('EEEE', languageCode).format(dt);
+    } catch (_) {
+      return dayName;
+    }
+  }
+
   String get passageText {
     if (verseFrom == null && verseTo == null) {
       return '$book $chapter';

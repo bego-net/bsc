@@ -1,8 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 import '../data/bible_books.dart';
+import '../l10n/app_localizations.dart';
+import '../state/locale_state.dart';
 
-/// Screen allowing the user to search and select one of the 66 Bible books.
+/// Screen allowing the user to search and select one of the 66 Bible books
+/// in English or Amharic.
 class BookPickerScreen extends StatefulWidget {
   final String currentBook;
 
@@ -26,15 +30,9 @@ class _BookPickerScreenState extends State<BookPickerScreen> {
   }
 
   void _onSearchChanged() {
-    final query = _searchController.text.trim().toLowerCase();
+    final query = _searchController.text.trim();
     setState(() {
-      if (query.isEmpty) {
-        _filteredBooks = BibleBooks.all;
-      } else {
-        _filteredBooks = BibleBooks.all
-            .where((b) => b.name.toLowerCase().contains(query))
-            .toList();
-      }
+      _filteredBooks = BibleBooks.search(query);
     });
   }
 
@@ -48,10 +46,12 @@ class _BookPickerScreenState extends State<BookPickerScreen> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
+    final l10n = AppLocalizations.of(context)!;
+    final languageCode = context.watch<LocaleState>().languageCode;
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Select Bible Book'),
+        title: Text(l10n.selectBook),
       ),
       body: Center(
         child: ConstrainedBox(
@@ -65,7 +65,7 @@ class _BookPickerScreenState extends State<BookPickerScreen> {
                   controller: _searchController,
                   autofocus: false,
                   decoration: InputDecoration(
-                    hintText: 'Search book (e.g. Genesis, Matthew)',
+                    hintText: l10n.searchBooks,
                     prefixIcon: const Icon(Icons.search),
                     suffixIcon: _searchController.text.isNotEmpty
                         ? IconButton(
@@ -90,7 +90,7 @@ class _BookPickerScreenState extends State<BookPickerScreen> {
                 child: _filteredBooks.isEmpty
                     ? Center(
                         child: Text(
-                          'No books match "${_searchController.text}"',
+                          l10n.noBooksFound,
                           style: theme.textTheme.bodyMedium?.copyWith(
                             color: colorScheme.onSurfaceVariant,
                           ),
@@ -102,8 +102,15 @@ class _BookPickerScreenState extends State<BookPickerScreen> {
                         separatorBuilder: (context, index) => const SizedBox(height: 6),
                         itemBuilder: (context, index) {
                           final book = _filteredBooks[index];
-                          final isSelected = book.name.toLowerCase() ==
-                              widget.currentBook.toLowerCase();
+                          final currentLower = widget.currentBook.trim().toLowerCase();
+                          final isSelected = book.name.toLowerCase() == currentLower ||
+                              book.amharicName.toLowerCase() == currentLower;
+
+                          final displayName = book.localizedName(languageCode);
+                          final altName = languageCode == 'am' ? book.name : book.amharicName;
+                          final testamentLabel = book.testament == 'OT'
+                              ? l10n.oldTestament
+                              : (languageCode == 'am' ? 'አዲስ ኪዳን' : 'New Testament');
 
                           return ListTile(
                             tileColor: isSelected
@@ -118,7 +125,7 @@ class _BookPickerScreenState extends State<BookPickerScreen> {
                               ),
                             ),
                             title: Text(
-                              book.name,
+                              displayName,
                               style: TextStyle(
                                 fontWeight: isSelected
                                     ? FontWeight.bold
@@ -129,7 +136,7 @@ class _BookPickerScreenState extends State<BookPickerScreen> {
                               ),
                             ),
                             subtitle: Text(
-                              '${book.chapterCount} ${book.chapterCount == 1 ? 'chapter' : 'chapters'} • ${book.testament == 'OT' ? 'Old Testament' : 'New Testament'}',
+                              '$altName • ${l10n.chaptersCount(book.chapterCount)} • $testamentLabel',
                               style: theme.textTheme.bodySmall?.copyWith(
                                 color: colorScheme.onSurfaceVariant,
                               ),

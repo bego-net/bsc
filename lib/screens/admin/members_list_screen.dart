@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../../l10n/app_localizations.dart';
 import '../../state/dashboard_state.dart';
 import 'member_detail_screen.dart';
 
@@ -10,8 +11,9 @@ class MembersListScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Scaffold(
-      appBar: AppBar(title: const Text('Members')),
+      appBar: AppBar(title: Text(l10n.members)),
       body: const _MembersListBody(),
     );
   }
@@ -36,6 +38,7 @@ class _MembersListBodyState extends State<_MembersListBody> {
   @override
   Widget build(BuildContext context) {
     final dash = context.watch<DashboardState>();
+    final l10n = AppLocalizations.of(context)!;
     final members = dash.filteredMembers;
 
     return Column(
@@ -46,7 +49,7 @@ class _MembersListBodyState extends State<_MembersListBody> {
           child: TextField(
             controller: _searchCtrl,
             decoration: InputDecoration(
-              hintText: 'Search by name or email…',
+              hintText: l10n.searchByNameOrUsername,
               prefixIcon: const Icon(Icons.search),
               suffixIcon: dash.searchQuery.isNotEmpty
                   ? IconButton(
@@ -70,25 +73,25 @@ class _MembersListBodyState extends State<_MembersListBody> {
           child: Row(
             children: [
               _SortChip(
-                label: 'Name',
+                label: l10n.sortByName,
                 selected: dash.sort == MemberSort.name,
                 onTap: () => dash.setSort(MemberSort.name),
               ),
               const SizedBox(width: 8),
               _SortChip(
-                label: 'Last active',
+                label: l10n.sortByLastActive,
                 selected: dash.sort == MemberSort.lastActive,
                 onTap: () => dash.setSort(MemberSort.lastActive),
               ),
               const SizedBox(width: 8),
               _SortChip(
-                label: 'Most active',
+                label: l10n.sortByMostActive,
                 selected: dash.sort == MemberSort.mostActive,
                 onTap: () => dash.setSort(MemberSort.mostActive),
               ),
               const SizedBox(width: 8),
               FilterChip(
-                label: const Text('Needs encouragement'),
+                label: Text(l10n.needsEncouragementFilter),
                 selected: dash.filterNeedsEncouragement,
                 onSelected: (_) => dash.toggleNeedsEncouragementFilter(),
               ),
@@ -100,7 +103,7 @@ class _MembersListBodyState extends State<_MembersListBody> {
           child: RefreshIndicator(
             onRefresh: dash.refresh,
             child: members.isEmpty
-                ? const Center(child: Text('No members found.'))
+                ? Center(child: Text(l10n.noMembersFound))
                 : ListView.separated(
                     physics: const AlwaysScrollableScrollPhysics(),
                     itemCount: members.length,
@@ -108,8 +111,8 @@ class _MembersListBodyState extends State<_MembersListBody> {
                     itemBuilder: (context, index) {
                       final m = members[index];
                       final lastRead = m.lastReadDate != null
-                          ? 'Last read: ${m.lastReadDate}'
-                          : 'No reading recorded';
+                          ? l10n.lastReadDate(m.lastReadDate!)
+                          : l10n.noReadingRecorded;
 
                       return ListTile(
                         leading: CircleAvatar(
@@ -127,10 +130,12 @@ class _MembersListBodyState extends State<_MembersListBody> {
                         ),
                         isThreeLine: true,
                         trailing: m.needsEncouragement
-                            ? const Tooltip(
-                                message: 'Needs encouragement',
-                                child:
-                                    Icon(Icons.favorite, color: Colors.orange),
+                            ? Tooltip(
+                                message: l10n.needsEncouragementFilter,
+                                child: const Icon(
+                                  Icons.favorite,
+                                  color: Colors.orange,
+                                ),
                               )
                             : null,
                         onTap: () => Navigator.push(
