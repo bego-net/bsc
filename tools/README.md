@@ -32,7 +32,16 @@ export GOOGLE_APPLICATION_CREDENTIALS="/path/to/your-service-account-key.json"
 pip install -r tools/requirements.txt
 ```
 
-### 4. Run the Tool
+### 4. Run the Tools
+
+**Create or promote an admin:**
+```bash
+python tools/create_admin.py <username> <password> [display_name]
+# Example:
+python tools/create_admin.py testadmin admin123 "Test Admin"
+```
+
+**Reset a user's password:**
 ```bash
 python tools/reset_password.py <username>
 ```
