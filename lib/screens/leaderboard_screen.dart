@@ -2,10 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../l10n/app_localizations.dart';
-import '../services/points.dart';
 import '../models/member_summary.dart';
+import '../services/points.dart';
 import '../state/auth_state.dart';
 import '../state/dashboard_state.dart';
+import '../ui/ui.dart';
 import '../widgets/profile_avatar_button.dart';
 
 /// Screen displaying the member leaderboard with categories and weekly points.
@@ -33,258 +34,317 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
   Widget build(BuildContext context) {
     final dash = context.watch<DashboardState>();
     final currentUid = context.watch<AuthState>().user?.uid;
-    final theme = Theme.of(context);
     final l10n = AppLocalizations.of(context)!;
-
     final ranked = rankedMembers(dash.allMembers, category: _selectedCategory);
 
     return Scaffold(
+      backgroundColor: AppColors.background,
       appBar: AppBar(
-        title: Text(l10n.leaderboardTitle),
-        actions: const [ProfileAvatarButton()],
-      ),
-      body: Column(
-        children: [
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            child: SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              child: SegmentedButton<LeaderboardCategory>(
-                segments: [
-                  ButtonSegment(
-                    value: LeaderboardCategory.overall,
-                    label: Text(l10n.overall),
-                    icon: const Icon(Icons.stars_outlined, size: 16),
-                  ),
-                  ButtonSegment(
-                    value: LeaderboardCategory.individual,
-                    label: Text(l10n.individualCategory),
-                    icon: const Icon(Icons.person_outline, size: 16),
-                  ),
-                  ButtonSegment(
-                    value: LeaderboardCategory.team,
-                    label: Text(l10n.teamCategory),
-                    icon: const Icon(Icons.group_outlined, size: 16),
-                  ),
-                  ButtonSegment(
-                    value: LeaderboardCategory.oldTestament,
-                    label: Text(l10n.otCategory),
-                    icon: const Icon(Icons.menu_book_outlined, size: 16),
-                  ),
-                ],
-                selected: {_selectedCategory},
-                onSelectionChanged: (newSelection) {
-                  setState(() {
-                    _selectedCategory = newSelection.first;
-                  });
-                },
-              ),
-            ),
-          ),
-          const Divider(height: 1),
-          Expanded(
-            child: Builder(
-              builder: (context) {
-                if (dash.isLoading && dash.allMembers.isEmpty) {
-                  return const Center(child: CircularProgressIndicator());
-                }
-                if (dash.error != null && dash.allMembers.isEmpty) {
-                  return Center(
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text('${l10n.error}: ${dash.error}'),
-                        const SizedBox(height: 12),
-                        ElevatedButton(
-                          onPressed: () => dash.refresh(),
-                          child: Text(l10n.retry),
-                        ),
-                      ],
-                    ),
-                  );
-                }
-                if (ranked.isEmpty) {
-                  return Center(
-                    child: Text(l10n.noLeaderboardData),
-                  );
-                }
-
-                return RefreshIndicator(
-                  onRefresh: dash.refresh,
-                  child: ListView.separated(
-                    padding: const EdgeInsets.symmetric(vertical: 8),
-                    itemCount: ranked.length,
-                    separatorBuilder: (context, index) => const Divider(height: 1),
-                    itemBuilder: (context, index) {
-                      final member = ranked[index];
-                      final rank = index + 1;
-                      final isMe = member.uid == currentUid;
-                      final points = pointsForCategory(member, _selectedCategory);
-
-                      return _LeaderboardRow(
-                        rank: rank,
-                        member: member,
-                        points: points,
-                        isMe: isMe,
-                        category: _selectedCategory,
-                        theme: theme,
-                        l10n: l10n,
-                      );
-                    },
-                  ),
-                );
-              },
-            ),
-          ),
+        backgroundColor: AppColors.background,
+        elevation: 0,
+        scrolledUnderElevation: 0,
+        centerTitle: false,
+        title: Text(
+          l10n.leaderboardTitle,
+          style: AppTextStyles.title(),
+        ),
+        actions: const [
+          ProfileAvatarButton(),
+          SizedBox(width: 8),
         ],
       ),
-    );
-  }
-}
-
-class _LeaderboardRow extends StatelessWidget {
-  final int rank;
-  final MemberSummary member;
-  final int points;
-  final bool isMe;
-  final LeaderboardCategory category;
-  final ThemeData theme;
-  final AppLocalizations l10n;
-
-  const _LeaderboardRow({
-    required this.rank,
-    required this.member,
-    required this.points,
-    required this.isMe,
-    required this.category,
-    required this.theme,
-    required this.l10n,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final isTop3 = rank <= 3;
-    Color? rankColor;
-    IconData? rankIcon;
-
-    if (rank == 1) {
-      rankColor = const Color(0xFFD4AF37); // Gold
-      rankIcon = Icons.emoji_events;
-    } else if (rank == 2) {
-      rankColor = const Color(0xFFA8A8A8); // Silver
-      rankIcon = Icons.military_tech;
-    } else if (rank == 3) {
-      rankColor = const Color(0xFFCD7F32); // Bronze
-      rankIcon = Icons.military_tech;
-    }
-
-    final rowBg = isMe
-        ? theme.colorScheme.primaryContainer.withValues(alpha: 0.35)
-        : (isTop3
-            ? theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.25)
-            : null);
-
-    final isAm = Localizations.localeOf(context).languageCode == 'am';
-
-    return Container(
-      color: rowBg,
-      child: ListTile(
-        leading: SizedBox(
-          width: 44,
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
+      body: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 600),
+          child: Column(
             children: [
-              if (rankIcon != null) ...[
-                Icon(rankIcon, color: rankColor, size: 20),
-                const SizedBox(width: 2),
-              ],
-              Text(
-                '#$rank',
-                style: TextStyle(
-                  fontWeight: isTop3 ? FontWeight.bold : FontWeight.w500,
-                  color: rankColor ?? theme.colorScheme.onSurfaceVariant,
-                  fontSize: 14,
+              // ── Filter Chips Bar ─────────────────────────────────────────────
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                child: SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: Row(
+                    children: [
+                      _buildFilterChip(
+                        category: LeaderboardCategory.overall,
+                        label: l10n.overall,
+                        icon: Icons.stars_rounded,
+                      ),
+                      const SizedBox(width: 8),
+                      _buildFilterChip(
+                        category: LeaderboardCategory.individual,
+                        label: l10n.individualCategory,
+                        icon: Icons.person_rounded,
+                      ),
+                      const SizedBox(width: 8),
+                      _buildFilterChip(
+                        category: LeaderboardCategory.team,
+                        label: l10n.teamCategory,
+                        icon: Icons.group_rounded,
+                      ),
+                      const SizedBox(width: 8),
+                      _buildFilterChip(
+                        category: LeaderboardCategory.oldTestament,
+                        label: l10n.otCategory,
+                        icon: Icons.menu_book_rounded,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 8),
+
+              // ── Leaderboard List / Podium ────────────────────────────────────
+              Expanded(
+                child: Builder(
+                  builder: (context) {
+                    if (dash.isLoading && dash.allMembers.isEmpty) {
+                      return const Center(child: CircularProgressIndicator(color: AppColors.accent));
+                    }
+                    if (dash.error != null && dash.allMembers.isEmpty) {
+                      return Center(
+                        child: Padding(
+                          padding: const EdgeInsets.all(24),
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text('${l10n.error}: ${dash.error}', style: AppTextStyles.body()),
+                              const SizedBox(height: 12),
+                              PrimaryButton(
+                                label: l10n.retry,
+                                onPressed: () => dash.refresh(),
+                              ),
+                            ],
+                          ),
+                        ),
+                      );
+                    }
+                    if (ranked.isEmpty) {
+                      return Center(
+                        child: Padding(
+                          padding: const EdgeInsets.all(20),
+                          child: EmptyState(
+                            icon: Icons.leaderboard_rounded,
+                            title: l10n.noLeaderboardData,
+                          ),
+                        ),
+                      );
+                    }
+
+                    return RefreshIndicator(
+                      color: AppColors.accent,
+                      onRefresh: dash.refresh,
+                      child: ListView.separated(
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                        itemCount: ranked.length,
+                        separatorBuilder: (context, index) => const SizedBox(height: 8),
+                        itemBuilder: (context, index) {
+                          final member = ranked[index];
+                          final rank = index + 1;
+                          final isMe = member.uid == currentUid;
+                          final points = pointsForCategory(member, _selectedCategory);
+
+                          return _LeaderboardItemCard(
+                            rank: rank,
+                            member: member,
+                            points: points,
+                            isMe: isMe,
+                            l10n: l10n,
+                          );
+                        },
+                      ),
+                    );
+                  },
                 ),
               ),
             ],
           ),
         ),
-        title: Row(
-          children: [
-            Expanded(
-              child: Text(
-                member.name.isNotEmpty ? member.name : l10n.memberBadge,
-                style: TextStyle(
-                  fontWeight: (isTop3 || isMe) ? FontWeight.bold : FontWeight.normal,
-                ),
-                overflow: TextOverflow.ellipsis,
-              ),
-            ),
-            if (isMe)
-              Container(
-                margin: const EdgeInsets.only(left: 6),
-                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                decoration: BoxDecoration(
-                  color: theme.colorScheme.primary,
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: Text(
-                  isAm ? 'እርስዎ' : 'You',
-                  style: TextStyle(
-                    color: theme.colorScheme.onPrimary,
-                    fontSize: 10,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
-          ],
-        ),
-        subtitle: Text(
-          _subtitleText(member, isAm),
-          style: theme.textTheme.bodySmall,
-          overflow: TextOverflow.ellipsis,
-        ),
-        trailing: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      ),
+    );
+  }
+
+  Widget _buildFilterChip({
+    required LeaderboardCategory category,
+    required String label,
+    required IconData icon,
+  }) {
+    final isSelected = _selectedCategory == category;
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: () {
+          setState(() {
+            _selectedCategory = category;
+          });
+        },
+        borderRadius: BorderRadius.circular(16),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
           decoration: BoxDecoration(
-            color: isTop3
-                ? (rankColor?.withValues(alpha: 0.15) ?? theme.colorScheme.primary.withValues(alpha: 0.1))
-                : theme.colorScheme.surfaceContainerHigh,
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: Text(
-            l10n.points(points),
-            style: TextStyle(
-              fontWeight: FontWeight.bold,
-              color: isTop3 ? rankColor : theme.colorScheme.primary,
-              fontSize: 13,
+            color: isSelected ? AppColors.accent : AppColors.card,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(
+              color: isSelected ? AppColors.accent : AppColors.border,
             ),
+            boxShadow: isSelected ? [] : AppColors.subtleShadow,
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                icon,
+                size: 18,
+                color: isSelected ? Colors.white : AppColors.textSecondary,
+              ),
+              const SizedBox(width: 6),
+              Text(
+                label,
+                style: AppTextStyles.caption(
+                  color: isSelected ? Colors.white : AppColors.textPrimary,
+                  fontWeight: isSelected ? FontWeight.bold : FontWeight.w600,
+                ),
+              ),
+            ],
           ),
         ),
       ),
     );
   }
+}
 
-  String _subtitleText(MemberSummary m, bool isAm) {
-    switch (category) {
-      case LeaderboardCategory.overall:
-        final parts = <String>[];
-        if (m.ibsDaysThisWeek > 0) parts.add('${m.ibsDaysThisWeek}d ${l10n.individualCategory}');
-        if (m.otDaysThisWeek > 0) parts.add('${m.otDaysThisWeek}d ${l10n.otCategory}');
-        if (m.preparedThisWeek) parts.add(l10n.preparedBadge);
-        return parts.isEmpty ? (isAm ? 'ምንም እንቅስቃሴ የለም' : 'No activity yet') : parts.join(' • ');
-      case LeaderboardCategory.individual:
-        return isAm
-            ? 'በዚህ ሳምንት ${m.ibsDaysThisWeek} ቀን ተነቧል'
-            : '${m.ibsDaysThisWeek} day(s) read this week';
-      case LeaderboardCategory.team:
-        return m.preparedThisWeek
-            ? (isAm ? 'ለጥናት ተዘጋጅቷል' : 'Prepared for session')
-            : (isAm ? 'ገና አልተዘጋጀም' : 'Not yet prepared');
-      case LeaderboardCategory.oldTestament:
-        return isAm
-            ? 'በዚህ ሳምንት ${m.otDaysThisWeek} ቀን ተጠናቋል'
-            : '${m.otDaysThisWeek} day(s) completed this week';
+class _LeaderboardItemCard extends StatelessWidget {
+  final int rank;
+  final MemberSummary member;
+  final int points;
+  final bool isMe;
+  final AppLocalizations l10n;
+
+  const _LeaderboardItemCard({
+    required this.rank,
+    required this.member,
+    required this.points,
+    required this.isMe,
+    required this.l10n,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    Color? rankBg;
+    Color? rankColor;
+    String? rankMedal;
+
+    if (rank == 1) {
+      rankBg = const Color(0xFFFEF3C7);
+      rankColor = AppColors.gold;
+      rankMedal = '🥇';
+    } else if (rank == 2) {
+      rankBg = const Color(0xFFF3F4F6);
+      rankColor = AppColors.silver;
+      rankMedal = '🥈';
+    } else if (rank == 3) {
+      rankBg = const Color(0xFFFDF2E9);
+      rankColor = AppColors.bronze;
+      rankMedal = '🥉';
     }
+
+    final cardBorder = isMe
+        ? Border.all(color: AppColors.accent, width: 2)
+        : (rank <= 3
+            ? Border.all(color: (rankColor ?? AppColors.border).withValues(alpha: 0.4))
+            : Border.all(color: AppColors.border));
+
+    final isAm = Localizations.localeOf(context).languageCode == 'am';
+
+    return AppCard(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      border: cardBorder,
+      color: isMe ? AppColors.accent.withValues(alpha: 0.05) : AppColors.card,
+      child: Row(
+        children: [
+          // Rank Badge / Medal
+          Container(
+            width: 40,
+            height: 40,
+            decoration: BoxDecoration(
+              color: rankBg ?? AppColors.surfaceMuted,
+              shape: BoxShape.circle,
+            ),
+            alignment: Alignment.center,
+            child: rankMedal != null
+                ? Text(rankMedal, style: const TextStyle(fontSize: 18))
+                : Text(
+                    '$rank',
+                    style: AppTextStyles.caption(
+                      color: AppColors.textSecondary,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+          ),
+          const SizedBox(width: 14),
+
+          // User Info
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Row(
+                  children: [
+                    Flexible(
+                      child: Text(
+                        member.name,
+                        style: AppTextStyles.title(),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                    if (isMe) ...[
+                      const SizedBox(width: 6),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: AppColors.accent,
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Text(
+                          isAm ? 'እኔ' : 'You',
+                          style: AppTextStyles.caption(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  'IBS: ${member.ibsDaysThisWeek}d  •  OT: ${member.otDaysThisWeek}d'
+                  '${member.preparedThisWeek ? '  •  ✓ ${l10n.preparedBadge}' : ''}',
+                  style: AppTextStyles.caption(),
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ],
+            ),
+          ),
+
+          // Points Pill
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+            decoration: BoxDecoration(
+              color: AppColors.accent.withValues(alpha: 0.12),
+              borderRadius: BorderRadius.circular(14),
+            ),
+            child: Text(
+              '$points pts',
+              style: AppTextStyles.caption(
+                color: AppColors.accent,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }

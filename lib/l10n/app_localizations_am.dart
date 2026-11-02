@@ -446,7 +446,7 @@ class AppLocalizationsAm extends AppLocalizations {
   String get overall => 'አጠቃላይ';
 
   @override
-  String get thisWeek => 'ይህ ሳምንት';
+  String get thisWeek => 'የዚህ ሳምንት';
 
   @override
   String get individualCategory => 'የግል';
@@ -815,4 +815,33 @@ class AppLocalizationsAm extends AppLocalizations {
 
   @override
   String get comingSoon => 'በቅርቡ ይጠብቁ';
+
+  @override
+  String greetingUser(String name) {
+    return 'ሰላም $name';
+  }
+
+  @override
+  String get greetingGuest => 'እንኳን ደህና መጡ';
+
+  @override
+  String get dayMon => 'ሰኞ';
+
+  @override
+  String get dayTue => 'ማክ';
+
+  @override
+  String get dayWed => 'ረቡ';
+
+  @override
+  String get dayThu => 'ሐሙ';
+
+  @override
+  String get dayFri => 'ዓርብ';
+
+  @override
+  String get daySat => 'ቅዳ';
+
+  @override
+  String get daySun => 'እሁ';
 }

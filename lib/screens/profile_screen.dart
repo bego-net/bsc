@@ -9,6 +9,7 @@ import '../state/locale_state.dart';
 import '../state/ot_state.dart';
 import '../state/study_state.dart';
 import '../state/team_state.dart';
+import '../ui/ui.dart';
 
 /// User profile screen: edit name, view stats, settings, change password, log out.
 class ProfileScreen extends StatefulWidget {
@@ -73,8 +74,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
       if (ok) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(l10n.nameUpdated),
+            content: Text(l10n.nameUpdated, style: AppTextStyles.body(color: Colors.white)),
+            backgroundColor: AppColors.accent,
             behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
           ),
         );
       }
@@ -126,26 +129,27 @@ class _ProfileScreenState extends State<ProfileScreen> {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: Text(l10n.logoutConfirmTitle),
-        content: Text(l10n.logoutConfirmMessage),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: Text(l10n.logoutConfirmTitle, style: AppTextStyles.title()),
+        content: Text(l10n.logoutConfirmMessage, style: AppTextStyles.body()),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(),
-            child: Text(l10n.cancel),
+            child: Text(l10n.cancel, style: AppTextStyles.caption(color: AppColors.textSecondary)),
           ),
           FilledButton(
+            style: FilledButton.styleFrom(backgroundColor: AppColors.error),
             onPressed: () {
               Navigator.of(ctx).pop();
               context.read<AuthState>().logOut();
             },
-            child: Text(l10n.logOut),
+            child: Text(l10n.logOut, style: AppTextStyles.button()),
           ),
         ],
       ),
     );
   }
 
-  // ── Initials helper ──────────────────────────────────────────────────────────
   static String _initials(String name) {
     final parts = name.trim().split(RegExp(r'\s+'));
     if (parts.isEmpty || parts.first.isEmpty) return '?';
@@ -153,11 +157,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
     return (parts.first[0] + parts.last[0]).toUpperCase();
   }
 
-  // ── Build ────────────────────────────────────────────────────────────────────
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
     final authState = context.watch<AuthState>();
     final localeState = context.watch<LocaleState>();
     final studyState = context.watch<StudyState>();
@@ -167,391 +168,379 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
     final user = authState.user;
     if (user == null) {
-      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+      return const Scaffold(body: Center(child: CircularProgressIndicator(color: AppColors.accent)));
     }
 
     final initials = _initials(user.name);
     final joinDate = DateFormat.yMMMd(localeState.languageCode).format(user.createdAt);
     final ibsStreak = studyState.streak;
-    final ibsReadingDays =
-        studyState.history.where((e) => e.completed).length;
+    final ibsReadingDays = studyState.history.where((e) => e.completed).length;
     final otStreak = otState.streak;
     final otReadingDays = otState.completedDaysCount;
     final isPrepared = teamState.isPrepared;
     final reminderTime = studyState.reminderTime.format(context);
 
     return Scaffold(
-      appBar: AppBar(title: Text(l10n.profile)),
-      body: Center(
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 640),
-          child: ListView(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-            children: [
-              // ── Avatar & basic info ──────────────────────────────────────────
-              _buildCard(
-                context,
-                child: Column(
-                  children: [
-                    const SizedBox(height: 8),
-                    CircleAvatar(
-                      radius: 36,
-                      backgroundColor: colorScheme.primary,
-                      child: Text(
-                        initials,
-                        style: TextStyle(
-                          color: colorScheme.onPrimary,
-                          fontSize: 26,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    // Role badge
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 12, vertical: 4),
-                      decoration: BoxDecoration(
-                        color: user.isAdmin
-                            ? colorScheme.tertiary.withValues(alpha: 0.15)
-                            : colorScheme.primary.withValues(alpha: 0.12),
-                        borderRadius: BorderRadius.circular(20),
-                        border: Border.all(
-                          color: user.isAdmin
-                              ? colorScheme.tertiary
-                              : colorScheme.primary,
-                          width: 0.8,
-                        ),
-                      ),
-                      child: Text(
-                        user.isAdmin ? l10n.adminBadge : l10n.memberBadge,
-                        style: theme.textTheme.labelMedium?.copyWith(
-                          fontWeight: FontWeight.bold,
-                          color: user.isAdmin
-                              ? colorScheme.tertiary
-                              : colorScheme.primary,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    // Username (read-only)
-                    ListTile(
-                      dense: true,
-                      leading: const Icon(Icons.alternate_email),
-                      title: Text(
-                        user.username.isEmpty ? '—' : user.username,
-                        style: const TextStyle(fontWeight: FontWeight.w500),
-                      ),
-                      subtitle: Text(l10n.usernameReadOnly),
-                    ),
-                    // Join date
-                    ListTile(
-                      dense: true,
-                      leading: const Icon(Icons.calendar_today_outlined),
-                      title: Text(joinDate),
-                      subtitle: Text(l10n.memberSince),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 12),
-
-              // ── Edit name ────────────────────────────────────────────────────
-              _buildCard(
-                context,
-                title: l10n.displayName,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    TextField(
-                      controller: _nameController,
-                      textCapitalization: TextCapitalization.words,
-                      decoration: InputDecoration(
-                        labelText: l10n.fullName,
-                        prefixIcon: const Icon(Icons.person_outline),
-                        errorText: _nameError,
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    FilledButton.tonal(
-                      onPressed: _nameSaving ? null : () => _saveName(l10n),
-                      child: _nameSaving
-                          ? const SizedBox(
-                              height: 18,
-                              width: 18,
-                              child: CircularProgressIndicator(strokeWidth: 2))
-                          : Text(l10n.saveName),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 12),
-
-              // ── Stats ────────────────────────────────────────────────────────
-              _buildCard(
-                context,
-                title: l10n.stats,
-                child: Column(
-                  children: [
-                    _buildStatRow(
-                        context, l10n.ibsStreakLabel, l10n.daysCount(ibsStreak), '🔥'),
-                    _buildStatRow(
-                        context, l10n.ibsReadingDaysLabel, '$ibsReadingDays', '📖'),
-                    _buildStatRow(
-                        context, l10n.otStreakLabel, l10n.daysCount(otStreak), '🕊️'),
-                    _buildStatRow(
-                        context, l10n.otReadingDaysLabel, '$otReadingDays', '📜'),
-                    _buildStatRow(
-                        context,
-                        l10n.teamBsPreparedLabel,
-                        isPrepared ? l10n.yesCheck : l10n.notYet,
-                        '👥'),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 12),
-
-              // ── Settings ─────────────────────────────────────────────────────
-              _buildCard(
-                context,
-                title: l10n.settings,
-                child: Column(
-                  children: [
-                    // Language setting
-                    ListTile(
-                      leading: Icon(Icons.language, color: colorScheme.primary),
-                      title: Text(l10n.language),
-                      trailing: SegmentedButton<String>(
-                        segments: const [
-                          ButtonSegment(
-                            value: 'am',
-                            label: Text('አማርኛ', style: TextStyle(fontSize: 12)),
-                          ),
-                          ButtonSegment(
-                            value: 'en',
-                            label: Text('English', style: TextStyle(fontSize: 12)),
-                          ),
-                        ],
-                        selected: {localeState.languageCode},
-                        onSelectionChanged: (selected) {
-                          localeState.setLanguage(
-                            selected.first,
-                            user: user,
-                            authRepo: context.read<AuthRepository>(),
-                            teamState: teamState,
-                            otState: otState,
-                          );
-                        },
-                        showSelectedIcon: false,
-                        style: const ButtonStyle(
-                          visualDensity: VisualDensity.compact,
-                          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                        ),
-                      ),
-                    ),
-                    const Divider(height: 1),
-                    // Daily reminder time
-                    ListTile(
-                      leading: Icon(Icons.alarm, color: colorScheme.primary),
-                      title: Text(l10n.dailyReminder),
-                      subtitle: Text(reminderTime),
-                      trailing: OutlinedButton.icon(
-                        onPressed: () => _pickReminderTime(context),
-                        icon: const Icon(Icons.edit_outlined, size: 16),
-                        label: Text(l10n.change),
-                        style: OutlinedButton.styleFrom(
-                          visualDensity: VisualDensity.compact,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                        ),
-                      ),
-                    ),
-                    // OT reminders switch
-                    SwitchListTile(
-                      secondary:
-                          Icon(Icons.menu_book_outlined, color: colorScheme.primary),
-                      title: Text(l10n.otReminders),
-                      value: otState.remindersEnabled,
-                      onChanged: (val) => otState.setRemindersEnabled(val),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 12),
-
-              // ── Change password ──────────────────────────────────────────────
-              _buildCard(
-                context,
-                title: l10n.changePasswordTitle,
-                child: Form(
-                  key: _changePasswordKey,
+      backgroundColor: AppColors.background,
+      appBar: AppBar(
+        backgroundColor: AppColors.background,
+        elevation: 0,
+        scrolledUnderElevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: AppColors.textPrimary),
+          onPressed: () => Navigator.of(context).pop(),
+        ),
+        title: Text(l10n.profile, style: AppTextStyles.title()),
+      ),
+      body: SafeArea(
+        child: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 600),
+            child: ListView(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              children: [
+                // ── Avatar & Basic Info Card ─────────────────────────────────
+                AppCard(
+                  padding: const EdgeInsets.all(24),
                   child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      if (_pwSuccess)
-                        Container(
-                          margin: const EdgeInsets.only(bottom: 12),
-                          padding: const EdgeInsets.all(12),
-                          decoration: BoxDecoration(
-                            color: Colors.green.shade50,
-                            borderRadius: BorderRadius.circular(10),
-                            border: Border.all(color: Colors.green.shade300),
-                          ),
-                          child: Text(l10n.passwordUpdatedSuccess,
-                              style: const TextStyle(color: Colors.green)),
+                      Container(
+                        width: 76,
+                        height: 76,
+                        decoration: const BoxDecoration(
+                          color: AppColors.accent,
+                          shape: BoxShape.circle,
                         ),
-                      if (_pwError != null)
-                        Container(
-                          margin: const EdgeInsets.only(bottom: 12),
-                          padding: const EdgeInsets.all(12),
-                          decoration: BoxDecoration(
-                            color: colorScheme.errorContainer
-                                .withValues(alpha: 0.3),
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                          child: Text(
-                            _pwError!,
-                            style:
-                                TextStyle(color: colorScheme.onErrorContainer),
-                          ),
+                        alignment: Alignment.center,
+                        child: Text(
+                          initials,
+                          style: AppTextStyles.headingLarge(color: Colors.white),
                         ),
-                      _buildPasswordField(
-                        controller: _currentPwController,
-                        label: l10n.currentPassword,
-                        obscure: _obscureCurrent,
-                        toggle: () =>
-                            setState(() => _obscureCurrent = !_obscureCurrent),
-                        validator: (v) =>
-                            (v == null || v.isEmpty) ? l10n.error : null,
                       ),
                       const SizedBox(height: 12),
-                      _buildPasswordField(
-                        controller: _newPwController,
-                        label: l10n.newPasswordHint,
-                        obscure: _obscureNew,
-                        toggle: () =>
-                            setState(() => _obscureNew = !_obscureNew),
-                        validator: (v) {
-                          if (v == null || v.length < 6) {
-                            return l10n.passwordMinLength;
-                          }
-                          return null;
-                        },
-                      ),
-                      const SizedBox(height: 12),
-                      _buildPasswordField(
-                        controller: _confirmPwController,
-                        label: l10n.confirmNewPassword,
-                        obscure: _obscureConfirm,
-                        toggle: () => setState(
-                            () => _obscureConfirm = !_obscureConfirm),
-                        validator: (v) => v != _newPwController.text
-                            ? l10n.passwordsDoNotMatch
-                            : null,
-                        action: TextInputAction.done,
-                        onSubmit: (_) => _changePassword(l10n),
+                      StatChip(
+                        label: user.isAdmin ? l10n.adminBadge : l10n.memberBadge,
+                        backgroundColor: user.isAdmin
+                            ? AppColors.gold.withValues(alpha: 0.15)
+                            : AppColors.accent.withValues(alpha: 0.12),
+                        borderColor: user.isAdmin ? AppColors.gold : AppColors.accent,
+                        textColor: user.isAdmin ? AppColors.gold : AppColors.accent,
                       ),
                       const SizedBox(height: 16),
-                      FilledButton.tonal(
-                        onPressed: _pwSaving ? null : () => _changePassword(l10n),
-                        child: _pwSaving
-                            ? const SizedBox(
-                                height: 18,
-                                width: 18,
-                                child:
-                                    CircularProgressIndicator(strokeWidth: 2))
-                            : Text(l10n.updatePassword),
+                      const Divider(color: AppColors.border, height: 1),
+                      const SizedBox(height: 10),
+                      ListTile(
+                        dense: true,
+                        contentPadding: EdgeInsets.zero,
+                        leading: const Icon(Icons.alternate_email, color: AppColors.accent),
+                        title: Text(
+                          user.username.isEmpty ? '—' : user.username,
+                          style: AppTextStyles.title(),
+                        ),
+                        subtitle: Text(l10n.usernameReadOnly, style: AppTextStyles.caption()),
+                      ),
+                      ListTile(
+                        dense: true,
+                        contentPadding: EdgeInsets.zero,
+                        leading: const Icon(Icons.calendar_today_outlined, color: AppColors.accent),
+                        title: Text(joinDate, style: AppTextStyles.title()),
+                        subtitle: Text(l10n.memberSince, style: AppTextStyles.caption()),
                       ),
                     ],
                   ),
                 ),
-              ),
-              const SizedBox(height: 16),
+                const SizedBox(height: 16),
 
-              // ── Log out ──────────────────────────────────────────────────────
-              OutlinedButton.icon(
-                onPressed: () => _logout(context, l10n),
-                icon: const Icon(Icons.logout),
-                label: Text(l10n.logOut),
-                style: OutlinedButton.styleFrom(
-                  foregroundColor: colorScheme.error,
-                  side: BorderSide(color: colorScheme.error),
-                  padding: const EdgeInsets.symmetric(vertical: 14),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
+                // ── Edit Name Card ───────────────────────────────────────────
+                AppCard(
+                  padding: const EdgeInsets.all(20),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      SectionTitle(title: l10n.displayName, padding: EdgeInsets.zero),
+                      const SizedBox(height: 12),
+                      TextField(
+                        controller: _nameController,
+                        textCapitalization: TextCapitalization.words,
+                        style: AppTextStyles.body(),
+                        decoration: InputDecoration(
+                          labelText: l10n.fullName,
+                          labelStyle: AppTextStyles.caption(),
+                          prefixIcon: const Icon(Icons.person_outline, color: AppColors.textSecondary),
+                          errorText: _nameError,
+                          filled: true,
+                          fillColor: AppColors.background,
+                          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(16),
+                            borderSide: const BorderSide(color: AppColors.border),
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(16),
+                            borderSide: const BorderSide(color: AppColors.border),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(16),
+                            borderSide: const BorderSide(color: AppColors.accent, width: 1.8),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 14),
+                      PrimaryButton(
+                        label: l10n.saveName,
+                        isTonal: true,
+                        height: 48,
+                        isLoading: _nameSaving,
+                        onPressed: () => _saveName(l10n),
+                      ),
+                    ],
                   ),
                 ),
-              ),
-              const SizedBox(height: 24),
-            ],
+                const SizedBox(height: 16),
+
+                // ── Stats Card ───────────────────────────────────────────────
+                AppCard(
+                  padding: const EdgeInsets.all(20),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      SectionTitle(title: l10n.stats, padding: EdgeInsets.zero),
+                      const SizedBox(height: 8),
+                      _buildStatRow(l10n.ibsStreakLabel, l10n.daysCount(ibsStreak), '🔥'),
+                      _buildStatRow(l10n.ibsReadingDaysLabel, '$ibsReadingDays', '📖'),
+                      _buildStatRow(l10n.otStreakLabel, l10n.daysCount(otStreak), '🕊️'),
+                      _buildStatRow(l10n.otReadingDaysLabel, '$otReadingDays', '📜'),
+                      _buildStatRow(
+                        l10n.teamBsPreparedLabel,
+                        isPrepared ? l10n.yesCheck : l10n.notYet,
+                        '👥',
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 16),
+
+                // ── Settings Card ────────────────────────────────────────────
+                AppCard(
+                  padding: const EdgeInsets.all(20),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      SectionTitle(title: l10n.settings, padding: EdgeInsets.zero),
+                      const SizedBox(height: 12),
+                      // Language switcher
+                      ListTile(
+                        contentPadding: EdgeInsets.zero,
+                        leading: const Icon(Icons.language, color: AppColors.accent),
+                        title: Text(l10n.language, style: AppTextStyles.body(fontWeight: FontWeight.w600)),
+                        trailing: Container(
+                          decoration: BoxDecoration(
+                            color: AppColors.background,
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(color: AppColors.border),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              _buildLangChip(
+                                'am',
+                                'አማርኛ',
+                                localeState.languageCode,
+                                () => localeState.setLanguage(
+                                  'am',
+                                  user: user,
+                                  authRepo: context.read<AuthRepository>(),
+                                  teamState: teamState,
+                                  otState: otState,
+                                ),
+                              ),
+                              _buildLangChip(
+                                'en',
+                                'English',
+                                localeState.languageCode,
+                                () => localeState.setLanguage(
+                                  'en',
+                                  user: user,
+                                  authRepo: context.read<AuthRepository>(),
+                                  teamState: teamState,
+                                  otState: otState,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                      const Divider(color: AppColors.border, height: 16),
+                      // Daily reminder
+                      ListTile(
+                        contentPadding: EdgeInsets.zero,
+                        leading: const Icon(Icons.alarm, color: AppColors.accent),
+                        title: Text(l10n.dailyReminder, style: AppTextStyles.body(fontWeight: FontWeight.w600)),
+                        subtitle: Text(reminderTime, style: AppTextStyles.caption()),
+                        trailing: OutlinedButton.icon(
+                          onPressed: () => _pickReminderTime(context),
+                          icon: const Icon(Icons.edit_outlined, size: 16, color: AppColors.accent),
+                          label: Text(l10n.change, style: AppTextStyles.caption(color: AppColors.accent)),
+                          style: OutlinedButton.styleFrom(
+                            side: const BorderSide(color: AppColors.border),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                          ),
+                        ),
+                      ),
+                      const Divider(color: AppColors.border, height: 16),
+                      // OT Reminders switch
+                      SwitchListTile(
+                        contentPadding: EdgeInsets.zero,
+                        activeThumbColor: AppColors.accent,
+                        secondary: const Icon(Icons.menu_book_outlined, color: AppColors.accent),
+                        title: Text(l10n.otReminders, style: AppTextStyles.body(fontWeight: FontWeight.w600)),
+                        value: otState.remindersEnabled,
+                        onChanged: (val) => otState.setRemindersEnabled(val),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 16),
+
+                // ── Change Password Card ─────────────────────────────────────
+                AppCard(
+                  padding: const EdgeInsets.all(20),
+                  child: Form(
+                    key: _changePasswordKey,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        SectionTitle(title: l10n.changePasswordTitle, padding: EdgeInsets.zero),
+                        const SizedBox(height: 12),
+                        if (_pwSuccess)
+                          Container(
+                            margin: const EdgeInsets.only(bottom: 12),
+                            padding: const EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                              color: AppColors.accent.withValues(alpha: 0.1),
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(color: AppColors.accent),
+                            ),
+                            child: Text(
+                              l10n.passwordUpdatedSuccess,
+                              style: AppTextStyles.body(color: AppColors.accent, fontWeight: FontWeight.bold),
+                            ),
+                          ),
+                        if (_pwError != null)
+                          Container(
+                            margin: const EdgeInsets.only(bottom: 12),
+                            padding: const EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                              color: AppColors.error.withValues(alpha: 0.1),
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(color: AppColors.error),
+                            ),
+                            child: Text(
+                              _pwError!,
+                              style: AppTextStyles.body(color: AppColors.error),
+                            ),
+                          ),
+                        _buildPasswordField(
+                          controller: _currentPwController,
+                          label: l10n.currentPassword,
+                          obscure: _obscureCurrent,
+                          toggle: () => setState(() => _obscureCurrent = !_obscureCurrent),
+                          validator: (v) => (v == null || v.isEmpty) ? l10n.error : null,
+                        ),
+                        const SizedBox(height: 12),
+                        _buildPasswordField(
+                          controller: _newPwController,
+                          label: l10n.newPasswordHint,
+                          obscure: _obscureNew,
+                          toggle: () => setState(() => _obscureNew = !_obscureNew),
+                          validator: (v) {
+                            if (v == null || v.length < 6) {
+                              return l10n.passwordMinLength;
+                            }
+                            return null;
+                          },
+                        ),
+                        const SizedBox(height: 12),
+                        _buildPasswordField(
+                          controller: _confirmPwController,
+                          label: l10n.confirmNewPassword,
+                          obscure: _obscureConfirm,
+                          toggle: () => setState(() => _obscureConfirm = !_obscureConfirm),
+                          validator: (v) => v != _newPwController.text ? l10n.passwordsDoNotMatch : null,
+                          action: TextInputAction.done,
+                          onSubmit: (_) => _changePassword(l10n),
+                        ),
+                        const SizedBox(height: 16),
+                        PrimaryButton(
+                          label: l10n.updatePassword,
+                          isTonal: true,
+                          height: 48,
+                          isLoading: _pwSaving,
+                          onPressed: () => _changePassword(l10n),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 20),
+
+                // ── Log Out Button ───────────────────────────────────────────
+                SizedBox(
+                  width: double.infinity,
+                  height: 52,
+                  child: OutlinedButton.icon(
+                    onPressed: () => _logout(context, l10n),
+                    icon: const Icon(Icons.logout, color: AppColors.error),
+                    label: Text(
+                      l10n.logOut,
+                      style: AppTextStyles.button(color: AppColors.error),
+                    ),
+                    style: OutlinedButton.styleFrom(
+                      side: const BorderSide(color: AppColors.error, width: 1.5),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 32),
+              ],
+            ),
           ),
         ),
       ),
     );
   }
 
-  // ── Helpers ──────────────────────────────────────────────────────────────────
-
-  Widget _buildCard(BuildContext context,
-      {required Widget child, String? title}) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
-    return Card(
-      elevation: 0,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-        side: BorderSide(
-          color: colorScheme.outlineVariant.withValues(alpha: 0.6),
-        ),
-      ),
-      color: Colors.white,
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            if (title != null) ...[
-              Text(
-                title,
-                style: theme.textTheme.titleSmall?.copyWith(
-                  fontWeight: FontWeight.bold,
-                  color: theme.colorScheme.onSurfaceVariant,
-                ),
-              ),
-              const SizedBox(height: 12),
-            ],
-            child,
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildStatRow(
-      BuildContext context, String label, String value, String emoji) {
-    final theme = Theme.of(context);
+  Widget _buildStatRow(String label, String value, String icon) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 6),
+      padding: const EdgeInsets.symmetric(vertical: 8),
       child: Row(
         children: [
-          Text(emoji, style: const TextStyle(fontSize: 18)),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Text(label,
-                style: theme.textTheme.bodyMedium?.copyWith(
-                  color: theme.colorScheme.onSurfaceVariant,
-                )),
-          ),
-          Text(
-            value,
-            style: theme.textTheme.bodyMedium
-                ?.copyWith(fontWeight: FontWeight.bold),
-          ),
+          Text(icon, style: const TextStyle(fontSize: 18)),
+          const SizedBox(width: 10),
+          Expanded(child: Text(label, style: AppTextStyles.body())),
+          Text(value, style: AppTextStyles.title(color: AppColors.accent)),
         ],
+      ),
+    );
+  }
+
+  Widget _buildLangChip(String code, String label, String current, VoidCallback onTap) {
+    final isSelected = code == current;
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+        decoration: BoxDecoration(
+          color: isSelected ? AppColors.accent : Colors.transparent,
+          borderRadius: BorderRadius.circular(10),
+        ),
+        child: Text(
+          label,
+          style: AppTextStyles.caption(
+            color: isSelected ? Colors.white : AppColors.textSecondary,
+            fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+          ),
+        ),
       ),
     );
   }
@@ -570,16 +559,33 @@ class _ProfileScreenState extends State<ProfileScreen> {
       obscureText: obscure,
       textInputAction: action,
       onFieldSubmitted: onSubmit,
+      style: AppTextStyles.body(),
       decoration: InputDecoration(
         labelText: label,
-        prefixIcon: const Icon(Icons.lock_outline),
+        labelStyle: AppTextStyles.caption(),
+        prefixIcon: const Icon(Icons.lock_outline, color: AppColors.textSecondary),
         suffixIcon: IconButton(
-          icon: Icon(obscure
-              ? Icons.visibility_outlined
-              : Icons.visibility_off_outlined),
+          icon: Icon(
+            obscure ? Icons.visibility_outlined : Icons.visibility_off_outlined,
+            color: AppColors.textSecondary,
+          ),
           onPressed: toggle,
         ),
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+        filled: true,
+        fillColor: AppColors.background,
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(16),
+          borderSide: const BorderSide(color: AppColors.border),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(16),
+          borderSide: const BorderSide(color: AppColors.border),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(16),
+          borderSide: const BorderSide(color: AppColors.accent, width: 1.8),
+        ),
       ),
       validator: validator,
     );

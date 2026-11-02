@@ -2,12 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../l10n/app_localizations.dart';
+import '../ui/ui.dart';
 
 /// Help screen shown when the user taps "Forgot password?".
-/// Explains that the leader must reset the password and provides
-/// a convenient "Copy request message" button.
 class ForgotPasswordScreen extends StatefulWidget {
-  /// Pre-fill the username field if the user already typed one on the login screen.
   final String initialUsername;
 
   const ForgotPasswordScreen({super.key, this.initialUsername = ''});
@@ -23,8 +21,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
   @override
   void initState() {
     super.initState();
-    _usernameController =
-        TextEditingController(text: widget.initialUsername);
+    _usernameController = TextEditingController(text: widget.initialUsername);
   }
 
   @override
@@ -53,48 +50,56 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
     final l10n = AppLocalizations.of(context)!;
 
     return Scaffold(
-      appBar: AppBar(title: Text(l10n.forgotPassword)),
-      body: Center(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(24.0),
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 420),
-            child: Card(
-              elevation: 0,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(24),
-                side: BorderSide(
-                  color: colorScheme.outlineVariant.withValues(alpha: 0.5),
-                ),
-              ),
-              color: Colors.white,
-              child: Padding(
-                padding: const EdgeInsets.all(32.0),
+      backgroundColor: AppColors.background,
+      appBar: AppBar(
+        backgroundColor: AppColors.background,
+        elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: AppColors.textPrimary),
+          onPressed: () => Navigator.of(context).pop(),
+        ),
+        title: Text(l10n.forgotPassword, style: AppTextStyles.title()),
+      ),
+      body: SafeArea(
+        child: Center(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 16.0),
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 440),
+              child: AppCard(
+                padding: const EdgeInsets.all(28.0),
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    Icon(Icons.help_outline,
-                        size: 48, color: colorScheme.primary),
+                    Center(
+                      child: Container(
+                        width: 64,
+                        height: 64,
+                        decoration: BoxDecoration(
+                          color: AppColors.accent.withValues(alpha: 0.12),
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Icon(
+                          Icons.help_outline_rounded,
+                          size: 32,
+                          color: AppColors.accent,
+                        ),
+                      ),
+                    ),
                     const SizedBox(height: 16),
                     Text(
                       l10n.needHelp,
-                      style: theme.textTheme.headlineSmall?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
+                      style: AppTextStyles.headingLarge(),
                       textAlign: TextAlign.center,
                     ),
-                    const SizedBox(height: 12),
+                    const SizedBox(height: 8),
                     Text(
                       l10n.forgotPasswordHelp,
-                      style: theme.textTheme.bodyMedium?.copyWith(
-                        color: colorScheme.onSurfaceVariant,
-                      ),
+                      style: AppTextStyles.body(color: AppColors.textSecondary),
                       textAlign: TextAlign.center,
                     ),
                     const SizedBox(height: 28),
@@ -104,38 +109,41 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                       controller: _usernameController,
                       keyboardType: TextInputType.text,
                       textInputAction: TextInputAction.done,
+                      style: AppTextStyles.body(),
                       decoration: InputDecoration(
                         labelText: l10n.yourUsername,
-                        prefixIcon: const Icon(Icons.person_outline),
+                        labelStyle: AppTextStyles.caption(),
+                        prefixIcon: const Icon(Icons.person_outline, color: AppColors.textSecondary),
+                        filled: true,
+                        fillColor: AppColors.background,
+                        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
                         border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
+                          borderRadius: BorderRadius.circular(16),
+                          borderSide: const BorderSide(color: AppColors.border),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(16),
+                          borderSide: const BorderSide(color: AppColors.border),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(16),
+                          borderSide: const BorderSide(color: AppColors.accent, width: 1.8),
                         ),
                       ),
                     ),
                     const SizedBox(height: 20),
 
                     // Copy button
-                    OutlinedButton.icon(
+                    PrimaryButton(
+                      label: _copied ? l10n.copied : l10n.copyRequestMessage,
+                      icon: _copied ? Icons.check_circle : Icons.copy_rounded,
+                      isOutlined: !_copied,
                       onPressed: () => _copyMessage(context),
-                      icon: Icon(
-                          _copied ? Icons.check : Icons.copy_outlined,
-                          size: 18),
-                      label: Text(
-                          _copied ? l10n.copied : l10n.copyRequestMessage),
-                      style: OutlinedButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(vertical: 14),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                      ),
                     ),
                     const SizedBox(height: 12),
                     Text(
                       l10n.requestMessagePreview,
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        color: colorScheme.outline,
-                        fontStyle: FontStyle.italic,
-                      ),
+                      style: AppTextStyles.caption(color: AppColors.textMuted),
                       textAlign: TextAlign.center,
                     ),
                   ],

@@ -5,6 +5,7 @@ import '../../data/bible_books.dart';
 import '../../l10n/app_localizations.dart';
 import '../../state/locale_state.dart';
 import '../../state/ot_state.dart';
+import '../../ui/ui.dart';
 
 /// Screen allowing admins to create and publish a new Old Testament reading plan.
 class OtEditWeekScreen extends StatefulWidget {
@@ -95,192 +96,214 @@ class _OtEditWeekScreenState extends State<OtEditWeekScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
     final languageCode = context.watch<LocaleState>().languageCode;
     final l10n = AppLocalizations.of(context)!;
     final maxChapters = BibleBooks.getChapterCount(_selectedBook);
     final localizedBook = BibleBooks.getLocalizedName(_selectedBook, languageCode);
 
     return Scaffold(
-      appBar: AppBar(title: Text(l10n.otPlan)),
+      backgroundColor: AppColors.background,
+      appBar: AppBar(
+        title: Text(l10n.otPlan, style: AppTextStyles.titleMedium()),
+        backgroundColor: AppColors.background,
+        elevation: 0,
+      ),
       body: Form(
         key: _formKey,
-        child: ListView(
-          padding: const EdgeInsets.all(16),
+        child: Column(
           children: [
-            // ── Book Picker ───────────────────────────────────────────────
-            Text(
-              l10n.pickBook,
-              style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 6),
-            InkWell(
-              onTap: () async {
-                final picked = await Navigator.of(context).push<String>(
-                  MaterialPageRoute(
-                    builder: (_) => _OtBookPickerPage(initial: _selectedBook),
-                  ),
-                );
-                if (picked != null && picked != _selectedBook) {
-                  setState(() {
-                    _selectedBook = picked;
-                    final newMax = BibleBooks.getChapterCount(picked);
-                    if (_startChapter > newMax) {
-                      _startChapter = 1;
-                    }
-                  });
-                }
-              },
-              child: InputDecorator(
-                decoration: InputDecoration(
-                  labelText: l10n.selectBook,
-                  border: const OutlineInputBorder(),
-                  suffixIcon: const Icon(Icons.arrow_drop_down),
-                ),
-                child: Text(
-                  '$localizedBook (${l10n.chaptersCount(maxChapters)})',
-                  style: theme.textTheme.bodyLarge,
-                ),
-              ),
-            ),
-            const SizedBox(height: 16),
-
-            // ── Starting Chapter ──────────────────────────────────────────
-            Text(
-              l10n.startChapter,
-              style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 6),
-            Card(
-              elevation: 0,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8),
-                side: BorderSide(color: theme.colorScheme.outlineVariant),
-              ),
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      '${l10n.chapter} $_startChapter / $maxChapters',
-                      style: theme.textTheme.titleMedium,
-                    ),
-                    Row(
+            Expanded(
+              child: ListView(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                children: [
+                  // ── Plan Configuration Card ─────────────────────────────────
+                  SectionTitle(title: l10n.pickBook),
+                  const SizedBox(height: 8),
+                  AppCard(
+                    padding: const EdgeInsets.all(16),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        IconButton(
-                          icon: const Icon(Icons.remove_circle_outline),
-                          onPressed: _startChapter > 1
-                              ? () => setState(() => _startChapter--)
-                              : null,
+                        Text(l10n.selectBook, style: AppTextStyles.label()),
+                        const SizedBox(height: 6),
+                        InkWell(
+                          borderRadius: BorderRadius.circular(14),
+                          onTap: () async {
+                            final picked = await Navigator.of(context).push<String>(
+                              MaterialPageRoute(
+                                builder: (_) => _OtBookPickerPage(initial: _selectedBook),
+                              ),
+                            );
+                            if (picked != null && picked != _selectedBook) {
+                              setState(() {
+                                _selectedBook = picked;
+                                final newMax = BibleBooks.getChapterCount(picked);
+                                if (_startChapter > newMax) {
+                                  _startChapter = 1;
+                                }
+                              });
+                            }
+                          },
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                            decoration: BoxDecoration(
+                              color: AppColors.background,
+                              borderRadius: BorderRadius.circular(14),
+                              border: Border.all(color: AppColors.cardBorder),
+                            ),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Text(
+                                  '$localizedBook (${l10n.chaptersCount(maxChapters)})',
+                                  style: AppTextStyles.body(fontWeight: FontWeight.w600),
+                                ),
+                                const Icon(Icons.arrow_drop_down, color: AppColors.textPrimary),
+                              ],
+                            ),
+                          ),
                         ),
-                        IconButton(
-                          icon: const Icon(Icons.add_circle_outline),
-                          onPressed: _startChapter < maxChapters
-                              ? () => setState(() => _startChapter++)
-                              : null,
+                        const SizedBox(height: 16),
+                        Text(l10n.startChapter, style: AppTextStyles.label()),
+                        const SizedBox(height: 6),
+                        Container(
+                          height: 48,
+                          decoration: BoxDecoration(
+                            color: AppColors.background,
+                            borderRadius: BorderRadius.circular(14),
+                            border: Border.all(color: AppColors.cardBorder),
+                          ),
+                          child: Row(
+                            children: [
+                              IconButton(
+                                icon: const Icon(Icons.remove, size: 20),
+                                color: _startChapter > 1 ? AppColors.accent : AppColors.textMuted,
+                                onPressed: _startChapter > 1
+                                    ? () => setState(() => _startChapter--)
+                                    : null,
+                              ),
+                              Expanded(
+                                child: Text(
+                                  '${l10n.chapter} $_startChapter / $maxChapters',
+                                  textAlign: TextAlign.center,
+                                  style: AppTextStyles.body(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 16,
+                                  ),
+                                ),
+                              ),
+                              IconButton(
+                                icon: const Icon(Icons.add, size: 20),
+                                color: _startChapter < maxChapters ? AppColors.accent : AppColors.textMuted,
+                                onPressed: _startChapter < maxChapters
+                                    ? () => setState(() => _startChapter++)
+                                    : null,
+                              ),
+                            ],
+                          ),
                         ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-            ),
-            const SizedBox(height: 16),
-
-            // ── Start Date Picker ─────────────────────────────────────────
-            Text(
-              l10n.startDate,
-              style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 6),
-            InkWell(
-              onTap: _pickStartDate,
-              child: InputDecorator(
-                decoration: const InputDecoration(
-                  border: OutlineInputBorder(),
-                  suffixIcon: Icon(Icons.calendar_today_outlined),
-                ),
-                child: Text(_formatDate(_startDate)),
-              ),
-            ),
-            const SizedBox(height: 16),
-
-            // ── Topic (Optional) ──────────────────────────────────────────
-            Text(
-              l10n.topic,
-              style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 6),
-            TextFormField(
-              controller: _topicController,
-              decoration: InputDecoration(
-                hintText: l10n.topic,
-                border: const OutlineInputBorder(),
-              ),
-            ),
-            const SizedBox(height: 20),
-
-            // ── Plan Preview Card ─────────────────────────────────────────
-            Card(
-              elevation: 0,
-              color: theme.colorScheme.primaryContainer.withValues(alpha: 0.2),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(10),
-                side: BorderSide(
-                  color: theme.colorScheme.primary.withValues(alpha: 0.3),
-                ),
-              ),
-              child: Padding(
-                padding: const EdgeInsets.all(14),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Icon(
-                          Icons.info_outline,
-                          size: 18,
-                          color: theme.colorScheme.primary,
+                        const SizedBox(height: 16),
+                        Text(l10n.startDate, style: AppTextStyles.label()),
+                        const SizedBox(height: 6),
+                        InkWell(
+                          borderRadius: BorderRadius.circular(14),
+                          onTap: _pickStartDate,
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                            decoration: BoxDecoration(
+                              color: AppColors.background,
+                              borderRadius: BorderRadius.circular(14),
+                              border: Border.all(color: AppColors.cardBorder),
+                            ),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Text(_formatDate(_startDate), style: AppTextStyles.body()),
+                                const Icon(Icons.calendar_today_outlined, color: AppColors.textMuted, size: 20),
+                              ],
+                            ),
+                          ),
                         ),
-                        const SizedBox(width: 8),
-                        Text(
-                          l10n.otPlan,
-                          style: theme.textTheme.labelLarge?.copyWith(
-                            color: theme.colorScheme.primary,
-                            fontWeight: FontWeight.bold,
+                        const SizedBox(height: 16),
+                        Text(l10n.topic, style: AppTextStyles.label()),
+                        const SizedBox(height: 6),
+                        TextFormField(
+                          controller: _topicController,
+                          style: AppTextStyles.body(),
+                          decoration: InputDecoration(
+                            hintText: l10n.topic,
+                            hintStyle: AppTextStyles.bodyMuted(),
+                            fillColor: AppColors.background,
+                            filled: true,
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(14),
+                              borderSide: const BorderSide(color: AppColors.cardBorder),
+                            ),
+                            enabledBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(14),
+                              borderSide: const BorderSide(color: AppColors.cardBorder),
+                            ),
+                            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
                           ),
                         ),
                       ],
                     ),
-                    const SizedBox(height: 8),
-                    Text(
-                      '• $localizedBook ($_startChapter–$maxChapters)\n'
-                      '• ${l10n.startDate}: ${_formatDate(_startDate)}',
-                      style: theme.textTheme.bodyMedium,
+                  ),
+                  const SizedBox(height: 16),
+
+                  // ── Plan Preview Card ─────────────────────────────────────
+                  AppCard(
+                    color: AppColors.accentLight,
+                    padding: const EdgeInsets.all(16),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            const Icon(Icons.info_outline, size: 20, color: AppColors.accent),
+                            const SizedBox(width: 8),
+                            Text(
+                              l10n.otPlan,
+                              style: AppTextStyles.cardTitle(color: AppColors.accent),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          '• $localizedBook ($_startChapter–$maxChapters)\n'
+                          '• ${l10n.startDate}: ${_formatDate(_startDate)}',
+                          style: AppTextStyles.body(height: 1.5),
+                        ),
+                      ],
                     ),
-                  ],
+                  ),
+                  const SizedBox(height: 24),
+                ],
+              ),
+            ),
+
+            // ── Sticky Save Button ──────────────────────────────────────────
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.05),
+                    blurRadius: 10,
+                    offset: const Offset(0, -2),
+                  ),
+                ],
+              ),
+              child: SafeArea(
+                top: false,
+                child: PrimaryButton(
+                  label: l10n.publish,
+                  isLoading: _isSaving,
+                  onPressed: _isSaving ? null : () => _publish(l10n, languageCode),
                 ),
               ),
             ),
-            const SizedBox(height: 24),
-
-            // ── Publish Button ────────────────────────────────────────────
-            FilledButton.icon(
-              onPressed: _isSaving ? null : () => _publish(l10n, languageCode),
-              icon: _isSaving
-                  ? const SizedBox(
-                      width: 18,
-                      height: 18,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    )
-                  : const Icon(Icons.publish_outlined),
-              label: Text(_isSaving ? l10n.loading : l10n.publish),
-              style: FilledButton.styleFrom(
-                padding: const EdgeInsets.symmetric(vertical: 14),
-              ),
-            ),
-            const SizedBox(height: 32),
           ],
         ),
       ),
@@ -328,23 +351,45 @@ class _OtBookPickerPageState extends State<_OtBookPickerPage> {
     final l10n = AppLocalizations.of(context)!;
 
     return Scaffold(
-      appBar: AppBar(title: Text(l10n.oldTestamentHeader)),
+      backgroundColor: AppColors.background,
+      appBar: AppBar(
+        title: Text(l10n.oldTestamentHeader, style: AppTextStyles.titleMedium()),
+        backgroundColor: AppColors.background,
+        elevation: 0,
+      ),
       body: Column(
         children: [
           Padding(
-            padding: const EdgeInsets.all(12),
-            child: TextField(
-              controller: _searchController,
-              autofocus: true,
-              decoration: InputDecoration(
-                hintText: l10n.searchBooks,
-                prefixIcon: const Icon(Icons.search),
-                border: const OutlineInputBorder(),
+            padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
+            child: Container(
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(16),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.04),
+                    blurRadius: 10,
+                    offset: const Offset(0, 3),
+                  ),
+                ],
+              ),
+              child: TextField(
+                controller: _searchController,
+                autofocus: true,
+                style: AppTextStyles.body(),
+                decoration: InputDecoration(
+                  hintText: l10n.searchBooks,
+                  hintStyle: AppTextStyles.bodyMuted(),
+                  prefixIcon: const Icon(Icons.search, color: AppColors.textMuted),
+                  border: InputBorder.none,
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                ),
               ),
             ),
           ),
           Expanded(
             child: ListView.builder(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               itemCount: _filtered.length,
               itemBuilder: (context, i) {
                 final book = _filtered[i];
@@ -353,13 +398,30 @@ class _OtBookPickerPageState extends State<_OtBookPickerPage> {
                 final displayName = book.localizedName(languageCode);
                 final altName = languageCode == 'am' ? book.name : book.amharicName;
 
-                return ListTile(
-                  title: Text(displayName),
-                  subtitle: Text('$altName • ${l10n.chaptersCount(book.chapterCount)}'),
-                  trailing: isSelected
-                      ? Icon(Icons.check, color: Theme.of(context).colorScheme.primary)
-                      : null,
-                  onTap: () => Navigator.of(context).pop(book.name),
+                return Padding(
+                  padding: const EdgeInsets.only(bottom: 8),
+                  child: AppCard(
+                    padding: EdgeInsets.zero,
+                    color: isSelected ? AppColors.accentLight : Colors.white,
+                    child: ListTile(
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                      title: Text(
+                        displayName,
+                        style: AppTextStyles.body(
+                          fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+                          color: isSelected ? AppColors.accent : AppColors.textPrimary,
+                        ),
+                      ),
+                      subtitle: Text(
+                        '$altName • ${l10n.chaptersCount(book.chapterCount)}',
+                        style: AppTextStyles.caption(),
+                      ),
+                      trailing: isSelected
+                          ? const Icon(Icons.check, color: AppColors.accent)
+                          : null,
+                      onTap: () => Navigator.of(context).pop(book.name),
+                    ),
+                  ),
                 );
               },
             ),

@@ -7,6 +7,7 @@ import '../../models/study_week.dart';
 import '../../state/auth_state.dart';
 import '../../state/locale_state.dart';
 import '../../state/team_state.dart';
+import '../../ui/ui.dart';
 
 /// Admin screen to edit and publish the current week's study passage and session info.
 class EditWeekScreen extends StatefulWidget {
@@ -150,170 +151,275 @@ class _EditWeekScreenState extends State<EditWeekScreen> {
     final languageCode = context.watch<LocaleState>().languageCode;
 
     return Scaffold(
-      appBar: AppBar(title: Text(l10n.editThisWeeksStudy)),
+      backgroundColor: AppColors.background,
+      appBar: AppBar(
+        title: Text(l10n.editThisWeeksStudy, style: AppTextStyles.titleMedium()),
+        backgroundColor: AppColors.background,
+        elevation: 0,
+      ),
       body: Form(
         key: _formKey,
-        child: ListView(
-          padding: const EdgeInsets.all(16),
+        child: Column(
           children: [
-            // ── Book picker ────────────────────────────────────────────────
-            _SectionLabel(l10n.book),
-            InkWell(
-              onTap: () async {
-                final picked = await Navigator.of(context).push<String>(
-                  MaterialPageRoute(
-                    builder: (_) => _BookPickerPage(initial: _book),
+            Expanded(
+              child: ListView(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                children: [
+                  // ── Passage Card ──────────────────────────────────────────
+                  SectionTitle(title: l10n.portion),
+                  const SizedBox(height: 8),
+                  AppCard(
+                    padding: const EdgeInsets.all(16),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(l10n.book, style: AppTextStyles.label()),
+                        const SizedBox(height: 6),
+                        InkWell(
+                          borderRadius: BorderRadius.circular(14),
+                          onTap: () async {
+                            final picked = await Navigator.of(context).push<String>(
+                              MaterialPageRoute(
+                                builder: (_) => _BookPickerPage(initial: _book),
+                              ),
+                            );
+                            if (picked != null && picked != _book) {
+                              setState(() {
+                                _book = picked;
+                                _chapter = 1;
+                                _verseFrom = 1;
+                                _verseTo = 1;
+                              });
+                            }
+                          },
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                            decoration: BoxDecoration(
+                              color: AppColors.background,
+                              borderRadius: BorderRadius.circular(14),
+                              border: Border.all(color: AppColors.cardBorder),
+                            ),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Text(
+                                  BibleBooks.getLocalizedName(_book, languageCode),
+                                  style: AppTextStyles.body(fontWeight: FontWeight.w600),
+                                ),
+                                const Icon(Icons.arrow_drop_down, color: AppColors.textPrimary),
+                              ],
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        Text(l10n.chapterRange(_maxChapter), style: AppTextStyles.label()),
+                        const SizedBox(height: 6),
+                        _ModernStepper(
+                          value: _chapter,
+                          min: 1,
+                          max: _maxChapter,
+                          onDecrement: () => setState(() {
+                            if (_chapter > 1) _chapter--;
+                          }),
+                          onIncrement: () => setState(() {
+                            if (_chapter < _maxChapter) _chapter++;
+                          }),
+                        ),
+                        const SizedBox(height: 16),
+                        Text(l10n.verseFrom, style: AppTextStyles.label()),
+                        const SizedBox(height: 6),
+                        _ModernStepper(
+                          value: _verseFrom,
+                          min: 1,
+                          max: 176,
+                          onDecrement: () => setState(() {
+                            if (_verseFrom > 1) _verseFrom--;
+                          }),
+                          onIncrement: () => setState(() {
+                            if (_verseFrom < 176) {
+                              _verseFrom++;
+                              if (_verseTo < _verseFrom) _verseTo = _verseFrom;
+                            }
+                          }),
+                        ),
+                        const SizedBox(height: 16),
+                        Text(l10n.verseTo, style: AppTextStyles.label()),
+                        const SizedBox(height: 6),
+                        _ModernStepper(
+                          value: _verseTo,
+                          min: _verseFrom,
+                          max: 176,
+                          onDecrement: () => setState(() {
+                            if (_verseTo > _verseFrom) _verseTo--;
+                          }),
+                          onIncrement: () => setState(() {
+                            if (_verseTo < 176) _verseTo++;
+                          }),
+                        ),
+                      ],
+                    ),
                   ),
-                );
-                if (picked != null && picked != _book) {
-                  setState(() {
-                    _book = picked;
-                    _chapter = 1;
-                    _verseFrom = 1;
-                    _verseTo = 1;
-                  });
-                }
-              },
-              child: InputDecorator(
-                decoration: const InputDecoration(
-                  border: OutlineInputBorder(),
-                  suffixIcon: Icon(Icons.arrow_drop_down),
+                  const SizedBox(height: 20),
+
+                  // ── Session Details Card ──────────────────────────────────
+                  SectionTitle(title: l10n.sessionDay),
+                  const SizedBox(height: 8),
+                  AppCard(
+                    padding: const EdgeInsets.all(16),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(l10n.sessionDay, style: AppTextStyles.label()),
+                        const SizedBox(height: 6),
+                        DropdownButtonFormField<String>(
+                          initialValue: _sessionDay,
+                          decoration: InputDecoration(
+                            fillColor: AppColors.background,
+                            filled: true,
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(14),
+                              borderSide: const BorderSide(color: AppColors.cardBorder),
+                            ),
+                            enabledBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(14),
+                              borderSide: const BorderSide(color: AppColors.cardBorder),
+                            ),
+                            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                          ),
+                          items: _days
+                              .map((d) => DropdownMenuItem(value: d, child: Text(d, style: AppTextStyles.body())))
+                              .toList(),
+                          onChanged: (v) => setState(() => _sessionDay = v!),
+                        ),
+                        const SizedBox(height: 16),
+                        Text(l10n.sessionTime, style: AppTextStyles.label()),
+                        const SizedBox(height: 6),
+                        InkWell(
+                          borderRadius: BorderRadius.circular(14),
+                          onTap: () async {
+                            final t = await showTimePicker(
+                              context: context,
+                              initialTime: _sessionTime,
+                            );
+                            if (t != null) setState(() => _sessionTime = t);
+                          },
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                            decoration: BoxDecoration(
+                              color: AppColors.background,
+                              borderRadius: BorderRadius.circular(14),
+                              border: Border.all(color: AppColors.cardBorder),
+                            ),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Text(_formatTime(_sessionTime), style: AppTextStyles.body()),
+                                const Icon(Icons.access_time_outlined, color: AppColors.textMuted),
+                              ],
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        Text(l10n.place, style: AppTextStyles.label()),
+                        const SizedBox(height: 6),
+                        TextFormField(
+                          controller: _placeController,
+                          style: AppTextStyles.body(),
+                          decoration: InputDecoration(
+                            hintText: l10n.placeHint,
+                            hintStyle: AppTextStyles.bodyMuted(),
+                            fillColor: AppColors.background,
+                            filled: true,
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(14),
+                              borderSide: const BorderSide(color: AppColors.cardBorder),
+                            ),
+                            enabledBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(14),
+                              borderSide: const BorderSide(color: AppColors.cardBorder),
+                            ),
+                            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                          ),
+                          validator: (v) =>
+                              (v == null || v.trim().isEmpty) ? l10n.placeRequired : null,
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+
+                  // ── Reminder & Options Card ───────────────────────────────
+                  SectionTitle(title: l10n.thursdayReminderTimeLabel),
+                  const SizedBox(height: 8),
+                  AppCard(
+                    padding: const EdgeInsets.all(16),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(l10n.thursdayReminderTimeLabel, style: AppTextStyles.label()),
+                        const SizedBox(height: 6),
+                        InkWell(
+                          borderRadius: BorderRadius.circular(14),
+                          onTap: () async {
+                            final t = await showTimePicker(
+                              context: context,
+                              initialTime: _reminderTime,
+                            );
+                            if (t != null) setState(() => _reminderTime = t);
+                          },
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                            decoration: BoxDecoration(
+                              color: AppColors.background,
+                              borderRadius: BorderRadius.circular(14),
+                              border: Border.all(color: AppColors.cardBorder),
+                            ),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Text(_formatTime(_reminderTime), style: AppTextStyles.body()),
+                                const Icon(Icons.notifications_outlined, color: AppColors.textMuted),
+                              ],
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        CheckboxListTile(
+                          contentPadding: EdgeInsets.zero,
+                          activeColor: AppColors.accent,
+                          title: Text(l10n.startAsNewWeek, style: AppTextStyles.cardTitle()),
+                          subtitle: Text(l10n.startAsNewWeekSubtitle, style: AppTextStyles.caption()),
+                          value: _isNewWeek,
+                          onChanged: (v) => setState(() => _isNewWeek = v ?? false),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                ],
+              ),
+            ),
+
+            // ── Sticky Save Button ──────────────────────────────────────────
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.05),
+                    blurRadius: 10,
+                    offset: const Offset(0, -2),
+                  ),
+                ],
+              ),
+              child: SafeArea(
+                top: false,
+                child: PrimaryButton(
+                  label: l10n.publish,
+                  isLoading: _isSaving,
+                  onPressed: _isSaving ? null : _publish,
                 ),
-                child: Text(BibleBooks.getLocalizedName(_book, languageCode)),
-              ),
-            ),
-            const SizedBox(height: 16),
-
-            // ── Chapter stepper ────────────────────────────────────────────
-            _SectionLabel(l10n.chapterRange(_maxChapter)),
-            _Stepper(
-              value: _chapter,
-              min: 1,
-              max: _maxChapter,
-              onDecrement: () => setState(() {
-                if (_chapter > 1) _chapter--;
-              }),
-              onIncrement: () => setState(() {
-                if (_chapter < _maxChapter) _chapter++;
-              }),
-            ),
-            const SizedBox(height: 16),
-
-            // ── Verse range ────────────────────────────────────────────────
-            _SectionLabel(l10n.verseFrom),
-            _Stepper(
-              value: _verseFrom,
-              min: 1,
-              max: 176,
-              onDecrement: () => setState(() {
-                if (_verseFrom > 1) _verseFrom--;
-              }),
-              onIncrement: () => setState(() {
-                if (_verseFrom < 176) {
-                  _verseFrom++;
-                  if (_verseTo < _verseFrom) _verseTo = _verseFrom;
-                }
-              }),
-            ),
-            const SizedBox(height: 12),
-            _SectionLabel(l10n.verseTo),
-            _Stepper(
-              value: _verseTo,
-              min: _verseFrom,
-              max: 176,
-              onDecrement: () => setState(() {
-                if (_verseTo > _verseFrom) _verseTo--;
-              }),
-              onIncrement: () => setState(() {
-                if (_verseTo < 176) _verseTo++;
-              }),
-            ),
-            const SizedBox(height: 16),
-
-            // ── Session day ────────────────────────────────────────────────
-            _SectionLabel(l10n.sessionDay),
-            DropdownButtonFormField<String>(
-              initialValue: _sessionDay,
-              decoration: const InputDecoration(border: OutlineInputBorder()),
-              items: _days
-                  .map((d) => DropdownMenuItem(value: d, child: Text(d)))
-                  .toList(),
-              onChanged: (v) => setState(() => _sessionDay = v!),
-            ),
-            const SizedBox(height: 16),
-
-            // ── Session time ────────────────────────────────────────────────
-            _SectionLabel(l10n.sessionTime),
-            ListTile(
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(4),
-                side: BorderSide(color: Theme.of(context).dividerColor),
-              ),
-              title: Text(_formatTime(_sessionTime)),
-              trailing: const Icon(Icons.access_time_outlined),
-              onTap: () async {
-                final t = await showTimePicker(
-                  context: context,
-                  initialTime: _sessionTime,
-                );
-                if (t != null) setState(() => _sessionTime = t);
-              },
-            ),
-            const SizedBox(height: 16),
-
-            // ── Place ──────────────────────────────────────────────────────
-            _SectionLabel(l10n.place),
-            TextFormField(
-              controller: _placeController,
-              decoration: InputDecoration(
-                hintText: l10n.placeHint,
-                border: const OutlineInputBorder(),
-              ),
-              validator: (v) =>
-                  (v == null || v.trim().isEmpty) ? l10n.placeRequired : null,
-            ),
-            const SizedBox(height: 16),
-
-            // ── Thursday reminder time ─────────────────────────────────────
-            _SectionLabel(l10n.thursdayReminderTimeLabel),
-            ListTile(
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(4),
-                side: BorderSide(color: Theme.of(context).dividerColor),
-              ),
-              title: Text(_formatTime(_reminderTime)),
-              trailing: const Icon(Icons.notifications_outlined),
-              onTap: () async {
-                final t = await showTimePicker(
-                  context: context,
-                  initialTime: _reminderTime,
-                );
-                if (t != null) setState(() => _reminderTime = t);
-              },
-            ),
-            const SizedBox(height: 24),
-
-            // ── New week toggle ────────────────────────────────────
-            CheckboxListTile(
-              title: Text(l10n.startAsNewWeek),
-              subtitle: Text(l10n.startAsNewWeekSubtitle),
-              value: _isNewWeek,
-              onChanged: (v) => setState(() => _isNewWeek = v ?? false),
-            ),
-            const SizedBox(height: 24),
-
-            // ── Publish button ─────────────────────────────────────────────
-            SizedBox(
-              width: double.infinity,
-              child: FilledButton(
-                onPressed: _isSaving ? null : _publish,
-                child: _isSaving
-                    ? const SizedBox(
-                        width: 20,
-                        height: 20,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      )
-                    : Text(l10n.publish),
               ),
             ),
           ],
@@ -323,29 +429,8 @@ class _EditWeekScreenState extends State<EditWeekScreen> {
   }
 }
 
-// ── Helper widgets ────────────────────────────────────────────────────────────
-
-class _SectionLabel extends StatelessWidget {
-  const _SectionLabel(this.text);
-  final String text;
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 6),
-      child: Text(
-        text,
-        style: Theme.of(context)
-            .textTheme
-            .labelLarge
-            ?.copyWith(fontWeight: FontWeight.w600),
-      ),
-    );
-  }
-}
-
-class _Stepper extends StatelessWidget {
-  const _Stepper({
+class _ModernStepper extends StatelessWidget {
+  const _ModernStepper({
     required this.value,
     required this.min,
     required this.max,
@@ -361,29 +446,42 @@ class _Stepper extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      children: [
-        IconButton(
-          icon: const Icon(Icons.remove_circle_outline),
-          onPressed: value > min ? onDecrement : null,
-        ),
-        Expanded(
-          child: Text(
-            '$value',
-            textAlign: TextAlign.center,
-            style: Theme.of(context).textTheme.titleMedium,
+    return Container(
+      height: 48,
+      decoration: BoxDecoration(
+        color: AppColors.background,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: AppColors.cardBorder),
+      ),
+      child: Row(
+        children: [
+          IconButton(
+            icon: const Icon(Icons.remove, size: 20),
+            color: value > min ? AppColors.accent : AppColors.textMuted,
+            onPressed: value > min ? onDecrement : null,
           ),
-        ),
-        IconButton(
-          icon: const Icon(Icons.add_circle_outline),
-          onPressed: value < max ? onIncrement : null,
-        ),
-      ],
+          Expanded(
+            child: Text(
+              '$value',
+              textAlign: TextAlign.center,
+              style: AppTextStyles.body(
+                fontWeight: FontWeight.bold,
+                fontSize: 18,
+              ),
+            ),
+          ),
+          IconButton(
+            icon: const Icon(Icons.add, size: 20),
+            color: value < max ? AppColors.accent : AppColors.textMuted,
+            onPressed: value < max ? onIncrement : null,
+          ),
+        ],
+      ),
     );
   }
 }
 
-/// Inline book picker reusing the 66-book list.
+/// Searchable book picker reusing the 66-book list.
 class _BookPickerPage extends StatefulWidget {
   const _BookPickerPage({required this.initial});
   final String initial;
@@ -402,25 +500,49 @@ class _BookPickerPageState extends State<_BookPickerPage> {
     final filtered = BibleBooks.search(_query);
 
     return Scaffold(
+      backgroundColor: AppColors.background,
       appBar: AppBar(
+        backgroundColor: AppColors.background,
+        elevation: 0,
         title: TextField(
           autofocus: true,
+          style: AppTextStyles.body(),
           decoration: InputDecoration(
             hintText: l10n.searchBookHint,
+            hintStyle: AppTextStyles.bodyMuted(),
             border: InputBorder.none,
           ),
           onChanged: (v) => setState(() => _query = v),
         ),
       ),
       body: ListView.builder(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         itemCount: filtered.length,
         itemBuilder: (_, i) {
           final book = filtered[i];
           final localizedName = book.localizedName(languageCode);
-          return ListTile(
-            title: Text(localizedName),
-            selected: book.name == widget.initial,
-            onTap: () => Navigator.of(context).pop(book.name),
+          final isSelected = book.name == widget.initial;
+
+          return Padding(
+            padding: const EdgeInsets.only(bottom: 8),
+            child: AppCard(
+              padding: EdgeInsets.zero,
+              color: isSelected ? AppColors.accentLight : Colors.white,
+              child: ListTile(
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                title: Text(
+                  localizedName,
+                  style: AppTextStyles.body(
+                    fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+                    color: isSelected ? AppColors.accent : AppColors.textPrimary,
+                  ),
+                ),
+                trailing: isSelected
+                    ? const Icon(Icons.check, color: AppColors.accent)
+                    : null,
+                onTap: () => Navigator.of(context).pop(book.name),
+              ),
+            ),
           );
         },
       ),

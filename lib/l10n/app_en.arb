@@ -361,5 +361,20 @@
   },
   "couldNotLoadMemberOverview": "Could not load member overview.",
   "bookFinishedStatus": "Book finished",
-  "comingSoon": "Coming soon"
+  "comingSoon": "Coming soon",
+  "greetingUser": "Hello, {name}",
+  "@greetingUser": {
+    "placeholders": {
+      "name": { "type": "String" }
+    }
+  },
+  "greetingGuest": "Welcome",
+  "thisWeek": "This Week",
+  "dayMon": "Mon",
+  "dayTue": "Tue",
+  "dayWed": "Wed",
+  "dayThu": "Thu",
+  "dayFri": "Fri",
+  "daySat": "Sat",
+  "daySun": "Sun"
 }

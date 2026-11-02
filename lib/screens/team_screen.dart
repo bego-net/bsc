@@ -10,6 +10,7 @@ import '../models/study_week.dart';
 import '../state/auth_state.dart';
 import '../state/locale_state.dart';
 import '../state/team_state.dart';
+import '../ui/ui.dart';
 import '../widgets/profile_avatar_button.dart';
 import 'admin/admin_home_screen.dart';
 
@@ -47,15 +48,22 @@ class _TeamScreenState extends State<TeamScreen> {
     final localeState = Provider.of<LocaleState?>(context);
     final l10n = AppLocalizations.of(context) ?? AppLocalizationsEn();
     final languageCode = localeState?.languageCode ?? l10n.localeName;
-    final colorScheme = Theme.of(context).colorScheme;
 
     return Scaffold(
+      backgroundColor: AppColors.background,
       appBar: AppBar(
-        title: Text(l10n.teamBsTitle),
+        backgroundColor: AppColors.background,
+        elevation: 0,
+        scrolledUnderElevation: 0,
+        centerTitle: false,
+        title: Text(
+          l10n.teamBsTitle,
+          style: AppTextStyles.title(),
+        ),
         actions: [
           if (authState.isAdmin)
             IconButton(
-              icon: const Icon(Icons.admin_panel_settings_outlined),
+              icon: const Icon(Icons.admin_panel_settings_outlined, color: AppColors.textPrimary),
               tooltip: l10n.adminTools,
               onPressed: () {
                 Navigator.of(context).push(
@@ -66,26 +74,31 @@ class _TeamScreenState extends State<TeamScreen> {
               },
             ),
           IconButton(
-            icon: const Icon(Icons.refresh_outlined),
+            icon: const Icon(Icons.refresh_outlined, color: AppColors.textSecondary),
             tooltip: l10n.refresh,
             onPressed: () => teamState.loadData(),
           ),
           const ProfileAvatarButton(),
+          const SizedBox(width: 8),
         ],
       ),
-      body: _buildBody(context, teamState, colorScheme, languageCode, l10n),
+      body: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 600),
+          child: _buildBody(context, teamState, languageCode, l10n),
+        ),
+      ),
     );
   }
 
   Widget _buildBody(
     BuildContext context,
     TeamState teamState,
-    ColorScheme colorScheme,
     String languageCode,
     AppLocalizations l10n,
   ) {
     if (teamState.isLoading) {
-      return const Center(child: CircularProgressIndicator());
+      return const Center(child: CircularProgressIndicator(color: AppColors.accent));
     }
 
     if (teamState.errorMessage != null) {
@@ -95,20 +108,20 @@ class _TeamScreenState extends State<TeamScreen> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Icon(Icons.error_outline, size: 48, color: Colors.red),
+              const Icon(Icons.error_outline, size: 48, color: AppColors.error),
               const SizedBox(height: 12),
               Text(
                 teamState.errorMessage!,
                 textAlign: TextAlign.center,
-                style: Theme.of(context).textTheme.bodyMedium,
+                style: AppTextStyles.body(),
               ),
               const SizedBox(height: 16),
-              FilledButton(
+              PrimaryButton(
+                label: l10n.retry,
                 onPressed: () {
                   teamState.clearError();
                   teamState.loadData();
                 },
-                child: Text(l10n.retry),
               ),
             ],
           ),
@@ -120,28 +133,11 @@ class _TeamScreenState extends State<TeamScreen> {
     if (week == null) {
       return Center(
         child: Padding(
-          padding: const EdgeInsets.all(32),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(
-                Icons.calendar_today_outlined,
-                size: 64,
-                color: colorScheme.primary.withValues(alpha: 0.4),
-              ),
-              const SizedBox(height: 16),
-              Text(
-                l10n.noActiveWeek,
-                style: Theme.of(context).textTheme.titleMedium,
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 8),
-              Text(
-                l10n.checkBackLater,
-                style: Theme.of(context).textTheme.bodySmall,
-                textAlign: TextAlign.center,
-              ),
-            ],
+          padding: const EdgeInsets.all(20),
+          child: EmptyState(
+            icon: Icons.calendar_today_outlined,
+            title: l10n.noActiveWeek,
+            subtitle: l10n.checkBackLater,
           ),
         ),
       );
@@ -150,45 +146,49 @@ class _TeamScreenState extends State<TeamScreen> {
     final localizedPassage = week.localizedPassageText(languageCode);
 
     return RefreshIndicator(
+      color: AppColors.accent,
       onRefresh: teamState.loadData,
       child: ListView(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         children: [
-          // ── This Week's Study Card ────────────────────────────────────────
-          _SectionCard(
+          // ── Hero Card: This Week's Passage & Session Info ─────────────────────
+          AppCard(
+            padding: const EdgeInsets.all(20),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Icon(Icons.book_outlined, color: colorScheme.primary),
-                    const SizedBox(width: 8),
                     Text(
                       l10n.thisWeeksPassage,
-                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                            color: colorScheme.primary,
-                            fontWeight: FontWeight.bold,
-                          ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 12),
-                Text(
-                  localizedPassage,
-                  style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                      style: AppTextStyles.caption(
+                        color: AppColors.accent,
                         fontWeight: FontWeight.bold,
                       ),
+                    ),
+                    StatChip.accent(l10n.teamBs),
+                  ],
                 ),
-                const SizedBox(height: 8),
-                _InfoRow(
+                const SizedBox(height: 10),
+                Text(
+                  localizedPassage,
+                  style: AppTextStyles.headingLarge(),
+                ),
+                const SizedBox(height: 16),
+                const Divider(color: AppColors.border, height: 1),
+                const SizedBox(height: 14),
+                _InfoItem(
                   icon: Icons.calendar_today_outlined,
                   text: week.sessionDay,
                 ),
-                _InfoRow(
+                const SizedBox(height: 8),
+                _InfoItem(
                   icon: Icons.access_time_outlined,
                   text: week.sessionTime,
                 ),
-                _InfoRow(
+                const SizedBox(height: 8),
+                _InfoItem(
                   icon: Icons.location_on_outlined,
                   text: week.place,
                 ),
@@ -197,30 +197,65 @@ class _TeamScreenState extends State<TeamScreen> {
           ),
           const SizedBox(height: 16),
 
-          // ── Mark as Prepared ──────────────────────────────────────────────
-          _PreparedButton(
-            isPrepared: teamState.isPrepared,
-            onTap: () => teamState.togglePrepared(),
-            l10n: l10n,
+          // ── Mark as Prepared Large Button ────────────────────────────────────
+          PrimaryButton(
+            label: teamState.isPrepared
+                ? '${l10n.preparedBadge} (${l10n.undoRead})'
+                : l10n.markAsPrepared,
+            icon: teamState.isPrepared ? Icons.check_circle : Icons.check_circle_outline,
+            isOutlined: teamState.isPrepared,
+            onPressed: () => teamState.togglePrepared(),
           ),
+          const SizedBox(height: 20),
+
+          // ── Questions Section ────────────────────────────────────────────────
+          SectionTitle(title: l10n.discussionQuestions),
+          const SizedBox(height: 6),
+          if (teamState.questions.isEmpty)
+            AppCard(
+              padding: const EdgeInsets.all(20),
+              child: Center(
+                child: Text(
+                  l10n.checkBackLater,
+                  style: AppTextStyles.subtitle(),
+                ),
+              ),
+            )
+          else
+            ...teamState.questions.asMap().entries.map((entry) {
+              final index = entry.key + 1;
+              final question = entry.value;
+              return Padding(
+                padding: const EdgeInsets.only(bottom: 10),
+                child: _QuestionCard(index: index, question: question),
+              );
+            }),
           const SizedBox(height: 16),
 
-          // ── Questions ────────────────────────────────────────────────────
-          _QuestionsSection(
-            questions: teamState.questions,
-            title: l10n.discussionQuestions,
-            emptyText: l10n.checkBackLater,
-          ),
-          const SizedBox(height: 16),
-
-          // ── Materials ────────────────────────────────────────────────────
-          _MaterialsSection(
-            materials: teamState.materials,
-            onOpenUrl: _openUrl,
-            title: l10n.studyMaterials,
-            emptyText: l10n.checkBackLater,
-            openLinkText: languageCode == 'am' ? 'ሊንኩን ክፈት →' : 'Open link →',
-          ),
+          // ── Materials Section ────────────────────────────────────────────────
+          SectionTitle(title: l10n.studyMaterials),
+          const SizedBox(height: 6),
+          if (teamState.materials.isEmpty)
+            AppCard(
+              padding: const EdgeInsets.all(20),
+              child: Center(
+                child: Text(
+                  l10n.checkBackLater,
+                  style: AppTextStyles.subtitle(),
+                ),
+              ),
+            )
+          else
+            ...teamState.materials.map((m) {
+              return Padding(
+                padding: const EdgeInsets.only(bottom: 10),
+                child: _MaterialCard(
+                  item: m,
+                  onOpenUrl: _openUrl,
+                  linkText: languageCode == 'am' ? 'ሊንኩን ክፈት →' : 'Open link →',
+                ),
+              );
+            }),
           const SizedBox(height: 32),
         ],
       ),
@@ -228,47 +263,63 @@ class _TeamScreenState extends State<TeamScreen> {
   }
 }
 
-// ── Sub-widgets ───────────────────────────────────────────────────────────────
-
-class _SectionCard extends StatelessWidget {
-  const _SectionCard({required this.child});
-  final Widget child;
-
-  @override
-  Widget build(BuildContext context) {
-    return Card(
-      elevation: 0,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-        side: BorderSide(
-          color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.2),
-        ),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: child,
-      ),
-    );
-  }
-}
-
-class _InfoRow extends StatelessWidget {
-  const _InfoRow({required this.icon, required this.text});
+class _InfoItem extends StatelessWidget {
   final IconData icon;
   final String text;
 
+  const _InfoItem({required this.icon, required this.text});
+
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(top: 4),
+    return Row(
+      children: [
+        Icon(icon, size: 18, color: AppColors.accent),
+        const SizedBox(width: 8),
+        Expanded(
+          child: Text(
+            text,
+            style: AppTextStyles.body(color: AppColors.textSecondary),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _QuestionCard extends StatelessWidget {
+  final int index;
+  final Question question;
+
+  const _QuestionCard({required this.index, required this.question});
+
+  @override
+  Widget build(BuildContext context) {
+    return AppCard(
+      padding: const EdgeInsets.all(16),
       child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(icon, size: 16, color: Theme.of(context).colorScheme.outline),
-          const SizedBox(width: 6),
+          Container(
+            width: 32,
+            height: 32,
+            decoration: BoxDecoration(
+              color: AppColors.accent.withValues(alpha: 0.12),
+              shape: BoxShape.circle,
+            ),
+            alignment: Alignment.center,
+            child: Text(
+              '$index',
+              style: AppTextStyles.caption(
+                color: AppColors.accent,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+          const SizedBox(width: 12),
           Expanded(
             child: Text(
-              text,
-              style: Theme.of(context).textTheme.bodyMedium,
+              question.text,
+              style: AppTextStyles.body(),
             ),
           ),
         ],
@@ -277,176 +328,64 @@ class _InfoRow extends StatelessWidget {
   }
 }
 
-class _PreparedButton extends StatelessWidget {
-  const _PreparedButton({
-    required this.isPrepared,
-    required this.onTap,
-    required this.l10n,
-  });
-  final bool isPrepared;
-  final VoidCallback onTap;
-  final AppLocalizations l10n;
-
-  @override
-  Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
-    return SizedBox(
-      width: double.infinity,
-      child: isPrepared
-          ? OutlinedButton.icon(
-              onPressed: onTap,
-              icon: const Icon(Icons.check_circle_outline),
-              label: Text('${l10n.preparedBadge} (${l10n.undoRead})'),
-              style: OutlinedButton.styleFrom(
-                foregroundColor: colorScheme.primary,
-                side: BorderSide(color: colorScheme.primary),
-                padding: const EdgeInsets.symmetric(vertical: 14),
-              ),
-            )
-          : FilledButton.icon(
-              onPressed: onTap,
-              icon: const Icon(Icons.check_circle_outline),
-              label: Text(l10n.markAsPrepared),
-              style: FilledButton.styleFrom(
-                padding: const EdgeInsets.symmetric(vertical: 14),
-              ),
-            ),
-    );
-  }
-}
-
-class _QuestionsSection extends StatelessWidget {
-  const _QuestionsSection({
-    required this.questions,
-    required this.title,
-    required this.emptyText,
-  });
-  final List<Question> questions;
-  final String title;
-  final String emptyText;
-
-  @override
-  Widget build(BuildContext context) {
-    return _SectionCard(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            title,
-            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
-          ),
-          const SizedBox(height: 12),
-          if (questions.isEmpty)
-            Text(
-              emptyText,
-              style: Theme.of(context).textTheme.bodySmall,
-            )
-          else
-            ...questions.asMap().entries.map((e) {
-              final idx = e.key + 1;
-              final q = e.value;
-              return Padding(
-                padding: const EdgeInsets.only(bottom: 12),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    CircleAvatar(
-                      radius: 12,
-                      backgroundColor:
-                          Theme.of(context).colorScheme.primaryContainer,
-                      child: Text(
-                        '$idx',
-                        style: const TextStyle(fontSize: 11),
-                      ),
-                    ),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: Text(
-                        q.text,
-                        style: Theme.of(context).textTheme.bodyMedium,
-                      ),
-                    ),
-                  ],
-                ),
-              );
-            }),
-        ],
-      ),
-    );
-  }
-}
-
-class _MaterialsSection extends StatelessWidget {
-  const _MaterialsSection({
-    required this.materials,
-    required this.onOpenUrl,
-    required this.title,
-    required this.emptyText,
-    required this.openLinkText,
-  });
-  final List<MaterialItem> materials;
+class _MaterialCard extends StatelessWidget {
+  final MaterialItem item;
   final Future<void> Function(String url) onOpenUrl;
-  final String title;
-  final String emptyText;
-  final String openLinkText;
+  final String linkText;
+
+  const _MaterialCard({
+    required this.item,
+    required this.onOpenUrl,
+    required this.linkText,
+  });
 
   @override
   Widget build(BuildContext context) {
-    return _SectionCard(
+    return AppCard(
+      padding: const EdgeInsets.all(18),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            title,
-            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.bold,
+          Row(
+            children: [
+              const Icon(Icons.description_outlined, color: AppColors.accent, size: 20),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  item.title,
+                  style: AppTextStyles.title(),
                 ),
+              ),
+            ],
           ),
-          const SizedBox(height: 12),
-          if (materials.isEmpty)
+          if (item.body.isNotEmpty) ...[
+            const SizedBox(height: 8),
             Text(
-              emptyText,
-              style: Theme.of(context).textTheme.bodySmall,
-            )
-          else
-            ...materials.map((m) {
-              return Padding(
-                padding: const EdgeInsets.only(bottom: 12),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+              item.body,
+              style: AppTextStyles.body(color: AppColors.textSecondary),
+            ),
+          ],
+          if (item.url != null && item.url!.isNotEmpty) ...[
+            const SizedBox(height: 12),
+            InkWell(
+              onTap: () => onOpenUrl(item.url!),
+              borderRadius: BorderRadius.circular(8),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: 4),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
                   children: [
                     Text(
-                      m.title,
-                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                            fontWeight: FontWeight.w600,
-                          ),
+                      linkText,
+                      style: AppTextStyles.button(color: AppColors.accent),
                     ),
-                    if (m.body.isNotEmpty) ...[
-                      const SizedBox(height: 4),
-                      Text(
-                        m.body,
-                        style: Theme.of(context).textTheme.bodySmall,
-                      ),
-                    ],
-                    if (m.url != null && m.url!.isNotEmpty) ...[
-                      const SizedBox(height: 6),
-                      InkWell(
-                        onTap: () => onOpenUrl(m.url!),
-                        child: Text(
-                          openLinkText,
-                          style: TextStyle(
-                            color: Theme.of(context).colorScheme.primary,
-                            decoration: TextDecoration.underline,
-                          ),
-                        ),
-                      ),
-                    ],
+                    const SizedBox(width: 4),
+                    const Icon(Icons.arrow_forward_rounded, size: 16, color: AppColors.accent),
                   ],
                 ),
-              );
-            }),
+              ),
+            ),
+          ],
         ],
       ),
     );

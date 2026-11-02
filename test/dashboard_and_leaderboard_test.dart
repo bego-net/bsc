@@ -118,7 +118,7 @@ void main() {
       ibsDaysThisWeek: 5,
       otDaysThisWeek: 2,
       preparedThisWeek: true,
-      lastReadDate: '2026-10-30',
+      lastReadDate: DateTime.now().toIso8601String().substring(0, 10),
     );
     final mCharlie = MemberSummary(
       uid: 'u2',
@@ -128,7 +128,7 @@ void main() {
       ibsDaysThisWeek: 1,
       otDaysThisWeek: 1,
       preparedThisWeek: false,
-      lastReadDate: '2026-10-25',
+      lastReadDate: DateTime.now().subtract(const Duration(days: 5)).toIso8601String().substring(0, 10),
     );
     final mBob = MemberSummary(
       uid: 'u3',
@@ -138,7 +138,7 @@ void main() {
       ibsDaysThisWeek: 3,
       otDaysThisWeek: 3,
       preparedThisWeek: true,
-      lastReadDate: '2026-10-29',
+      lastReadDate: DateTime.now().subtract(const Duration(days: 1)).toIso8601String().substring(0, 10),
     );
 
     test('rankedMembers sorts descending by points in category', () {
@@ -220,7 +220,7 @@ void main() {
         ibsDaysThisWeek: 5,
         otDaysThisWeek: 3,
         preparedThisWeek: true,
-        lastReadDate: '2026-10-30',
+        lastReadDate: DateTime.now().toIso8601String().substring(0, 10),
       );
       final m2 = MemberSummary(
         uid: 'u2',

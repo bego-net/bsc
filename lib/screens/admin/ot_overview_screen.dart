@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 
 import '../../l10n/app_localizations.dart';
 import '../../state/ot_state.dart';
+import '../../ui/ui.dart';
 
 /// Read-only admin overview of member progress for the current Old Testament week.
 class OtOverviewScreen extends StatefulWidget {
@@ -31,84 +32,127 @@ class _OtOverviewScreenState extends State<OtOverviewScreen> {
     final week = otState.currentWeek;
 
     return Scaffold(
-      appBar: AppBar(title: Text(l10n.otMemberOverview)),
+      backgroundColor: AppColors.background,
+      appBar: AppBar(
+        title: Text(l10n.otMemberOverview, style: AppTextStyles.titleMedium()),
+        backgroundColor: AppColors.background,
+        elevation: 0,
+      ),
       body: otState.overviewLoading
-          ? const Center(child: CircularProgressIndicator())
+          ? const Center(child: CircularProgressIndicator(color: AppColors.accent))
           : week == null
-              ? Center(child: Text(l10n.noActiveWeekPublishedDot))
+              ? Center(
+                  child: Padding(
+                    padding: const EdgeInsets.all(24),
+                    child: EmptyState(
+                      icon: Icons.menu_book_outlined,
+                      title: l10n.noActiveWeekPublishedDot,
+                    ),
+                  ),
+                )
               : Column(
                   children: [
-                    Container(
-                      width: double.infinity,
-                      padding: const EdgeInsets.all(16),
-                      color: Theme.of(context)
-                          .colorScheme
-                          .primaryContainer
-                          .withValues(alpha: 0.3),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            week.topic,
-                            style: Theme.of(context)
-                                .textTheme
-                                .titleMedium
-                                ?.copyWith(fontWeight: FontWeight.bold),
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            l10n.weekStartingTotal(
-                              week.startDate,
-                              overview.length,
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
+                      child: AppCard(
+                        color: AppColors.accentLight,
+                        padding: const EdgeInsets.all(16),
+                        child: Row(
+                          children: [
+                            Container(
+                              width: 44,
+                              height: 44,
+                              decoration: BoxDecoration(
+                                color: AppColors.accent.withValues(alpha: 0.15),
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: const Icon(Icons.menu_book, color: AppColors.accent, size: 22),
                             ),
-                            style: Theme.of(context).textTheme.bodySmall,
-                          ),
-                        ],
+                            const SizedBox(width: 14),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    week.topic,
+                                    style: AppTextStyles.cardTitle(color: AppColors.accent),
+                                  ),
+                                  const SizedBox(height: 2),
+                                  Text(
+                                    l10n.weekStartingTotal(
+                                      week.startDate,
+                                      overview.length,
+                                    ),
+                                    style: AppTextStyles.caption(color: AppColors.textPrimary),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
                     Expanded(
                       child: overview.isEmpty
-                          ? Center(child: Text(l10n.noMembersRegistered))
-                          : ListView.separated(
-                              padding: const EdgeInsets.symmetric(vertical: 8),
+                          ? Center(
+                              child: Padding(
+                                padding: const EdgeInsets.all(24),
+                                child: EmptyState(
+                                  icon: Icons.people_outline,
+                                  title: l10n.noMembersRegistered,
+                                ),
+                              ),
+                            )
+                          : ListView.builder(
+                              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                               itemCount: overview.length,
-                              separatorBuilder: (_, _) => const Divider(height: 1),
                               itemBuilder: (context, i) {
                                 final item = overview[i];
-                                return ListTile(
-                                  leading: CircleAvatar(
-                                    child: Text(
-                                      item.name.isNotEmpty
-                                          ? item.name[0].toUpperCase()
-                                          : '?',
-                                    ),
-                                  ),
-                                  title: Text(item.name),
-                                  subtitle: Text(item.email),
-                                  trailing: Container(
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 10,
-                                      vertical: 4,
-                                    ),
-                                    decoration: BoxDecoration(
-                                      color: item.completedDays == item.totalDays &&
-                                              item.totalDays > 0
-                                          ? Colors.green.withValues(alpha: 0.15)
-                                          : Theme.of(context)
-                                              .colorScheme
-                                              .surfaceContainerHighest,
-                                      borderRadius: BorderRadius.circular(12),
-                                    ),
-                                    child: Text(
-                                      item.displayProgress,
-                                      style: TextStyle(
-                                        fontWeight: FontWeight.bold,
-                                        color: item.completedDays ==
-                                                    item.totalDays &&
-                                                item.totalDays > 0
-                                            ? Colors.green.shade800
-                                            : null,
-                                      ),
+                                final isAllDone = item.completedDays == item.totalDays && item.totalDays > 0;
+
+                                return Padding(
+                                  padding: const EdgeInsets.only(bottom: 8),
+                                  child: AppCard(
+                                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                                    child: Row(
+                                      children: [
+                                        CircleAvatar(
+                                          radius: 20,
+                                          backgroundColor: AppColors.accentLight,
+                                          child: Text(
+                                            item.name.isNotEmpty ? item.name[0].toUpperCase() : '?',
+                                            style: AppTextStyles.cardTitle(
+                                              color: AppColors.accent,
+                                            ),
+                                          ),
+                                        ),
+                                        const SizedBox(width: 12),
+                                        Expanded(
+                                          child: Column(
+                                            crossAxisAlignment: CrossAxisAlignment.start,
+                                            children: [
+                                              Text(item.name, style: AppTextStyles.cardTitle()),
+                                              Text(item.email, style: AppTextStyles.caption()),
+                                            ],
+                                          ),
+                                        ),
+                                        Container(
+                                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                                          decoration: BoxDecoration(
+                                            color: isAllDone
+                                                ? AppColors.accentLight
+                                                : AppColors.cardBorder.withValues(alpha: 0.5),
+                                            borderRadius: BorderRadius.circular(12),
+                                          ),
+                                          child: Text(
+                                            '${item.completedDays} / ${item.totalDays}',
+                                            style: AppTextStyles.label(
+                                              color: isAllDone ? AppColors.accent : AppColors.textMuted,
+                                              fontWeight: FontWeight.w700,
+                                            ),
+                                          ),
+                                        ),
+                                      ],
                                     ),
                                   ),
                                 );

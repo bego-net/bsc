@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 
 import '../l10n/app_localizations.dart';
 import '../state/auth_state.dart';
+import '../ui/ui.dart';
 import '../utils/auth_utils.dart';
 
 /// Screen for new users to register an account with name, username, and password.
@@ -47,9 +48,10 @@ class _SignupScreenState extends State<SignupScreen> {
       final error = authState.errorMessage ?? l10n.error;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(error),
-          backgroundColor: Theme.of(context).colorScheme.error,
+          content: Text(error, style: AppTextStyles.body(color: Colors.white)),
+          backgroundColor: AppColors.error,
           behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         ),
       );
     }
@@ -57,57 +59,62 @@ class _SignupScreenState extends State<SignupScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
     final authState = context.watch<AuthState>();
     final l10n = AppLocalizations.of(context)!;
 
     return Scaffold(
+      backgroundColor: AppColors.background,
       appBar: AppBar(
-        title: Text(l10n.createAccount),
+        backgroundColor: AppColors.background,
+        elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: AppColors.textPrimary),
+          onPressed: () => Navigator.of(context).pop(),
+        ),
+        title: Text(
+          l10n.createAccount,
+          style: AppTextStyles.title(),
+        ),
       ),
-      body: Center(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(24.0),
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 420),
-            child: Card(
-              elevation: 0,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(24),
-                side: BorderSide(
-                  color: colorScheme.outlineVariant.withValues(alpha: 0.5),
-                ),
-              ),
-              color: Colors.white,
-              child: Padding(
-                padding: const EdgeInsets.all(32.0),
+      body: SafeArea(
+        child: Center(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 16.0),
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 440),
+              child: AppCard(
+                padding: const EdgeInsets.all(28.0),
                 child: Form(
                   key: _formKey,
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      Icon(
-                        Icons.person_add_outlined,
-                        size: 48,
-                        color: colorScheme.primary,
+                      Center(
+                        child: Container(
+                          width: 64,
+                          height: 64,
+                          decoration: BoxDecoration(
+                            color: AppColors.accent.withValues(alpha: 0.12),
+                            shape: BoxShape.circle,
+                          ),
+                          child: const Icon(
+                            Icons.person_add_outlined,
+                            size: 32,
+                            color: AppColors.accent,
+                          ),
+                        ),
                       ),
                       const SizedBox(height: 16),
                       Text(
                         l10n.joinBibleStudy,
-                        style: theme.textTheme.headlineMedium?.copyWith(
-                          fontWeight: FontWeight.bold,
-                          color: colorScheme.onSurface,
-                        ),
+                        style: AppTextStyles.headingLarge(),
                         textAlign: TextAlign.center,
                       ),
                       const SizedBox(height: 6),
                       Text(
                         l10n.signupSubtitle,
-                        style: theme.textTheme.bodyMedium?.copyWith(
-                          color: colorScheme.onSurfaceVariant,
-                        ),
+                        style: AppTextStyles.subtitle(),
                         textAlign: TextAlign.center,
                       ),
                       const SizedBox(height: 28),
@@ -117,12 +124,10 @@ class _SignupScreenState extends State<SignupScreen> {
                         controller: _nameController,
                         textInputAction: TextInputAction.next,
                         textCapitalization: TextCapitalization.words,
-                        decoration: InputDecoration(
+                        style: AppTextStyles.body(),
+                        decoration: _inputDecoration(
                           labelText: l10n.fullName,
-                          prefixIcon: const Icon(Icons.person_outline),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
+                          icon: Icons.badge_outlined,
                         ),
                         validator: (value) {
                           if (value == null || value.trim().isEmpty) {
@@ -139,12 +144,10 @@ class _SignupScreenState extends State<SignupScreen> {
                         keyboardType: TextInputType.text,
                         textInputAction: TextInputAction.next,
                         autocorrect: false,
-                        decoration: InputDecoration(
+                        style: AppTextStyles.body(),
+                        decoration: _inputDecoration(
                           labelText: l10n.usernameHint,
-                          prefixIcon: const Icon(Icons.alternate_email),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
+                          icon: Icons.alternate_email,
                         ),
                         validator: (value) {
                           if (value == null || value.trim().isEmpty) {
@@ -164,23 +167,22 @@ class _SignupScreenState extends State<SignupScreen> {
                         controller: _passwordController,
                         obscureText: _obscurePassword,
                         textInputAction: TextInputAction.next,
-                        decoration: InputDecoration(
+                        style: AppTextStyles.body(),
+                        decoration: _inputDecoration(
                           labelText: l10n.passwordHint,
-                          prefixIcon: const Icon(Icons.lock_outline),
+                          icon: Icons.lock_outline,
                           suffixIcon: IconButton(
                             icon: Icon(
                               _obscurePassword
                                   ? Icons.visibility_outlined
                                   : Icons.visibility_off_outlined,
+                              color: AppColors.textSecondary,
                             ),
                             onPressed: () {
                               setState(() {
                                 _obscurePassword = !_obscurePassword;
                               });
                             },
-                          ),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
                           ),
                         ),
                         validator: (value) {
@@ -198,23 +200,22 @@ class _SignupScreenState extends State<SignupScreen> {
                         obscureText: _obscureConfirm,
                         textInputAction: TextInputAction.done,
                         onFieldSubmitted: (_) => _submit(l10n),
-                        decoration: InputDecoration(
+                        style: AppTextStyles.body(),
+                        decoration: _inputDecoration(
                           labelText: l10n.confirmPassword,
-                          prefixIcon: const Icon(Icons.lock_outline),
+                          icon: Icons.lock_outline,
                           suffixIcon: IconButton(
                             icon: Icon(
                               _obscureConfirm
                                   ? Icons.visibility_outlined
                                   : Icons.visibility_off_outlined,
+                              color: AppColors.textSecondary,
                             ),
                             onPressed: () {
                               setState(() {
                                 _obscureConfirm = !_obscureConfirm;
                               });
                             },
-                          ),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
                           ),
                         ),
                         validator: (value) {
@@ -227,47 +228,33 @@ class _SignupScreenState extends State<SignupScreen> {
                       const SizedBox(height: 24),
 
                       // Submit button
-                      FilledButton(
-                        onPressed: authState.isLoading ? null : () => _submit(l10n),
-                        style: FilledButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(vertical: 16),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                        ),
-                        child: authState.isLoading
-                            ? const SizedBox(
-                                height: 20,
-                                width: 20,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                  color: Colors.white,
-                                ),
-                              )
-                            : Text(
-                                l10n.signUp,
-                                style: const TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
+                      PrimaryButton(
+                        label: l10n.signUp,
+                        isLoading: authState.isLoading,
+                        onPressed: () => _submit(l10n),
                       ),
                       const SizedBox(height: 20),
 
                       // Back to login
-                      Wrap(
-                        alignment: WrapAlignment.center,
-                        crossAxisAlignment: WrapCrossAlignment.center,
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Text(
-                            l10n.alreadyHaveAccount,
-                            style: theme.textTheme.bodyMedium?.copyWith(
-                              color: colorScheme.onSurfaceVariant,
+                          Flexible(
+                            child: Text(
+                              l10n.alreadyHaveAccount,
+                              style: AppTextStyles.body(color: AppColors.textSecondary),
+                              overflow: TextOverflow.ellipsis,
                             ),
                           ),
                           TextButton(
                             onPressed: () => Navigator.of(context).pop(),
-                            child: Text(l10n.logIn),
+                            child: Text(
+                              l10n.logIn,
+                              style: AppTextStyles.body(
+                                color: AppColors.accent,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
                           ),
                         ],
                       ),
@@ -278,6 +265,34 @@ class _SignupScreenState extends State<SignupScreen> {
             ),
           ),
         ),
+      ),
+    );
+  }
+
+  InputDecoration _inputDecoration({
+    required String labelText,
+    required IconData icon,
+    Widget? suffixIcon,
+  }) {
+    return InputDecoration(
+      labelText: labelText,
+      labelStyle: AppTextStyles.caption(),
+      prefixIcon: Icon(icon, color: AppColors.textSecondary),
+      suffixIcon: suffixIcon,
+      filled: true,
+      fillColor: AppColors.background,
+      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(16),
+        borderSide: const BorderSide(color: AppColors.border),
+      ),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(16),
+        borderSide: const BorderSide(color: AppColors.border),
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(16),
+        borderSide: const BorderSide(color: AppColors.accent, width: 1.8),
       ),
     );
   }

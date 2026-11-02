@@ -13,7 +13,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'l10n/app_localizations.dart';
 import 'state/auth_state.dart';
 import 'state/locale_state.dart';
-
+import 'ui/ui.dart';
 
 /// The root application widget configuring the Material 3 light theme
 /// and routing based on authentication state.
@@ -22,8 +22,8 @@ class BibleStudyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const seedColor = Color(0xFF2F6F5E);
-    const backgroundColor = Color(0xFFF4F1EA);
+    const seedColor = AppColors.accent;
+    const backgroundColor = AppColors.background;
 
     final colorScheme = ColorScheme.fromSeed(
       seedColor: seedColor,
@@ -54,7 +54,28 @@ class BibleStudyApp extends StatelessWidget {
         ),
         navigationBarTheme: NavigationBarThemeData(
           backgroundColor: Colors.white,
-          indicatorColor: seedColor.withValues(alpha: 0.15),
+          indicatorColor: AppColors.accentLight,
+          elevation: 0,
+          labelTextStyle: WidgetStateProperty.resolveWith((states) {
+            if (states.contains(WidgetState.selected)) {
+              return AppTextStyles.label(
+                color: AppColors.accent,
+                fontWeight: FontWeight.w700,
+                fontSize: 12,
+              );
+            }
+            return AppTextStyles.label(
+              color: AppColors.textMuted,
+              fontWeight: FontWeight.w500,
+              fontSize: 12,
+            );
+          }),
+          iconTheme: WidgetStateProperty.resolveWith((states) {
+            if (states.contains(WidgetState.selected)) {
+              return const IconThemeData(color: AppColors.accent, size: 24);
+            }
+            return const IconThemeData(color: AppColors.textMuted, size: 24);
+          }),
         ),
       ),
       home: const AuthGate(),
@@ -79,7 +100,7 @@ class AuthGate extends StatelessWidget {
     if (authState.isLoading) {
       return const Scaffold(
         body: Center(
-          child: CircularProgressIndicator(),
+          child: CircularProgressIndicator(color: AppColors.accent),
         ),
       );
     }
@@ -96,7 +117,7 @@ class AuthGate extends StatelessWidget {
   }
 }
 
-/// The main application shell hosting the bottom navigation bar with 4 tabs.
+/// The main application shell hosting the bottom navigation bar with tabs.
 class AppShell extends StatefulWidget {
   const AppShell({super.key});
 
@@ -194,14 +215,30 @@ class _AppShellState extends State<AppShell> {
         index: effectiveIndex,
         children: screens,
       ),
-      bottomNavigationBar: NavigationBar(
-        selectedIndex: effectiveIndex,
-        onDestinationSelected: (index) {
-          setState(() {
-            _currentIndex = index;
-          });
-        },
-        destinations: destinations,
+      bottomNavigationBar: Container(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.05),
+              blurRadius: 16,
+              offset: const Offset(0, -4),
+            ),
+          ],
+        ),
+        child: ClipRRect(
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+          child: NavigationBar(
+            selectedIndex: effectiveIndex,
+            onDestinationSelected: (index) {
+              setState(() {
+                _currentIndex = index;
+              });
+            },
+            destinations: destinations,
+          ),
+        ),
       ),
     );
   }

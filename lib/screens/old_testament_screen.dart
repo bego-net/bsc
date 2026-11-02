@@ -9,6 +9,7 @@ import '../models/ot_week.dart';
 import '../state/auth_state.dart';
 import '../state/locale_state.dart';
 import '../state/ot_state.dart';
+import '../ui/ui.dart';
 import '../widgets/profile_avatar_button.dart';
 import 'admin/ot_admin_home_screen.dart';
 import 'admin/ot_edit_week_screen.dart';
@@ -41,15 +42,22 @@ class _OldTestamentScreenState extends State<OldTestamentScreen> {
     final localeState = Provider.of<LocaleState?>(context);
     final l10n = AppLocalizations.of(context) ?? AppLocalizationsEn();
     final languageCode = localeState?.languageCode ?? l10n.localeName;
-    final colorScheme = Theme.of(context).colorScheme;
 
     return Scaffold(
+      backgroundColor: AppColors.background,
       appBar: AppBar(
-        title: Text(l10n.otTitle),
+        backgroundColor: AppColors.background,
+        elevation: 0,
+        scrolledUnderElevation: 0,
+        centerTitle: false,
+        title: Text(
+          l10n.otTitle,
+          style: AppTextStyles.title(),
+        ),
         actions: [
           if (authState.isAdmin)
             IconButton(
-              icon: const Icon(Icons.admin_panel_settings_outlined),
+              icon: const Icon(Icons.admin_panel_settings_outlined, color: AppColors.textPrimary),
               tooltip: l10n.adminTools,
               onPressed: () {
                 Navigator.of(context).push(
@@ -60,7 +68,7 @@ class _OldTestamentScreenState extends State<OldTestamentScreen> {
               },
             ),
           IconButton(
-            icon: const Icon(Icons.history_outlined),
+            icon: const Icon(Icons.history_outlined, color: AppColors.textSecondary),
             tooltip: l10n.pastWeeks,
             onPressed: () {
               Navigator.of(context).push(
@@ -71,26 +79,31 @@ class _OldTestamentScreenState extends State<OldTestamentScreen> {
             },
           ),
           IconButton(
-            icon: const Icon(Icons.refresh_outlined),
+            icon: const Icon(Icons.refresh_outlined, color: AppColors.textSecondary),
             tooltip: l10n.refresh,
             onPressed: () => otState.loadData(),
           ),
           const ProfileAvatarButton(),
+          const SizedBox(width: 8),
         ],
       ),
-      body: _buildBody(context, otState, colorScheme, languageCode, l10n),
+      body: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 600),
+          child: _buildBody(context, otState, languageCode, l10n),
+        ),
+      ),
     );
   }
 
   Widget _buildBody(
     BuildContext context,
     OtState otState,
-    ColorScheme colorScheme,
     String languageCode,
     AppLocalizations l10n,
   ) {
     if (otState.isLoading) {
-      return const Center(child: CircularProgressIndicator());
+      return const Center(child: CircularProgressIndicator(color: AppColors.accent));
     }
 
     if (otState.errorMessage != null) {
@@ -100,20 +113,20 @@ class _OldTestamentScreenState extends State<OldTestamentScreen> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Icon(Icons.error_outline, size: 48, color: Colors.red),
+              const Icon(Icons.error_outline, size: 48, color: AppColors.error),
               const SizedBox(height: 12),
               Text(
                 otState.errorMessage!,
                 textAlign: TextAlign.center,
-                style: Theme.of(context).textTheme.bodyMedium,
+                style: AppTextStyles.body(),
               ),
               const SizedBox(height: 16),
-              FilledButton(
+              PrimaryButton(
+                label: l10n.retry,
                 onPressed: () {
                   otState.clearError();
                   otState.loadData();
                 },
-                child: Text(l10n.retry),
               ),
             ],
           ),
@@ -125,28 +138,11 @@ class _OldTestamentScreenState extends State<OldTestamentScreen> {
     if (week == null) {
       return Center(
         child: Padding(
-          padding: const EdgeInsets.all(32),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(
-                Icons.menu_book_outlined,
-                size: 64,
-                color: colorScheme.primary.withValues(alpha: 0.4),
-              ),
-              const SizedBox(height: 16),
-              Text(
-                l10n.noOtWeek,
-                style: Theme.of(context).textTheme.titleMedium,
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 8),
-              Text(
-                l10n.contactAdminPlan,
-                style: Theme.of(context).textTheme.bodySmall,
-                textAlign: TextAlign.center,
-              ),
-            ],
+          padding: const EdgeInsets.all(20),
+          child: EmptyState(
+            icon: Icons.menu_book_outlined,
+            title: l10n.noOtWeek,
+            subtitle: l10n.contactAdminPlan,
           ),
         ),
       );
@@ -163,9 +159,10 @@ class _OldTestamentScreenState extends State<OldTestamentScreen> {
     final weekTopic = week.topic.isNotEmpty ? week.topic : defaultTopic;
 
     return RefreshIndicator(
+      color: AppColors.accent,
       onRefresh: otState.loadData,
       child: ListView(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         children: [
           // ── Topic & Progress Card ─────────────────────────────────────────
           _TopicProgressCard(
@@ -202,20 +199,18 @@ class _OldTestamentScreenState extends State<OldTestamentScreen> {
           ),
           const SizedBox(height: 16),
 
-          // ── Reminder Switch ───────────────────────────────────────────────
+          // ── Reminder Switch Card ──────────────────────────────────────────
           _ReminderSwitchCard(
             enabled: otState.remindersEnabled,
             onChanged: (val) => otState.setRemindersEnabled(val),
             l10n: l10n,
           ),
-          const SizedBox(height: 24),
+          const SizedBox(height: 32),
         ],
       ),
     );
   }
 }
-
-// ── Sub-widgets ───────────────────────────────────────────────────────────────
 
 class _TopicProgressCard extends StatelessWidget {
   final OtState otState;
@@ -230,84 +225,40 @@ class _TopicProgressCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
-
-    return Card(
-      elevation: 0,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-        side: BorderSide(color: colorScheme.outline.withValues(alpha: 0.2)),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Icon(Icons.local_library_outlined, color: colorScheme.primary),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Text(
-                    l10n.otPlan,
-                    style: theme.textTheme.labelLarge?.copyWith(
-                      color: colorScheme.primary,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
+    return AppCard(
+      padding: const EdgeInsets.all(20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                l10n.otPlan,
+                style: AppTextStyles.caption(
+                  color: AppColors.accent,
+                  fontWeight: FontWeight.bold,
                 ),
-                // Streak indicator
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: Colors.orange.withValues(alpha: 0.15),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const Icon(Icons.local_fire_department,
-                          size: 16, color: Colors.deepOrange),
-                      const SizedBox(width: 4),
-                      Text(
-                        '${otState.streak}d ${l10n.streakFormatted(otState.streak)}',
-                        style: const TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.deepOrange,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 10),
-            Text(
-              weekTopic,
-              style: theme.textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.bold,
               ),
-            ),
-            const SizedBox(height: 14),
-            ClipRRect(
-              borderRadius: BorderRadius.circular(6),
-              child: LinearProgressIndicator(
-                value: otState.progressFraction,
-                minHeight: 8,
-                backgroundColor: colorScheme.surfaceContainerHighest,
-              ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              l10n.completedDaysProgress(otState.completedDaysCount, otState.totalDaysCount),
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: theme.textTheme.bodySmall?.color?.withValues(alpha: 0.8),
-              ),
-            ),
-          ],
-        ),
+              StatChip.streak('${otState.streak}d ${l10n.streakFormatted(otState.streak)}'),
+            ],
+          ),
+          const SizedBox(height: 10),
+          Text(
+            weekTopic,
+            style: AppTextStyles.headingLarge(),
+          ),
+          const SizedBox(height: 16),
+          AppProgressBar(
+            value: otState.progressFraction,
+            height: 8,
+          ),
+          const SizedBox(height: 8),
+          Text(
+            l10n.completedDaysProgress(otState.completedDaysCount, otState.totalDaysCount),
+            style: AppTextStyles.caption(),
+          ),
+        ],
       ),
     );
   }
@@ -330,67 +281,51 @@ class _TodayHighlightCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
     final passage = todayDay.localizedPassageText(languageCode);
 
-    return Card(
-      elevation: 0,
-      color: colorScheme.primaryContainer.withValues(alpha: 0.25),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-        side: BorderSide(color: colorScheme.primary.withValues(alpha: 0.3)),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Icon(Icons.today_outlined, color: colorScheme.primary, size: 20),
-                const SizedBox(width: 6),
-                Text(
-                  l10n.todayReading,
-                  style: theme.textTheme.labelLarge?.copyWith(
-                    color: colorScheme.primary,
-                    fontWeight: FontWeight.bold,
-                  ),
+    return AppCard(
+      border: Border.all(color: AppColors.accent.withValues(alpha: 0.35), width: 1.5),
+      color: Colors.white,
+      padding: const EdgeInsets.all(20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 32,
+                height: 32,
+                decoration: BoxDecoration(
+                  color: AppColors.accent.withValues(alpha: 0.12),
+                  shape: BoxShape.circle,
                 ),
-              ],
-            ),
-            const SizedBox(height: 10),
-            Text(
-              passage,
-              style: theme.textTheme.headlineSmall?.copyWith(
-                fontWeight: FontWeight.bold,
+                child: const Icon(Icons.today_rounded, color: AppColors.accent, size: 18),
               ),
-            ),
-            const SizedBox(height: 14),
-            SizedBox(
-              width: double.infinity,
-              child: isCompleted
-                  ? OutlinedButton.icon(
-                      onPressed: onToggle,
-                      icon: const Icon(Icons.check_circle),
-                      label: Text('${l10n.completedStatus} (${l10n.undoRead})'),
-                      style: OutlinedButton.styleFrom(
-                        foregroundColor: colorScheme.primary,
-                        side: BorderSide(color: colorScheme.primary),
-                        padding: const EdgeInsets.symmetric(vertical: 12),
-                      ),
-                    )
-                  : FilledButton.icon(
-                      onPressed: onToggle,
-                      icon: const Icon(Icons.check_circle_outline),
-                      label: Text(l10n.markAsReadToday),
-                      style: FilledButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(vertical: 12),
-                      ),
-                    ),
-            ),
-          ],
-        ),
+              const SizedBox(width: 8),
+              Text(
+                l10n.todayReading,
+                style: AppTextStyles.caption(
+                  color: AppColors.accent,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          Text(
+            passage,
+            style: AppTextStyles.headingLarge(),
+          ),
+          const SizedBox(height: 16),
+          PrimaryButton(
+            label: isCompleted
+                ? '${l10n.completedStatus} (${l10n.undoRead})'
+                : l10n.markAsReadToday,
+            icon: isCompleted ? Icons.check_circle : Icons.check_circle_outline,
+            isOutlined: isCompleted,
+            onPressed: onToggle,
+          ),
+        ],
       ),
     );
   }
@@ -409,55 +344,41 @@ class _BookFinishedCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
-
-    return Card(
-      elevation: 0,
-      color: colorScheme.secondaryContainer.withValues(alpha: 0.3),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-        side: BorderSide(color: colorScheme.secondary.withValues(alpha: 0.3)),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Icon(Icons.check_circle_outline, color: colorScheme.secondary, size: 24),
-                const SizedBox(width: 8),
-                Text(
-                  l10n.bookFinished,
-                  style: theme.textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
-                    color: colorScheme.secondary,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 8),
-            Text(
-              l10n.bookFinishedNotice,
-              style: theme.textTheme.bodyMedium,
-            ),
-            if (isAdmin) ...[
-              const SizedBox(height: 14),
-              FilledButton.icon(
-                icon: const Icon(Icons.menu_book),
-                label: Text(l10n.pickBook),
-                onPressed: () {
-                  Navigator.of(context).push(
-                    MaterialPageRoute<void>(
-                      builder: (_) => const OtEditWeekScreen(),
-                    ),
-                  );
-                },
+    return AppCard(
+      padding: const EdgeInsets.all(20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(Icons.check_circle_outline, color: AppColors.accent, size: 24),
+              const SizedBox(width: 8),
+              Text(
+                l10n.bookFinished,
+                style: AppTextStyles.title(color: AppColors.accent),
               ),
             ],
+          ),
+          const SizedBox(height: 8),
+          Text(
+            l10n.bookFinishedNotice,
+            style: AppTextStyles.body(),
+          ),
+          if (isAdmin) ...[
+            const SizedBox(height: 16),
+            PrimaryButton(
+              icon: Icons.menu_book,
+              label: l10n.pickBook,
+              onPressed: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute<void>(
+                    builder: (_) => const OtEditWeekScreen(),
+                  ),
+                );
+              },
+            ),
           ],
-        ),
+        ],
       ),
     );
   }
@@ -470,28 +391,19 @@ class _NoReadingTodayCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return Card(
-      elevation: 0,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-        side: BorderSide(
-          color: theme.colorScheme.outline.withValues(alpha: 0.2),
-        ),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Row(
-          children: [
-            const Icon(Icons.event_available_outlined, color: Colors.grey),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Text(
-                l10n.checkBackLater,
-              ),
+    return AppCard(
+      padding: const EdgeInsets.all(18),
+      child: Row(
+        children: [
+          const Icon(Icons.event_available_outlined, color: AppColors.textSecondary),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Text(
+              l10n.checkBackLater,
+              style: AppTextStyles.body(color: AppColors.textSecondary),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
@@ -510,91 +422,91 @@ class _WeekDaysList extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
     final today = OtState.todayDateString;
 
-    return Card(
-      elevation: 0,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-        side: BorderSide(color: colorScheme.outline.withValues(alpha: 0.2)),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(12),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 6),
-              child: Text(
-                l10n.otPlan,
-                style: theme.textTheme.titleSmall?.copyWith(
-                  fontWeight: FontWeight.bold,
+    return AppCard(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
+            child: Text(
+              l10n.otPlan,
+              style: AppTextStyles.title(),
+            ),
+          ),
+          const Divider(color: AppColors.border, height: 16),
+          ...otState.days.map((day) {
+            final isCompleted = otState.readings[day.date] == true;
+            final isToday = day.date == today;
+            final isFuture = otState.isFutureDay(day.date);
+            final localizedPassage = day.localizedPassageText(languageCode);
+            final dayDisplayName = day.localizedDayName(languageCode);
+
+            return ListTile(
+              contentPadding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+              leading: Container(
+                width: 36,
+                height: 36,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: isCompleted
+                      ? AppColors.accent.withValues(alpha: 0.15)
+                      : isToday
+                          ? AppColors.surfaceMuted
+                          : AppColors.background,
+                  border: Border.all(
+                    color: isCompleted
+                        ? AppColors.accent
+                        : isToday
+                            ? AppColors.accent
+                            : AppColors.border,
+                    width: isToday ? 1.8 : 1.0,
+                  ),
+                ),
+                alignment: Alignment.center,
+                child: Icon(
+                  isCompleted
+                      ? Icons.check
+                      : isFuture
+                          ? Icons.lock_outline
+                          : Icons.menu_book,
+                  size: 18,
+                  color: isCompleted
+                      ? AppColors.accent
+                      : isToday
+                          ? AppColors.accent
+                          : AppColors.textMuted,
                 ),
               ),
-            ),
-            const Divider(height: 12),
-            ...otState.days.map((day) {
-              final isCompleted = otState.readings[day.date] == true;
-              final isToday = day.date == today;
-              final isFuture = otState.isFutureDay(day.date);
-              final localizedPassage = day.localizedPassageText(languageCode);
-              final dayDisplayName = day.localizedDayName(languageCode);
-
-              return ListTile(
-                dense: true,
-                contentPadding: const EdgeInsets.symmetric(horizontal: 4),
-                leading: CircleAvatar(
-                  radius: 14,
-                  backgroundColor: isCompleted
-                      ? Colors.green.shade100
-                      : isToday
-                          ? colorScheme.primaryContainer
-                          : colorScheme.surfaceContainerHighest,
-                  child: Icon(
-                    isCompleted
-                        ? Icons.check
-                        : isFuture
-                            ? Icons.lock_outline
-                            : Icons.menu_book,
-                    size: 14,
-                    color: isCompleted
-                        ? Colors.green.shade800
-                        : isToday
-                            ? colorScheme.primary
-                            : Colors.grey,
-                  ),
+              title: Text(
+                '$dayDisplayName: $localizedPassage',
+                style: AppTextStyles.body(
+                  fontWeight: isToday ? FontWeight.bold : FontWeight.normal,
+                  color: isFuture ? AppColors.textMuted : AppColors.textPrimary,
                 ),
-                title: Text(
-                  '$dayDisplayName: $localizedPassage',
-                  style: TextStyle(
-                    fontWeight: isToday ? FontWeight.bold : FontWeight.normal,
-                    color: isFuture ? Colors.grey : null,
-                  ),
+              ),
+              subtitle: Text(
+                isFuture
+                    ? '${day.date} (Locked)'
+                    : (isToday ? '${day.date} (${l10n.today})' : day.date),
+                style: AppTextStyles.caption(
+                  color: isFuture ? AppColors.textMuted : AppColors.textSecondary,
                 ),
-                subtitle: Text(
-                  isFuture ? '${day.date} (Locked)' : (isToday ? '${day.date} (${l10n.today})' : day.date),
-                  style: TextStyle(
-                    fontSize: 11,
-                    color: isFuture ? Colors.grey.shade400 : null,
-                  ),
-                ),
-                trailing: isFuture
-                    ? const Icon(Icons.lock, size: 18, color: Colors.grey)
-                    : IconButton(
-                        icon: Icon(
-                          isCompleted
-                              ? Icons.check_box
-                              : Icons.check_box_outline_blank,
-                          color: isCompleted ? colorScheme.primary : Colors.grey,
-                        ),
-                        onPressed: () => otState.toggleDay(day.date),
+              ),
+              trailing: isFuture
+                  ? const Icon(Icons.lock, size: 20, color: AppColors.textMuted)
+                  : IconButton(
+                      icon: Icon(
+                        isCompleted ? Icons.check_box : Icons.check_box_outline_blank,
+                        color: isCompleted ? AppColors.accent : AppColors.textSecondary,
                       ),
-              );
-            }),
-          ],
-        ),
+                      onPressed: () => otState.toggleDay(day.date),
+                    ),
+            );
+          }),
+        ],
       ),
     );
   }
@@ -613,18 +525,13 @@ class _ReminderSwitchCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return Card(
-      elevation: 0,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-        side: BorderSide(
-          color: theme.colorScheme.outline.withValues(alpha: 0.2),
-        ),
-      ),
+    return AppCard(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       child: SwitchListTile(
-        title: Text(l10n.otReminders),
-        subtitle: Text(l10n.otReminderBody),
+        contentPadding: EdgeInsets.zero,
+        activeThumbColor: AppColors.accent,
+        title: Text(l10n.otReminders, style: AppTextStyles.title()),
+        subtitle: Text(l10n.otReminderBody, style: AppTextStyles.subtitle()),
         value: enabled,
         onChanged: onChanged,
       ),
