@@ -13,6 +13,12 @@ class AppLocalizationsAm extends AppLocalizations {
   String get appTitle => 'የመጽሐፍ ቅዱስ ጥናት';
 
   @override
+  String get splashAppName => 'ብሥራት የመጽሐፍ ቅዱስ ጥናት';
+
+  @override
+  String get splashRetry => 'እንደገና ሞክር';
+
+  @override
   String get individualBs => 'የግል ጥናት';
 
   @override

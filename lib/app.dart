@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -157,9 +158,64 @@ class BibleStudyApp extends StatelessWidget {
   }
 }
 
-/// Routes to LoginScreen if unauthenticated, or AppShell if signed in.
-class AuthGate extends StatelessWidget {
+/// Routes to SplashScreen at startup, then fades into LoginScreen, ForcePasswordChangeScreen, or AppShell.
+class AuthGate extends StatefulWidget {
   const AuthGate({super.key});
+
+  @override
+  State<AuthGate> createState() => _AuthGateState();
+}
+
+class _AuthGateState extends State<AuthGate> {
+  bool _splashVisible = true;
+  bool _minTimeElapsed = false;
+  bool _hasTimedOut = false;
+  Timer? _minTimer;
+  Timer? _timeoutTimer;
+
+  @override
+  void initState() {
+    super.initState();
+    _startTimers();
+  }
+
+  void _startTimers() {
+    _minTimer?.cancel();
+    _timeoutTimer?.cancel();
+    _minTimeElapsed = false;
+    _hasTimedOut = false;
+
+    _minTimer = Timer(const Duration(milliseconds: 1500), () {
+      if (mounted) {
+        setState(() {
+          _minTimeElapsed = true;
+        });
+      }
+    });
+
+    _timeoutTimer = Timer(const Duration(seconds: 15), () {
+      if (mounted && _splashVisible) {
+        setState(() {
+          _hasTimedOut = true;
+        });
+      }
+    });
+  }
+
+  void _handleRetry() {
+    setState(() {
+      _hasTimedOut = false;
+    });
+    _startTimers();
+    context.read<AuthState>().retryInit();
+  }
+
+  @override
+  void dispose() {
+    _minTimer?.cancel();
+    _timeoutTimer?.cancel();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -171,23 +227,40 @@ class AuthGate extends StatelessWidget {
       });
     }
 
-    if (authState.isLoading) {
-      return const Scaffold(
+    if (_splashVisible && _minTimeElapsed && !authState.isLoading) {
+      _splashVisible = false;
+      _timeoutTimer?.cancel();
+    }
+
+    final Widget activeScreen;
+    if (_splashVisible) {
+      activeScreen = SplashScreen(
+        key: const ValueKey('splash_screen'),
+        showRetry: _hasTimedOut || (authState.errorMessage != null && !authState.isAuthenticated),
+        errorMessage: _hasTimedOut ? authState.errorMessage : null,
+        onRetry: _handleRetry,
+      );
+    } else if (authState.isLoading) {
+      activeScreen = const Scaffold(
+        key: ValueKey('auth_loading'),
         body: Center(
           child: CircularProgressIndicator(color: AppColors.accent),
         ),
       );
+    } else if (!authState.isAuthenticated) {
+      activeScreen = const LoginScreen(key: ValueKey('login_screen'));
+    } else if (authState.mustChangePassword) {
+      activeScreen = const ForcePasswordChangeScreen(key: ValueKey('force_pw_screen'));
+    } else {
+      activeScreen = const AppShell(key: ValueKey('app_shell_screen'));
     }
 
-    if (!authState.isAuthenticated) {
-      return const LoginScreen();
-    }
-
-    if (authState.mustChangePassword) {
-      return const ForcePasswordChangeScreen();
-    }
-
-    return const AppShell();
+    return AnimatedSwitcher(
+      duration: const Duration(milliseconds: 500),
+      switchInCurve: Curves.easeInOut,
+      switchOutCurve: Curves.easeInOut,
+      child: activeScreen,
+    );
   }
 }
 

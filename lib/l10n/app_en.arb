@@ -1,6 +1,8 @@
 {
   "@@locale": "en",
   "appTitle": "Bible Study",
+  "splashAppName": "Bisrat Bible Study",
+  "splashRetry": "Try again",
   "individualBs": "Individual BS",
   "teamBs": "Team BS",
   "oldTestament": "Old Testament",

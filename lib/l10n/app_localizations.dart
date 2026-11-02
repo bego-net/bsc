@@ -104,6 +104,18 @@ abstract class AppLocalizations {
   /// **'Bible Study'**
   String get appTitle;
 
+  /// No description provided for @splashAppName.
+  ///
+  /// In en, this message translates to:
+  /// **'Bisrat Bible Study'**
+  String get splashAppName;
+
+  /// No description provided for @splashRetry.
+  ///
+  /// In en, this message translates to:
+  /// **'Try again'**
+  String get splashRetry;
+
   /// No description provided for @individualBs.
   ///
   /// In en, this message translates to:

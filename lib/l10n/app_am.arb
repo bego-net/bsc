@@ -1,6 +1,8 @@
 {
   "@@locale": "am",
   "appTitle": "የመጽሐፍ ቅዱስ ጥናት",
+  "splashAppName": "ብሥራት የመጽሐፍ ቅዱስ ጥናት",
+  "splashRetry": "እንደገና ሞክር",
   "individualBs": "የግል ጥናት",
   "teamBs": "የቡድን ጥናት",
   "oldTestament": "ብሉይ ኪዳን",

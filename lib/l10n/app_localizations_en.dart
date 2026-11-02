@@ -13,6 +13,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get appTitle => 'Bible Study';
 
   @override
+  String get splashAppName => 'Bisrat Bible Study';
+
+  @override
+  String get splashRetry => 'Try again';
+
+  @override
   String get individualBs => 'Individual BS';
 
   @override
