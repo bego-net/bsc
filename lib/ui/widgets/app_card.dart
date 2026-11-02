@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../app_colors.dart';
 
-/// Standard white rounded card (radius 20, subtle shadow, light border) matching Individual BS.
+/// Standard white rounded card (radius 20, subtle shadow, light border).
 class AppCard extends StatelessWidget {
   final Widget child;
   final EdgeInsetsGeometry padding;
@@ -25,7 +25,7 @@ class AppCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    Widget content = Container(
+    return Container(
       margin: margin,
       decoration: BoxDecoration(
         color: color ?? AppColors.card,
@@ -46,7 +46,5 @@ class AppCard extends StatelessWidget {
         ),
       ),
     );
-
-    return content;
   }
 }

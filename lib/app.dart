@@ -30,6 +30,13 @@ class BibleStudyApp extends StatelessWidget {
       brightness: Brightness.light,
     ).copyWith(
       surface: backgroundColor,
+      onSurface: AppColors.textPrimary,
+      primary: AppColors.accent,
+      onPrimary: Colors.white,
+      secondary: AppColors.accent,
+      onSecondary: Colors.white,
+      surfaceContainer: Colors.white,
+      error: AppColors.error,
     );
 
     final localeState = Provider.of<LocaleState?>(context);
@@ -45,12 +52,85 @@ class BibleStudyApp extends StatelessWidget {
         colorScheme: colorScheme,
         textTheme: GoogleFonts.notoSansEthiopicTextTheme(
           ThemeData(useMaterial3: true, colorScheme: colorScheme).textTheme,
-        ),
+        ).apply(bodyColor: AppColors.textPrimary, displayColor: AppColors.textPrimary),
         scaffoldBackgroundColor: backgroundColor,
-        appBarTheme: const AppBarTheme(
+        appBarTheme: AppBarTheme(
           backgroundColor: backgroundColor,
           surfaceTintColor: Colors.transparent,
           elevation: 0,
+          scrolledUnderElevation: 0,
+          titleTextStyle: AppTextStyles.title(),
+          iconTheme: const IconThemeData(color: AppColors.textPrimary),
+        ),
+        cardTheme: CardThemeData(
+          color: Colors.white,
+          elevation: 0,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+            side: const BorderSide(color: AppColors.border),
+          ),
+        ),
+        dividerTheme: const DividerThemeData(
+          color: AppColors.divider,
+          thickness: 1,
+          space: 1,
+        ),
+        chipTheme: ChipThemeData(
+          backgroundColor: AppColors.surface,
+          selectedColor: AppColors.accent,
+          labelStyle: AppTextStyles.caption(),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          side: const BorderSide(color: AppColors.border),
+        ),
+        inputDecorationTheme: InputDecorationTheme(
+          filled: true,
+          fillColor: backgroundColor,
+          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(14),
+            borderSide: const BorderSide(color: AppColors.border),
+          ),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(14),
+            borderSide: const BorderSide(color: AppColors.border),
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(14),
+            borderSide: const BorderSide(color: AppColors.accent, width: 1.8),
+          ),
+          errorBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(14),
+            borderSide: const BorderSide(color: AppColors.error),
+          ),
+        ),
+        elevatedButtonTheme: ElevatedButtonThemeData(
+          style: ElevatedButton.styleFrom(
+            backgroundColor: AppColors.accent,
+            foregroundColor: Colors.white,
+            elevation: 0,
+            minimumSize: const Size(double.infinity, 52),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+            textStyle: AppTextStyles.button(),
+          ),
+        ),
+        outlinedButtonTheme: OutlinedButtonThemeData(
+          style: OutlinedButton.styleFrom(
+            foregroundColor: AppColors.accent,
+            side: const BorderSide(color: AppColors.border),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+          ),
+        ),
+        snackBarTheme: SnackBarThemeData(
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          backgroundColor: AppColors.textPrimary,
+          contentTextStyle: AppTextStyles.body(color: Colors.white),
+        ),
+        dialogTheme: DialogThemeData(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          backgroundColor: Colors.white,
+          titleTextStyle: AppTextStyles.title(),
+          contentTextStyle: AppTextStyles.body(),
         ),
         navigationBarTheme: NavigationBarThemeData(
           backgroundColor: Colors.white,
@@ -59,16 +139,10 @@ class BibleStudyApp extends StatelessWidget {
           labelTextStyle: WidgetStateProperty.resolveWith((states) {
             if (states.contains(WidgetState.selected)) {
               return AppTextStyles.label(
-                color: AppColors.accent,
-                fontWeight: FontWeight.w700,
-                fontSize: 12,
-              );
+                  color: AppColors.accent, fontWeight: FontWeight.w700, fontSize: 12);
             }
             return AppTextStyles.label(
-              color: AppColors.textMuted,
-              fontWeight: FontWeight.w500,
-              fontSize: 12,
-            );
+                color: AppColors.textMuted, fontWeight: FontWeight.w500, fontSize: 12);
           }),
           iconTheme: WidgetStateProperty.resolveWith((states) {
             if (states.contains(WidgetState.selected)) {
@@ -180,30 +254,30 @@ class _AppShellState extends State<AppShell> {
 
     final l10n = AppLocalizations.of(context)!;
     final destinations = [
-      NavigationDestination(
-        icon: const Icon(Icons.person_outline),
-        selectedIcon: const Icon(Icons.person),
+      AppNavItem(
+        icon: Icons.person_outline,
+        selectedIcon: Icons.person,
         label: l10n.individualBs,
       ),
-      NavigationDestination(
-        icon: const Icon(Icons.group_outlined),
-        selectedIcon: const Icon(Icons.group),
+      AppNavItem(
+        icon: Icons.group_outlined,
+        selectedIcon: Icons.group,
         label: l10n.teamBs,
       ),
-      NavigationDestination(
-        icon: const Icon(Icons.menu_book_outlined),
-        selectedIcon: const Icon(Icons.menu_book),
+      AppNavItem(
+        icon: Icons.menu_book_outlined,
+        selectedIcon: Icons.menu_book,
         label: l10n.oldTestament,
       ),
-      NavigationDestination(
-        icon: const Icon(Icons.leaderboard_outlined),
-        selectedIcon: const Icon(Icons.leaderboard),
+      AppNavItem(
+        icon: Icons.leaderboard_outlined,
+        selectedIcon: Icons.leaderboard,
         label: l10n.leaderboard,
       ),
       if (isAdmin)
-        NavigationDestination(
-          icon: const Icon(Icons.dashboard_outlined),
-          selectedIcon: const Icon(Icons.dashboard),
+        AppNavItem(
+          icon: Icons.dashboard_outlined,
+          selectedIcon: Icons.dashboard,
           label: l10n.dashboard,
         ),
     ];
@@ -215,30 +289,14 @@ class _AppShellState extends State<AppShell> {
         index: effectiveIndex,
         children: screens,
       ),
-      bottomNavigationBar: Container(
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.05),
-              blurRadius: 16,
-              offset: const Offset(0, -4),
-            ),
-          ],
-        ),
-        child: ClipRRect(
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
-          child: NavigationBar(
-            selectedIndex: effectiveIndex,
-            onDestinationSelected: (index) {
-              setState(() {
-                _currentIndex = index;
-              });
-            },
-            destinations: destinations,
-          ),
-        ),
+      bottomNavigationBar: AppNavBar(
+        selectedIndex: effectiveIndex,
+        onDestinationSelected: (index) {
+          setState(() {
+            _currentIndex = index;
+          });
+        },
+        items: destinations,
       ),
     );
   }
