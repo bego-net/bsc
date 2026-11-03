@@ -2,6 +2,10 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import 'repositories/auth_repository.dart';
+import 'repositories/ot_repository.dart';
+import 'repositories/study_repository.dart';
+import 'repositories/team_repository.dart';
 import 'screens/admin/dashboard_screen.dart';
 import 'screens/force_password_change_screen.dart';
 import 'screens/individual_screen.dart';
@@ -10,6 +14,7 @@ import 'screens/login_screen.dart';
 import 'screens/old_testament_screen.dart';
 import 'screens/team_screen.dart';
 import 'services/notification_service.dart';
+import 'services/offline_preloader.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'l10n/app_localizations.dart';
 import 'state/auth_state.dart';
@@ -284,6 +289,19 @@ class _AppShellState extends State<AppShell> {
         _notificationService = context.read<NotificationService>();
         _notificationService?.selectedPayload.addListener(_handleNotificationPayload);
         _handleNotificationPayload();
+
+        // Preload and cache core data for offline access (non-blocking).
+        final authState = context.read<AuthState>();
+        final uid = authState.user?.uid;
+        if (uid != null) {
+          OfflinePreloader.preload(
+            uid: uid,
+            authRepo: context.read<AuthRepository>(),
+            studyRepo: context.read<StudyRepository>(),
+            otRepo: context.read<OtRepository>(),
+            teamRepo: context.read<TeamRepository>(),
+          );
+        }
       }
     });
   }
