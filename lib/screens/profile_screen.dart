@@ -106,7 +106,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
           _newPwController.clear();
           _confirmPwController.clear();
         } else {
-          _pwError = authState.errorMessage ?? l10n.error;
+          final raw = authState.errorMessage ?? l10n.error;
+          final isOffline = raw.contains('network') ||
+              raw.contains('unavailable') ||
+              raw.contains('SocketException') ||
+              raw.contains('TimeoutException');
+          _pwError = isOffline ? l10n.offlinePasswordChangeNotice : raw;
         }
       });
     }

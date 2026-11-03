@@ -23,6 +23,7 @@ import 'repositories/team_repository.dart';
 import 'services/fake_notification_service.dart';
 import 'services/local_notification_service.dart';
 import 'services/notification_service.dart';
+import 'services/offline_reminders.dart';
 import 'state/auth_state.dart';
 import 'state/locale_state.dart';
 import 'state/dashboard_state.dart';
@@ -42,6 +43,7 @@ void main() async {
       try {
         FirebaseFirestore.instance.settings = const Settings(
           persistenceEnabled: true,
+          cacheSizeBytes: Settings.CACHE_SIZE_UNLIMITED,
         );
       } catch (_) {
         // Persistence setting warning on specific platforms
@@ -108,6 +110,13 @@ void main() async {
     await notificationService.initialize();
   }
 
+  // Schedule daily and Thursday reminders from cached data at startup
+  OfflineReminders.scheduleCachedReminders(
+    teamRepo: teamRepository,
+    otRepo: otRepository,
+    notificationService: notificationService,
+  );
+
   runApp(
     MultiProvider(
       providers: [
@@ -128,6 +137,7 @@ void main() async {
             repository: studyRepository,
             uid: context.read<AuthState>().user?.uid,
             initialUser: context.read<AuthState>().user,
+            notificationService: notificationService,
           ),
           update: (context, authState, studyState) {
             if (studyState == null) {
@@ -135,9 +145,13 @@ void main() async {
                 repository: studyRepository,
                 uid: authState.user?.uid,
                 initialUser: authState.user,
+                notificationService: notificationService,
               );
             }
             if (studyState.uid != authState.user?.uid) {
+              if (authState.user == null) {
+                notificationService.cancelDailyStudyReminder();
+              }
               studyState.setUser(authState.user);
             }
             return studyState;

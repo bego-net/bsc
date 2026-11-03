@@ -164,6 +164,12 @@ class _OldTestamentScreenState extends State<OldTestamentScreen> {
       child: ListView(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         children: [
+          // Offline pending-write indicator
+          OfflineIndicator(
+            hasPendingWrites: otState.hasPendingWrites,
+            isFromCache: false,
+            compact: true,
+          ),
           // ── Topic & Progress Card ─────────────────────────────────────────
           _TopicProgressCard(
             otState: otState,

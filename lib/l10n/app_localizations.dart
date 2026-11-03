@@ -116,6 +116,54 @@ abstract class AppLocalizations {
   /// **'Try again'**
   String get splashRetry;
 
+  /// No description provided for @offlineMode.
+  ///
+  /// In en, this message translates to:
+  /// **'Offline mode'**
+  String get offlineMode;
+
+  /// No description provided for @savedOnPhoneWillSync.
+  ///
+  /// In en, this message translates to:
+  /// **'Saved on this phone, will sync'**
+  String get savedOnPhoneWillSync;
+
+  /// No description provided for @offlineSignupNotice.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign up requires an active internet connection.'**
+  String get offlineSignupNotice;
+
+  /// No description provided for @offlineFirstLoginNotice.
+  ///
+  /// In en, this message translates to:
+  /// **'First login requires an active internet connection.'**
+  String get offlineFirstLoginNotice;
+
+  /// No description provided for @offlinePasswordChangeNotice.
+  ///
+  /// In en, this message translates to:
+  /// **'Changing password requires an active internet connection.'**
+  String get offlinePasswordChangeNotice;
+
+  /// No description provided for @offlineForgotPasswordNotice.
+  ///
+  /// In en, this message translates to:
+  /// **'Password reset requires an active internet connection.'**
+  String get offlineForgotPasswordNotice;
+
+  /// No description provided for @offlineLinkNotice.
+  ///
+  /// In en, this message translates to:
+  /// **'Cannot open external link while offline.'**
+  String get offlineLinkNotice;
+
+  /// No description provided for @lastUpdated.
+  ///
+  /// In en, this message translates to:
+  /// **'Last updated'**
+  String get lastUpdated;
+
   /// No description provided for @individualBs.
   ///
   /// In en, this message translates to:

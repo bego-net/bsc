@@ -94,6 +94,15 @@ class _DashboardScreenState extends State<DashboardScreen> {
           child: ListView(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             children: [
+              if (dash.lastFetched != null)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 8),
+                  child: Text(
+                    '${l10n.lastUpdated}: ${_formatTime(dash.lastFetched!)}',
+                    style: AppTextStyles.caption(color: AppColors.textMuted),
+                    textAlign: TextAlign.end,
+                  ),
+                ),
               SectionTitle(title: l10n.thisWeek),
               const SizedBox(height: 10),
               _MembersCard(dash: dash, l10n: l10n),
@@ -115,6 +124,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
         );
       }),
     );
+  }
+
+  String _formatTime(DateTime dt) {
+    final h = dt.hour.toString().padLeft(2, '0');
+    final m = dt.minute.toString().padLeft(2, '0');
+    return '$h:$m';
   }
 
   void _copySummary(

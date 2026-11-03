@@ -36,8 +36,22 @@ class _TeamScreenState extends State<TeamScreen> {
 
   Future<void> _openUrl(String url) async {
     final uri = Uri.tryParse(url);
-    if (uri != null && await canLaunchUrl(uri)) {
-      await launchUrl(uri, mode: LaunchMode.externalApplication);
+    try {
+      if (uri != null && await canLaunchUrl(uri)) {
+        await launchUrl(uri, mode: LaunchMode.externalApplication);
+      } else if (mounted) {
+        final l10n = AppLocalizations.of(context) ?? AppLocalizationsEn();
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(l10n.offlineLinkNotice)),
+        );
+      }
+    } catch (_) {
+      if (mounted) {
+        final l10n = AppLocalizations.of(context) ?? AppLocalizationsEn();
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(l10n.offlineLinkNotice)),
+        );
+      }
     }
   }
 
@@ -151,6 +165,12 @@ class _TeamScreenState extends State<TeamScreen> {
       child: ListView(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         children: [
+          // Offline pending-write indicator
+          OfflineIndicator(
+            hasPendingWrites: teamState.hasPendingWrites,
+            isFromCache: false,
+            compact: true,
+          ),
           // ── Hero Card: This Week's Passage & Session Info ─────────────────────
           AppCard(
             padding: const EdgeInsets.all(20),

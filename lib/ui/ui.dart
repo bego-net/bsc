@@ -5,6 +5,7 @@ export 'splash_screen.dart';
 export 'widgets/app_card.dart';
 export 'widgets/app_input_decoration.dart';
 export 'widgets/empty_state.dart';
+export 'widgets/offline_indicator.dart';
 export 'widgets/page_header.dart';
 export 'widgets/primary_button.dart';
 export 'widgets/progress_bar.dart';

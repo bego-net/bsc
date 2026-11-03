@@ -22,6 +22,7 @@ class TeamState extends ChangeNotifier {
   bool _isPrepared = false;
   String _languageCode = 'am';
   bool _isLoading = false;
+  bool _hasPendingWrites = false;
   String? _errorMessage;
 
   bool _disposed = false;
@@ -41,6 +42,7 @@ class TeamState extends ChangeNotifier {
   bool get isPrepared => _isPrepared;
   String get languageCode => _languageCode;
   bool get isLoading => _isLoading;
+  bool get hasPendingWrites => _hasPendingWrites;
   String? get errorMessage => _errorMessage;
   bool get isAdmin => _isAdmin;
   String? get uid => _uid;
@@ -107,6 +109,7 @@ class TeamState extends ChangeNotifier {
     if (_currentWeek == null || _uid == null) return;
     final next = !_isPrepared;
     _isPrepared = next;
+    _hasPendingWrites = true;
     _safeNotify();
     try {
       await _repo.setUserPrepared(
@@ -114,8 +117,11 @@ class TeamState extends ChangeNotifier {
         uid: _uid,
         prepared: next,
       );
+      _hasPendingWrites = false;
+      _safeNotify();
     } catch (e) {
       // Rollback on error
+      _hasPendingWrites = false;
       _isPrepared = !next;
       _errorMessage = 'Could not update preparation status.';
       _safeNotify();
