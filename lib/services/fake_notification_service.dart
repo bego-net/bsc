@@ -17,6 +17,9 @@ class FakeNotificationService implements NotificationService {
   List<String> scheduledOtDates = [];
   bool otRemindersEnabled = true;
   bool otRemindersCancelled = false;
+  String? scheduledDailyStudyTime;
+  bool dailyStudyRemindersEnabled = true;
+  bool dailyStudyRemindersCancelled = false;
   String? lastNotificationTitle;
   String? lastNotificationBody;
 
@@ -73,6 +76,23 @@ class FakeNotificationService implements NotificationService {
     scheduledOtWeek = null;
     scheduledOtDates.clear();
     otRemindersCancelled = true;
+  }
+
+  @override
+  Future<void> scheduleDailyStudyReminder({
+    required String reminderTime,
+    required bool enabled,
+    String languageCode = 'am',
+  }) async {
+    scheduledDailyStudyTime = reminderTime;
+    dailyStudyRemindersEnabled = enabled;
+    dailyStudyRemindersCancelled = false;
+  }
+
+  @override
+  Future<void> cancelDailyStudyReminder() async {
+    scheduledDailyStudyTime = null;
+    dailyStudyRemindersCancelled = true;
   }
 
   @override

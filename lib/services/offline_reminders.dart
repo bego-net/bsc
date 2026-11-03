@@ -40,6 +40,13 @@ class OfflineReminders {
           languageCode: languageCode,
         );
       }
+
+      // 3. Daily Individual Bible Study reminder from cached preferences
+      await notificationService.scheduleDailyStudyReminder(
+        reminderTime: reminderTime,
+        enabled: true,
+        languageCode: languageCode,
+      );
     } catch (e) {
       debugPrint('[OfflineReminders] Scheduled reminders notice: $e');
     }

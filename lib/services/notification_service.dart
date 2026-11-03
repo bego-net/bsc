@@ -28,6 +28,16 @@ abstract class NotificationService {
   /// Cancels any scheduled Old Testament reminders.
   Future<void> cancelOtReminders();
 
+  /// Schedules daily individual Bible study reminder at [reminderTime].
+  Future<void> scheduleDailyStudyReminder({
+    required String reminderTime,
+    required bool enabled,
+    String languageCode = 'am',
+  });
+
+  /// Cancels any scheduled daily individual Bible study reminder.
+  Future<void> cancelDailyStudyReminder();
+
   /// Sends an immediate test notification (used in Admin Tools to verify on phone/emulator).
   Future<void> sendTestNotification({
     required String title,

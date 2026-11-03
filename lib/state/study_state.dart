@@ -4,6 +4,7 @@ import '../data/bible_books.dart';
 import '../models/app_user.dart';
 import '../models/reading_entry.dart';
 import '../repositories/study_repository.dart';
+import '../services/notification_service.dart';
 
 /// Manages Bible study state for the active user, including current portion,
 /// today's reading completion, streak counting, reading history, and reminders.
@@ -23,15 +24,19 @@ class StudyState extends ChangeNotifier {
   bool _isLoading = false;
   bool _hasPendingWrites = false;
   Future<void>? _pendingLoad;
+  final NotificationService? _notificationService;
 
   StudyState({
     required StudyRepository repository,
     String? uid,
     AppUser? initialUser,
     DateTime Function()? now,
+    NotificationService? notificationService,
   })  : _repo = repository,
         _uid = uid ?? initialUser?.uid,
-        _now = now ?? DateTime.now {
+        _now = now ?? DateTime.now,
+        // ignore: prefer_initializing_formals
+        _notificationService = notificationService {
     if (initialUser != null) {
       _applyUser(initialUser);
     }
@@ -76,6 +81,7 @@ class StudyState extends ChangeNotifier {
       _todayReading = null;
       _history = [];
       _pendingLoad = null;
+      _notificationService?.cancelDailyStudyReminder();
       notifyListeners();
       return;
     }
@@ -91,6 +97,11 @@ class StudyState extends ChangeNotifier {
     _verseFrom = user.verseFrom;
     _verseTo = user.verseTo < user.verseFrom ? user.verseFrom : user.verseTo;
     _reminderTime = _parseReminderTime(user.reminderTime);
+    _notificationService?.scheduleDailyStudyReminder(
+      reminderTime: user.reminderTime,
+      enabled: true,
+      languageCode: user.language,
+    );
     notifyListeners();
   }
 
@@ -310,13 +321,19 @@ class StudyState extends ChangeNotifier {
   // --- Reminder Time ---
 
   /// Updates and persists the daily reminder time.
-  Future<void> setReminderTime(TimeOfDay time) async {
+  Future<void> setReminderTime(TimeOfDay time, {String languageCode = 'am'}) async {
     _reminderTime = time;
     notifyListeners();
 
+    final formatted =
+        '${time.hour.toString().padLeft(2, '0')}:${time.minute.toString().padLeft(2, '0')}';
+    await _notificationService?.scheduleDailyStudyReminder(
+      reminderTime: formatted,
+      enabled: true,
+      languageCode: languageCode,
+    );
+
     if (_uid != null) {
-      final formatted =
-          '${time.hour.toString().padLeft(2, '0')}:${time.minute.toString().padLeft(2, '0')}';
       await _repo.updateReminderTime(
         uid: _uid!,
         reminderTime: formatted,

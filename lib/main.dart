@@ -137,6 +137,7 @@ void main() async {
             repository: studyRepository,
             uid: context.read<AuthState>().user?.uid,
             initialUser: context.read<AuthState>().user,
+            notificationService: notificationService,
           ),
           update: (context, authState, studyState) {
             if (studyState == null) {
@@ -144,9 +145,13 @@ void main() async {
                 repository: studyRepository,
                 uid: authState.user?.uid,
                 initialUser: authState.user,
+                notificationService: notificationService,
               );
             }
             if (studyState.uid != authState.user?.uid) {
+              if (authState.user == null) {
+                notificationService.cancelDailyStudyReminder();
+              }
               studyState.setUser(authState.user);
             }
             return studyState;
