@@ -26,6 +26,9 @@ class AuthState extends ChangeNotifier {
   String? get errorMessage => _errorMessage;
   bool get mustChangePassword => _user?.mustChangePassword ?? false;
 
+  /// Retries initial session / user profile loading.
+  Future<void> retryInit() => _init();
+
   Future<void> _init() async {
     _isLoading = true;
     notifyListeners();

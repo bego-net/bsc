@@ -5,6 +5,7 @@ import '../../l10n/app_localizations.dart';
 import '../../models/member_overview_item.dart';
 import '../../repositories/team_repository.dart';
 import '../../state/team_state.dart';
+import '../../ui/ui.dart';
 
 /// Read-only admin screen showing all members and their preparation status.
 class OverviewScreen extends StatefulWidget {
@@ -64,83 +65,144 @@ class _OverviewScreenState extends State<OverviewScreen> {
     final preparedCount = members.where((m) => m.isPrepared).length;
 
     return Scaffold(
+      backgroundColor: AppColors.background,
       appBar: AppBar(
-        title: Text(l10n.memberOverview),
+        title: Text(l10n.memberOverview, style: AppTextStyles.titleMedium()),
+        backgroundColor: AppColors.background,
+        elevation: 0,
         actions: [
           IconButton(
-            icon: const Icon(Icons.refresh_outlined),
+            icon: const Icon(Icons.refresh_outlined, color: AppColors.textPrimary),
             onPressed: _load,
           ),
         ],
       ),
       body: _loading
-          ? const Center(child: CircularProgressIndicator())
+          ? const Center(child: CircularProgressIndicator(color: AppColors.accent))
           : _error != null
               ? Center(
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(l10n.couldNotLoadMemberOverview),
-                      const SizedBox(height: 12),
-                      FilledButton(
-                        onPressed: _load,
-                        child: Text(l10n.retry),
-                      ),
-                    ],
+                  child: Padding(
+                    padding: const EdgeInsets.all(24),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(l10n.couldNotLoadMemberOverview, style: AppTextStyles.body()),
+                        const SizedBox(height: 16),
+                        PrimaryButton(
+                          label: l10n.retry,
+                          onPressed: _load,
+                        ),
+                      ],
+                    ),
                   ),
                 )
               : members.isEmpty
-                  ? Center(child: Text(l10n.noMembersFound))
+                  ? Center(
+                      child: Padding(
+                        padding: const EdgeInsets.all(24),
+                        child: EmptyState(
+                          icon: Icons.people_outline,
+                          title: l10n.noMembersFound,
+                        ),
+                      ),
+                    )
                   : Column(
                       children: [
-                        // Summary banner
-                        Container(
-                          width: double.infinity,
-                          color: Theme.of(context)
-                              .colorScheme
-                              .primaryContainer
-                              .withValues(alpha: 0.5),
-                          padding: const EdgeInsets.symmetric(
-                              vertical: 12, horizontal: 16),
-                          child: Text(
-                            l10n.preparedOf(preparedCount, members.length),
-                            style: Theme.of(context)
-                                .textTheme
-                                .titleMedium
-                                ?.copyWith(fontWeight: FontWeight.bold),
+                        // Summary card
+                        Padding(
+                          padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
+                          child: AppCard(
+                            color: AppColors.accentLight,
+                            padding: const EdgeInsets.all(16),
+                            child: Row(
+                              children: [
+                                Container(
+                                  width: 44,
+                                  height: 44,
+                                  decoration: BoxDecoration(
+                                    color: AppColors.accent.withValues(alpha: 0.15),
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  child: const Icon(Icons.group_outlined, color: AppColors.accent, size: 22),
+                                ),
+                                const SizedBox(width: 14),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        l10n.preparedOf(preparedCount, members.length),
+                                        style: AppTextStyles.cardTitle(color: AppColors.accent),
+                                      ),
+                                      const SizedBox(height: 6),
+                                      AppProgressBar(
+                                        value: members.isEmpty
+                                            ? 0.0
+                                            : preparedCount / members.length,
+                                        fillColor: AppColors.accent,
+                                        backgroundColor: Colors.white,
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
                           ),
                         ),
                         Expanded(
-                          child: ListView.separated(
+                          child: ListView.builder(
+                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                             itemCount: members.length,
-                            separatorBuilder: (_, _) =>
-                                const Divider(height: 1),
                             itemBuilder: (_, i) {
                               final m = members[i];
-                              return ListTile(
-                                leading: CircleAvatar(
-                                  child: Text(
-                                    m.name.isNotEmpty
-                                        ? m.name[0].toUpperCase()
-                                        : '?',
+                              return Padding(
+                                padding: const EdgeInsets.only(bottom: 8),
+                                child: AppCard(
+                                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                                  child: Row(
+                                    children: [
+                                      CircleAvatar(
+                                        radius: 20,
+                                        backgroundColor: AppColors.accentLight,
+                                        child: Text(
+                                          m.name.isNotEmpty ? m.name[0].toUpperCase() : '?',
+                                          style: AppTextStyles.cardTitle(
+                                            color: AppColors.accent,
+                                          ),
+                                        ),
+                                      ),
+                                      const SizedBox(width: 12),
+                                      Expanded(
+                                        child: Column(
+                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          children: [
+                                            Text(m.name, style: AppTextStyles.cardTitle()),
+                                            if (m.lastReadingDate != null)
+                                              Text(
+                                                l10n.lastReadingDate(m.lastReadingDate!),
+                                                style: AppTextStyles.caption(),
+                                              ),
+                                          ],
+                                        ),
+                                      ),
+                                      Container(
+                                        width: 32,
+                                        height: 32,
+                                        decoration: BoxDecoration(
+                                          color: m.isPrepared
+                                              ? AppColors.accentLight
+                                              : AppColors.cardBorder.withValues(alpha: 0.3),
+                                          shape: BoxShape.circle,
+                                        ),
+                                        child: Icon(
+                                          m.isPrepared ? Icons.check : Icons.close,
+                                          size: 18,
+                                          color: m.isPrepared ? AppColors.accent : AppColors.textMuted,
+                                        ),
+                                      ),
+                                    ],
                                   ),
                                 ),
-                                title: Text(m.name),
-                                subtitle: m.lastReadingDate != null
-                                    ? Text(
-                                        l10n.lastReadingDate(m.lastReadingDate!),
-                                        style: const TextStyle(fontSize: 12),
-                                      )
-                                    : null,
-                                trailing: m.isPrepared
-                                    ? const Icon(
-                                        Icons.check_circle,
-                                        color: Colors.green,
-                                      )
-                                    : const Icon(
-                                        Icons.radio_button_unchecked,
-                                        color: Colors.grey,
-                                      ),
                               );
                             },
                           ),

@@ -8,6 +8,7 @@ import '../../services/points.dart';
 import '../../services/weekly_summary.dart';
 import '../../state/dashboard_state.dart';
 import '../../state/locale_state.dart';
+import '../../ui/ui.dart';
 import '../../widgets/profile_avatar_button.dart';
 import 'member_detail_screen.dart';
 import 'members_list_screen.dart';
@@ -36,15 +37,17 @@ class _DashboardScreenState extends State<DashboardScreen> {
   Widget build(BuildContext context) {
     final dash = context.watch<DashboardState>();
     final languageCode = context.watch<LocaleState>().languageCode;
-    final theme = Theme.of(context);
     final l10n = AppLocalizations.of(context)!;
 
     return Scaffold(
+      backgroundColor: AppColors.background,
       appBar: AppBar(
-        title: Text(l10n.dashboardTitle),
+        title: Text(l10n.dashboardTitle, style: AppTextStyles.titleMedium()),
+        backgroundColor: AppColors.background,
+        elevation: 0,
         actions: [
           IconButton(
-            icon: const Icon(Icons.people_outline),
+            icon: const Icon(Icons.people_outline, color: AppColors.textPrimary),
             tooltip: l10n.membersList,
             onPressed: () => Navigator.push(
               context,
@@ -52,7 +55,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
             ),
           ),
           IconButton(
-            icon: const Icon(Icons.copy_outlined),
+            icon: const Icon(Icons.copy_outlined, color: AppColors.textPrimary),
             tooltip: l10n.copySummary,
             onPressed: dash.isLoading ? null : () => _copySummary(context, dash, languageCode, l10n),
           ),
@@ -61,57 +64,58 @@ class _DashboardScreenState extends State<DashboardScreen> {
       ),
       body: Builder(builder: (context) {
         if (dash.isLoading) {
-          return const Center(child: CircularProgressIndicator());
+          return const Center(child: CircularProgressIndicator(color: AppColors.accent));
         }
         if (dash.error != null) {
           return Center(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text('${l10n.error}: ${dash.error}'),
-                const SizedBox(height: 12),
-                ElevatedButton(
-                  onPressed: () => dash.refresh(),
-                  child: Text(l10n.retry),
-                ),
-              ],
+            child: Padding(
+              padding: const EdgeInsets.all(24),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    '${l10n.error}: ${dash.error}',
+                    style: AppTextStyles.body(),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 16),
+                  PrimaryButton(
+                    label: l10n.retry,
+                    onPressed: () => dash.refresh(),
+                  ),
+                ],
+              ),
             ),
           );
         }
         return RefreshIndicator(
+          color: AppColors.accent,
           onRefresh: dash.refresh,
           child: ListView(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             children: [
-              _sectionLabel(theme, l10n.thisWeek),
-              const SizedBox(height: 8),
+              SectionTitle(title: l10n.thisWeek),
+              const SizedBox(height: 10),
               _MembersCard(dash: dash, l10n: l10n),
-              const SizedBox(height: 8),
+              const SizedBox(height: 12),
               _IbsCard(dash: dash, l10n: l10n),
-              const SizedBox(height: 8),
+              const SizedBox(height: 12),
               _TeamCard(dash: dash, languageCode: languageCode, l10n: l10n),
-              const SizedBox(height: 8),
+              const SizedBox(height: 12),
               _OtCard(dash: dash, l10n: l10n),
-              const SizedBox(height: 8),
+              const SizedBox(height: 12),
               _EncouragementCard(dash: dash, l10n: l10n),
-              const SizedBox(height: 20),
-              _sectionLabel(theme, l10n.leaderboardTitle),
-              const SizedBox(height: 8),
+              const SizedBox(height: 24),
+              SectionTitle(title: l10n.leaderboardTitle),
+              const SizedBox(height: 10),
               _TopReadersList(members: dash.allMembers, l10n: l10n),
+              const SizedBox(height: 24),
             ],
           ),
         );
       }),
     );
   }
-
-  Widget _sectionLabel(ThemeData theme, String text) => Text(
-        text,
-        style: theme.textTheme.titleSmall?.copyWith(
-          color: theme.colorScheme.primary,
-          fontWeight: FontWeight.bold,
-        ),
-      );
 
   void _copySummary(
     BuildContext context,
@@ -147,30 +151,35 @@ class _SummaryCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(children: [
-              Icon(icon, size: 18, color: Theme.of(context).colorScheme.primary),
-              const SizedBox(width: 8),
+    return AppCard(
+      padding: const EdgeInsets.all(18),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 36,
+                height: 36,
+                decoration: BoxDecoration(
+                  color: AppColors.accentLight,
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Icon(icon, size: 20, color: AppColors.accent),
+              ),
+              const SizedBox(width: 12),
               Expanded(
                 child: Text(
                   title,
-                  style: Theme.of(context)
-                      .textTheme
-                      .titleSmall
-                      ?.copyWith(fontWeight: FontWeight.bold),
+                  style: AppTextStyles.cardTitle(),
                   overflow: TextOverflow.ellipsis,
                 ),
               ),
-            ]),
-            const SizedBox(height: 10),
-            ...children,
-          ],
-        ),
+            ],
+          ),
+          const SizedBox(height: 14),
+          ...children,
+        ],
       ),
     );
   }
@@ -184,23 +193,22 @@ class _Stat extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 2),
+      padding: const EdgeInsets.symmetric(vertical: 4),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Expanded(
             child: Text(
               label,
-              style: Theme.of(context).textTheme.bodyMedium,
+              style: AppTextStyles.bodyMuted(),
               overflow: TextOverflow.ellipsis,
             ),
           ),
           const SizedBox(width: 8),
-          Text(value,
-              style: Theme.of(context)
-                  .textTheme
-                  .bodyMedium
-                  ?.copyWith(fontWeight: FontWeight.bold)),
+          Text(
+            value,
+            style: AppTextStyles.body(fontWeight: FontWeight.w700),
+          ),
         ],
       ),
     );
@@ -269,7 +277,7 @@ class _TeamCard extends StatelessWidget {
     final week = dash.currentTeamWeek;
     final isAm = languageCode == 'am';
     return _SummaryCard(
-      icon: Icons.group_outlined,
+      icon: Icons.diversity_3_outlined,
       title: l10n.teamBsTitle,
       children: [
         if (week != null)
@@ -324,10 +332,13 @@ class _EncouragementCard extends StatelessWidget {
       title: l10n.needsEncouragement,
       children: [
         if (list.isEmpty)
-          Text(l10n.noMembersNeedsEncouragement)
+          Padding(
+            padding: const EdgeInsets.only(top: 4),
+            child: Text(l10n.noMembersNeedsEncouragement, style: AppTextStyles.bodyMuted()),
+          )
         else ...[
           _Stat(label: '${list.length}', value: ''),
-          const SizedBox(height: 4),
+          const SizedBox(height: 6),
           ...list.map(
             (m) => _MemberTile(member: m),
           ),
@@ -344,6 +355,7 @@ class _MemberTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return InkWell(
+      borderRadius: BorderRadius.circular(10),
       onTap: () => Navigator.push(
         context,
         MaterialPageRoute(
@@ -351,12 +363,14 @@ class _MemberTile extends StatelessWidget {
         ),
       ),
       child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 4),
+        padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 4),
         child: Row(
           children: [
-            const Icon(Icons.chevron_right, size: 16),
-            const SizedBox(width: 4),
-            Expanded(child: Text(member.name)),
+            const Icon(Icons.chevron_right, size: 18, color: AppColors.textMuted),
+            const SizedBox(width: 6),
+            Expanded(
+              child: Text(member.name, style: AppTextStyles.body()),
+            ),
           ],
         ),
       ),
@@ -375,12 +389,22 @@ class _TopReadersList extends StatelessWidget {
   Widget build(BuildContext context) {
     final top = topReaders(members);
     if (top.isEmpty) {
-      return Text(l10n.noLeaderboardData);
+      return AppCard(
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Center(
+            child: Text(l10n.noLeaderboardData, style: AppTextStyles.bodyMuted()),
+          ),
+        ),
+      );
     }
     return Column(
       children: [
         for (int i = 0; i < top.length; i++)
-          _TopReaderTile(rank: i + 1, member: top[i], l10n: l10n),
+          Padding(
+            padding: const EdgeInsets.only(bottom: 8),
+            child: _TopReaderTile(rank: i + 1, member: top[i], l10n: l10n),
+          ),
       ],
     );
   }
@@ -407,24 +431,48 @@ class _TopReaderTile extends StatelessWidget {
                 ? '🥉'
                 : '$rank.';
 
-    return ListTile(
-      contentPadding: EdgeInsets.zero,
-      leading: Text(medal, style: const TextStyle(fontSize: 22)),
-      title: Text(member.name),
-      subtitle: Text(
-          'IBS: ${member.ibsDaysThisWeek}d  OT: ${member.otDaysThisWeek}d'
-          '${member.preparedThisWeek ? '  ✓ ${l10n.preparedBadge}' : ''}'),
-      trailing: Text(
-        l10n.points(pts),
-        style: Theme.of(context)
-            .textTheme
-            .bodyLarge
-            ?.copyWith(fontWeight: FontWeight.bold),
-      ),
-      onTap: () => Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (_) => MemberDetailScreen(uid: member.uid),
+    return AppCard(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      child: InkWell(
+        onTap: () => Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (_) => MemberDetailScreen(uid: member.uid),
+          ),
+        ),
+        child: Row(
+          children: [
+            SizedBox(
+              width: 36,
+              child: Text(
+                medal,
+                style: const TextStyle(fontSize: 22),
+                textAlign: TextAlign.center,
+              ),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(member.name, style: AppTextStyles.cardTitle()),
+                  const SizedBox(height: 2),
+                  Text(
+                    'IBS: ${member.ibsDaysThisWeek}d  OT: ${member.otDaysThisWeek}d'
+                    '${member.preparedThisWeek ? '  ✓ ${l10n.preparedBadge}' : ''}',
+                    style: AppTextStyles.caption(),
+                  ),
+                ],
+              ),
+            ),
+            Text(
+              l10n.points(pts),
+              style: AppTextStyles.body(
+                fontWeight: FontWeight.bold,
+                color: AppColors.accent,
+              ),
+            ),
+          ],
         ),
       ),
     );

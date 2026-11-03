@@ -5,6 +5,7 @@ import '../l10n/app_localizations.dart';
 import '../models/ot_week.dart';
 import '../state/locale_state.dart';
 import '../state/ot_state.dart';
+import '../ui/ui.dart';
 
 /// Screen displaying previous Old Testament study weeks.
 class OtHistoryScreen extends StatefulWidget {
@@ -33,30 +34,58 @@ class _OtHistoryScreenState extends State<OtHistoryScreen> {
     final l10n = AppLocalizations.of(context)!;
 
     return Scaffold(
-      appBar: AppBar(title: Text(l10n.pastWeeks)),
-      body: otState.historyLoading
-          ? const Center(child: CircularProgressIndicator())
-          : history.isEmpty
-              ? Center(child: Text(l10n.noLeaderboardData))
-              : ListView.separated(
-                  padding: const EdgeInsets.all(16),
-                  itemCount: history.length,
-                  separatorBuilder: (_, _) => const Divider(height: 1),
-                  itemBuilder: (context, i) {
-                    final week = history[i];
-                    return _WeekHistoryTile(week: week, languageCode: languageCode, l10n: l10n);
-                  },
-                ),
+      backgroundColor: AppColors.background,
+      appBar: AppBar(
+        backgroundColor: AppColors.background,
+        elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: AppColors.textPrimary),
+          onPressed: () => Navigator.of(context).pop(),
+        ),
+        title: Text(l10n.pastWeeks, style: AppTextStyles.title()),
+      ),
+      body: SafeArea(
+        child: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 600),
+            child: otState.historyLoading
+                ? const Center(child: CircularProgressIndicator(color: AppColors.accent))
+                : history.isEmpty
+                    ? Center(
+                        child: Padding(
+                          padding: const EdgeInsets.all(20),
+                          child: EmptyState(
+                            icon: Icons.history_rounded,
+                            title: l10n.noLeaderboardData,
+                          ),
+                        ),
+                      )
+                    : ListView.separated(
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                        itemCount: history.length,
+                        separatorBuilder: (_, _) => const SizedBox(height: 12),
+                        itemBuilder: (context, i) {
+                          final week = history[i];
+                          return _WeekHistoryCard(
+                            week: week,
+                            languageCode: languageCode,
+                            l10n: l10n,
+                          );
+                        },
+                      ),
+          ),
+        ),
+      ),
     );
   }
 }
 
-class _WeekHistoryTile extends StatelessWidget {
+class _WeekHistoryCard extends StatelessWidget {
   final OtWeek week;
   final String languageCode;
   final AppLocalizations l10n;
 
-  const _WeekHistoryTile({
+  const _WeekHistoryCard({
     required this.week,
     required this.languageCode,
     required this.l10n,
@@ -64,43 +93,58 @@ class _WeekHistoryTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
     final daysCount = week.days.length;
 
-    return ExpansionTile(
-      leading: const Icon(Icons.calendar_month_outlined),
-      title: Text(
-        week.topic.isNotEmpty ? week.topic : l10n.otPlan,
-        style: theme.textTheme.titleMedium?.copyWith(
-          fontWeight: FontWeight.w600,
+    return AppCard(
+      padding: EdgeInsets.zero,
+      child: ExpansionTile(
+        tilePadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+        shape: const Border(),
+        leading: Container(
+          width: 36,
+          height: 36,
+          decoration: BoxDecoration(
+            color: AppColors.accent.withValues(alpha: 0.12),
+            shape: BoxShape.circle,
+          ),
+          child: const Icon(Icons.calendar_month_outlined, color: AppColors.accent, size: 18),
         ),
-      ),
-      subtitle: Text(
-        '${l10n.startDate}: ${week.startDate} • $daysCount',
-        style: theme.textTheme.bodySmall,
-      ),
-      children: [
-        if (week.days.isEmpty)
-          Padding(
-            padding: const EdgeInsets.all(16),
-            child: Text(l10n.checkBackLater),
-          )
-        else
-          ...week.days.map((day) {
-            return ListTile(
-              dense: true,
-              leading: Text(
-                day.localizedDayName(languageCode),
-                style: theme.textTheme.labelMedium?.copyWith(
-                  fontWeight: FontWeight.bold,
-                  color: theme.colorScheme.primary,
+        title: Text(
+          week.topic.isNotEmpty ? week.topic : l10n.otPlan,
+          style: AppTextStyles.title(),
+        ),
+        subtitle: Text(
+          '${l10n.startDate}: ${week.startDate} • $daysCount',
+          style: AppTextStyles.caption(),
+        ),
+        children: [
+          const Divider(color: AppColors.border, height: 1),
+          if (week.days.isEmpty)
+            Padding(
+              padding: const EdgeInsets.all(16),
+              child: Text(l10n.checkBackLater, style: AppTextStyles.subtitle()),
+            )
+          else
+            ...week.days.map((day) {
+              return ListTile(
+                dense: true,
+                contentPadding: const EdgeInsets.symmetric(horizontal: 16),
+                leading: Text(
+                  day.localizedDayName(languageCode),
+                  style: AppTextStyles.caption(
+                    color: AppColors.accent,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
-              ),
-              title: Text(day.localizedPassageText(languageCode)),
-              subtitle: Text(day.date),
-            );
-          }),
-      ],
+                title: Text(
+                  day.localizedPassageText(languageCode),
+                  style: AppTextStyles.body(),
+                ),
+                subtitle: Text(day.date, style: AppTextStyles.caption()),
+              );
+            }),
+        ],
+      ),
     );
   }
 }

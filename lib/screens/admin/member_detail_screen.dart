@@ -6,6 +6,7 @@ import '../../l10n/app_localizations.dart';
 import '../../models/member_summary.dart';
 import '../../state/dashboard_state.dart';
 import '../../state/locale_state.dart';
+import '../../ui/ui.dart';
 
 /// Read-only member detail screen. Opens by tapping in list or encouragement card.
 class MemberDetailScreen extends StatefulWidget {
@@ -30,15 +31,25 @@ class _MemberDetailScreenState extends State<MemberDetailScreen> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     return Scaffold(
-      appBar: AppBar(title: Text(l10n.memberDetail)),
+      backgroundColor: AppColors.background,
+      appBar: AppBar(
+        title: Text(l10n.memberDetail, style: AppTextStyles.titleMedium()),
+        backgroundColor: AppColors.background,
+        elevation: 0,
+      ),
       body: FutureBuilder<MemberSummary>(
         future: _detailFuture,
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
+            return const Center(child: CircularProgressIndicator(color: AppColors.accent));
           }
           if (snapshot.hasError) {
-            return Center(child: Text('${l10n.error}: ${snapshot.error}'));
+            return Center(
+              child: Text(
+                '${l10n.error}: ${snapshot.error}',
+                style: AppTextStyles.body(),
+              ),
+            );
           }
           final m = snapshot.data!;
           return _MemberDetailBody(member: m);
@@ -54,139 +65,181 @@ class _MemberDetailBody extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
     final l10n = AppLocalizations.of(context)!;
     final languageCode = context.watch<LocaleState>().languageCode;
 
     return ListView(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       children: [
-        // ── Profile header ─────────────────────────────────────────────────
-        Row(
-          children: [
-            CircleAvatar(
-              radius: 30,
-              child: Text(
-                member.name.isNotEmpty ? member.name[0].toUpperCase() : '?',
-                style: const TextStyle(fontSize: 24),
-              ),
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(member.name,
-                      style: theme.textTheme.titleMedium
-                          ?.copyWith(fontWeight: FontWeight.bold)),
-                  Text(member.email,
-                      style: theme.textTheme.bodySmall),
-                  Text(
-                    '${l10n.role}: ${member.role == "admin" ? l10n.adminBadge : l10n.memberBadge}',
-                    style: theme.textTheme.bodySmall,
+        // ── Profile header card ─────────────────────────────────────────────
+        AppCard(
+          padding: const EdgeInsets.all(20),
+          child: Row(
+            children: [
+              CircleAvatar(
+                radius: 32,
+                backgroundColor: AppColors.accentLight,
+                child: Text(
+                  member.name.isNotEmpty ? member.name[0].toUpperCase() : '?',
+                  style: const TextStyle(
+                    fontSize: 28,
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.accent,
                   ),
-                  Text(
-                    '${l10n.joined}: ${_fmtDate(member.joinDate)}',
-                    style: theme.textTheme.bodySmall,
-                  ),
-                ],
+                ),
               ),
-            ),
-          ],
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      member.name,
+                      style: AppTextStyles.titleMedium().copyWith(fontSize: 20),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(member.email, style: AppTextStyles.bodyMuted()),
+                    const SizedBox(height: 6),
+                    Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
+                          decoration: BoxDecoration(
+                            color: member.role == 'admin'
+                                ? AppColors.accentLight
+                                : AppColors.cardBorder.withValues(alpha: 0.5),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Text(
+                            member.role == 'admin' ? l10n.adminBadge : l10n.memberBadge,
+                            style: AppTextStyles.caption(
+                              color: member.role == 'admin'
+                                  ? AppColors.accent
+                                  : AppColors.textMuted,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          '${l10n.joined}: ${_fmtDate(member.joinDate)}',
+                          style: AppTextStyles.caption(),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
         ),
         const SizedBox(height: 16),
-        const Divider(),
 
         // ── Current study ──────────────────────────────────────────────────
-        _Section(
-          title: l10n.currentStudy,
-          children: [
-            _Row(
-              l10n.book,
-              BibleBooks.getLocalizedName(member.currentBook, languageCode),
-            ),
-            _Row(l10n.chapter, '${member.currentChapter}'),
-            _Row(l10n.verses,
-                '${member.currentVerseFrom}–${member.currentVerseTo}'),
-          ],
-        ),
+        SectionTitle(title: l10n.currentStudy),
         const SizedBox(height: 8),
+        AppCard(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            children: [
+              _Row(
+                l10n.book,
+                BibleBooks.getLocalizedName(member.currentBook, languageCode),
+              ),
+              const Divider(height: 16, color: AppColors.cardBorder),
+              _Row(l10n.chapter, '${member.currentChapter}'),
+              const Divider(height: 16, color: AppColors.cardBorder),
+              _Row(
+                l10n.verses,
+                '${member.currentVerseFrom}–${member.currentVerseTo}',
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 16),
 
         // ── Streaks ────────────────────────────────────────────────────────
-        _Section(
-          title: l10n.streaks,
-          children: [
-            _Row(l10n.ibsStreakLabel, l10n.daysCount(member.ibsStreak)),
-            _Row(l10n.otStreakLabel, l10n.daysCount(member.otStreak)),
-          ],
-        ),
+        SectionTitle(title: l10n.streaks),
         const SizedBox(height: 8),
+        AppCard(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            children: [
+              _Row(l10n.ibsStreakLabel, '🔥 ${l10n.daysCount(member.ibsStreak)}'),
+              const Divider(height: 16, color: AppColors.cardBorder),
+              _Row(l10n.otStreakLabel, '🔥 ${l10n.daysCount(member.otStreak)}'),
+            ],
+          ),
+        ),
+        const SizedBox(height: 16),
 
         // ── IBS History ────────────────────────────────────────────────────
-        _Section(
-          title: l10n.ibsHistory30,
-          children: member.ibsHistory.isEmpty
-              ? [Text(l10n.noReadingsRecorded)]
-              : member.ibsHistory
-                  .map((e) => _Row(e.date, e.localizedReferenceText(languageCode)))
-                  .toList(),
-        ),
+        SectionTitle(title: l10n.ibsHistory30),
         const SizedBox(height: 8),
+        AppCard(
+          padding: const EdgeInsets.all(16),
+          child: member.ibsHistory.isEmpty
+              ? Text(l10n.noReadingsRecorded, style: AppTextStyles.bodyMuted())
+              : Column(
+                  children: [
+                    for (int i = 0; i < member.ibsHistory.length; i++) ...[
+                      if (i > 0) const Divider(height: 14, color: AppColors.cardBorder),
+                      _Row(
+                        member.ibsHistory[i].date,
+                        member.ibsHistory[i].localizedReferenceText(languageCode),
+                      ),
+                    ],
+                  ],
+                ),
+        ),
+        const SizedBox(height: 16),
 
         // ── OT History ────────────────────────────────────────────────────
-        _Section(
-          title: l10n.otHistory30,
-          children: member.otReadingDates.isEmpty
-              ? [Text(l10n.noReadingsRecorded)]
-              : member.otReadingDates
-                  .map((d) => _Row(d, l10n.completedCheck))
-                  .toList(),
-        ),
+        SectionTitle(title: l10n.otHistory30),
         const SizedBox(height: 8),
+        AppCard(
+          padding: const EdgeInsets.all(16),
+          child: member.otReadingDates.isEmpty
+              ? Text(l10n.noReadingsRecorded, style: AppTextStyles.bodyMuted())
+              : Column(
+                  children: [
+                    for (int i = 0; i < member.otReadingDates.length; i++) ...[
+                      if (i > 0) const Divider(height: 14, color: AppColors.cardBorder),
+                      _Row(member.otReadingDates[i], l10n.completedCheck),
+                    ],
+                  ],
+                ),
+        ),
+        const SizedBox(height: 16),
 
         // ── Team BS History ───────────────────────────────────────────────
-        _Section(
-          title: l10n.teamBsHistory,
-          children: member.teamPrepHistory.isEmpty
-              ? [Text(l10n.noDataAvailable)]
-              : member.teamPrepHistory.entries
-                  .map((e) => _Row(
-                        e.key,
-                        e.value ? l10n.preparedCheck : l10n.notPrepared,
-                      ))
-                  .toList(),
+        SectionTitle(title: l10n.teamBsHistory),
+        const SizedBox(height: 8),
+        AppCard(
+          padding: const EdgeInsets.all(16),
+          child: member.teamPrepHistory.isEmpty
+              ? Text(l10n.noDataAvailable, style: AppTextStyles.bodyMuted())
+              : Column(
+                  children: [
+                    for (int i = 0; i < member.teamPrepHistory.entries.length; i++) ...[
+                      if (i > 0) const Divider(height: 14, color: AppColors.cardBorder),
+                      _Row(
+                        member.teamPrepHistory.entries.elementAt(i).key,
+                        member.teamPrepHistory.entries.elementAt(i).value
+                            ? l10n.preparedCheck
+                            : l10n.notPrepared,
+                      ),
+                    ],
+                  ],
+                ),
         ),
+        const SizedBox(height: 24),
       ],
     );
   }
 
   String _fmtDate(DateTime dt) =>
       '${dt.year}-${dt.month.toString().padLeft(2, '0')}-${dt.day.toString().padLeft(2, '0')}';
-}
-
-// ── Helper widgets ─────────────────────────────────────────────────────────────
-
-class _Section extends StatelessWidget {
-  final String title;
-  final List<Widget> children;
-
-  const _Section({required this.title, required this.children});
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(title,
-            style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                  color: Theme.of(context).colorScheme.primary,
-                  fontWeight: FontWeight.bold,
-                )),
-        const SizedBox(height: 6),
-        ...children,
-      ],
-    );
-  }
 }
 
 class _Row extends StatelessWidget {
@@ -196,27 +249,20 @@ class _Row extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 2),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          SizedBox(
-            width: 160,
-            child: Text(label,
-                style: Theme.of(context)
-                    .textTheme
-                    .bodySmall
-                    ?.copyWith(color: Colors.grey[700])),
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        SizedBox(
+          width: 150,
+          child: Text(label, style: AppTextStyles.bodyMuted()),
+        ),
+        Expanded(
+          child: Text(
+            value,
+            style: AppTextStyles.body(fontWeight: FontWeight.w600),
           ),
-          Expanded(
-            child: Text(value,
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      fontWeight: FontWeight.w500,
-                    )),
-          ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 }

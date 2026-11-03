@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 
 import '../l10n/app_localizations.dart';
 import '../state/auth_state.dart';
+import '../ui/ui.dart';
 
 /// Shown immediately after login when [AppUser.mustChangePassword] is true.
 /// The user cannot skip this screen.
@@ -39,9 +40,13 @@ class _ForcePasswordChangeScreenState
     if (!success && mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(authState.errorMessage ?? l10n.error),
-          backgroundColor: Theme.of(context).colorScheme.error,
+          content: Text(
+            authState.errorMessage ?? l10n.error,
+            style: AppTextStyles.body(color: Colors.white),
+          ),
+          backgroundColor: AppColors.error,
           behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         ),
       );
     }
@@ -49,52 +54,52 @@ class _ForcePasswordChangeScreenState
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
     final authState = context.watch<AuthState>();
     final l10n = AppLocalizations.of(context)!;
 
     return PopScope(
       canPop: false, // Cannot navigate back or skip
       child: Scaffold(
-        body: Center(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.all(24.0),
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 420),
-              child: Card(
-                elevation: 0,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(24),
-                  side: BorderSide(
-                    color: colorScheme.outlineVariant.withValues(alpha: 0.5),
-                  ),
-                ),
-                color: Colors.white,
-                child: Padding(
-                  padding: const EdgeInsets.all(32.0),
+        backgroundColor: AppColors.background,
+        body: SafeArea(
+          child: Center(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 24.0),
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 440),
+                child: AppCard(
+                  padding: const EdgeInsets.all(28.0),
                   child: Form(
                     key: _formKey,
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
-                        Icon(Icons.lock_reset,
-                            size: 48, color: colorScheme.primary),
+                        Center(
+                          child: Container(
+                            width: 64,
+                            height: 64,
+                            decoration: BoxDecoration(
+                              color: AppColors.accent.withValues(alpha: 0.12),
+                              shape: BoxShape.circle,
+                            ),
+                            child: const Icon(
+                              Icons.lock_reset_rounded,
+                              size: 32,
+                              color: AppColors.accent,
+                            ),
+                          ),
+                        ),
                         const SizedBox(height: 16),
                         Text(
                           l10n.setNewPassword,
-                          style: theme.textTheme.headlineSmall?.copyWith(
-                            fontWeight: FontWeight.bold,
-                          ),
+                          style: AppTextStyles.headingLarge(),
                           textAlign: TextAlign.center,
                         ),
                         const SizedBox(height: 8),
                         Text(
                           l10n.forceChangeSubtitle,
-                          style: theme.textTheme.bodyMedium?.copyWith(
-                            color: colorScheme.onSurfaceVariant,
-                          ),
+                          style: AppTextStyles.body(color: AppColors.textSecondary),
                           textAlign: TextAlign.center,
                         ),
                         const SizedBox(height: 28),
@@ -104,18 +109,35 @@ class _ForcePasswordChangeScreenState
                           controller: _newController,
                           obscureText: _obscureNew,
                           textInputAction: TextInputAction.next,
+                          style: AppTextStyles.body(),
                           decoration: InputDecoration(
                             labelText: l10n.newPasswordHint,
-                            prefixIcon: const Icon(Icons.lock_outline),
+                            labelStyle: AppTextStyles.caption(),
+                            prefixIcon: const Icon(Icons.lock_outline, color: AppColors.textSecondary),
                             suffixIcon: IconButton(
-                              icon: Icon(_obscureNew
-                                  ? Icons.visibility_outlined
-                                  : Icons.visibility_off_outlined),
+                              icon: Icon(
+                                _obscureNew
+                                    ? Icons.visibility_outlined
+                                    : Icons.visibility_off_outlined,
+                                color: AppColors.textSecondary,
+                              ),
                               onPressed: () =>
                                   setState(() => _obscureNew = !_obscureNew),
                             ),
+                            filled: true,
+                            fillColor: AppColors.background,
+                            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
                             border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
+                              borderRadius: BorderRadius.circular(16),
+                              borderSide: const BorderSide(color: AppColors.border),
+                            ),
+                            enabledBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(16),
+                              borderSide: const BorderSide(color: AppColors.border),
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(16),
+                              borderSide: const BorderSide(color: AppColors.accent, width: 1.8),
                             ),
                           ),
                           validator: (v) {
@@ -133,18 +155,35 @@ class _ForcePasswordChangeScreenState
                           obscureText: _obscureConfirm,
                           textInputAction: TextInputAction.done,
                           onFieldSubmitted: (_) => _submit(l10n),
+                          style: AppTextStyles.body(),
                           decoration: InputDecoration(
                             labelText: l10n.confirmNewPassword,
-                            prefixIcon: const Icon(Icons.lock_outline),
+                            labelStyle: AppTextStyles.caption(),
+                            prefixIcon: const Icon(Icons.lock_outline, color: AppColors.textSecondary),
                             suffixIcon: IconButton(
-                              icon: Icon(_obscureConfirm
-                                  ? Icons.visibility_outlined
-                                  : Icons.visibility_off_outlined),
+                              icon: Icon(
+                                _obscureConfirm
+                                    ? Icons.visibility_outlined
+                                    : Icons.visibility_off_outlined,
+                                color: AppColors.textSecondary,
+                              ),
                               onPressed: () => setState(
                                   () => _obscureConfirm = !_obscureConfirm),
                             ),
+                            filled: true,
+                            fillColor: AppColors.background,
+                            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
                             border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
+                              borderRadius: BorderRadius.circular(16),
+                              borderSide: const BorderSide(color: AppColors.border),
+                            ),
+                            enabledBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(16),
+                              borderSide: const BorderSide(color: AppColors.border),
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(16),
+                              borderSide: const BorderSide(color: AppColors.accent, width: 1.8),
                             ),
                           ),
                           validator: (v) {
@@ -156,27 +195,10 @@ class _ForcePasswordChangeScreenState
                         ),
                         const SizedBox(height: 24),
 
-                        FilledButton(
-                          onPressed: authState.isLoading ? null : () => _submit(l10n),
-                          style: FilledButton.styleFrom(
-                            padding: const EdgeInsets.symmetric(vertical: 16),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                          ),
-                          child: authState.isLoading
-                              ? const SizedBox(
-                                  height: 20,
-                                  width: 20,
-                                  child: CircularProgressIndicator(
-                                      strokeWidth: 2, color: Colors.white),
-                                )
-                              : Text(
-                                  l10n.setPassword,
-                                  style: const TextStyle(
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.bold),
-                                ),
+                        PrimaryButton(
+                          label: l10n.setPassword,
+                          isLoading: authState.isLoading,
+                          onPressed: () => _submit(l10n),
                         ),
                       ],
                     ),

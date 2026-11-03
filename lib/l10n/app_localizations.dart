@@ -104,6 +104,18 @@ abstract class AppLocalizations {
   /// **'Bible Study'**
   String get appTitle;
 
+  /// No description provided for @splashAppName.
+  ///
+  /// In en, this message translates to:
+  /// **'Bisrat Bible Study'**
+  String get splashAppName;
+
+  /// No description provided for @splashRetry.
+  ///
+  /// In en, this message translates to:
+  /// **'Try again'**
+  String get splashRetry;
+
   /// No description provided for @individualBs.
   ///
   /// In en, this message translates to:
@@ -1615,6 +1627,60 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Coming soon'**
   String get comingSoon;
+
+  /// No description provided for @greetingUser.
+  ///
+  /// In en, this message translates to:
+  /// **'Hello, {name}'**
+  String greetingUser(String name);
+
+  /// No description provided for @greetingGuest.
+  ///
+  /// In en, this message translates to:
+  /// **'Welcome'**
+  String get greetingGuest;
+
+  /// No description provided for @dayMon.
+  ///
+  /// In en, this message translates to:
+  /// **'Mon'**
+  String get dayMon;
+
+  /// No description provided for @dayTue.
+  ///
+  /// In en, this message translates to:
+  /// **'Tue'**
+  String get dayTue;
+
+  /// No description provided for @dayWed.
+  ///
+  /// In en, this message translates to:
+  /// **'Wed'**
+  String get dayWed;
+
+  /// No description provided for @dayThu.
+  ///
+  /// In en, this message translates to:
+  /// **'Thu'**
+  String get dayThu;
+
+  /// No description provided for @dayFri.
+  ///
+  /// In en, this message translates to:
+  /// **'Fri'**
+  String get dayFri;
+
+  /// No description provided for @daySat.
+  ///
+  /// In en, this message translates to:
+  /// **'Sat'**
+  String get daySat;
+
+  /// No description provided for @daySun.
+  ///
+  /// In en, this message translates to:
+  /// **'Sun'**
+  String get daySun;
 }
 
 class _AppLocalizationsDelegate

@@ -1,6 +1,8 @@
 {
   "@@locale": "am",
   "appTitle": "የመጽሐፍ ቅዱስ ጥናት",
+  "splashAppName": "ብሥራት የመጽሐፍ ቅዱስ ጥናት",
+  "splashRetry": "እንደገና ሞክር",
   "individualBs": "የግል ጥናት",
   "teamBs": "የቡድን ጥናት",
   "oldTestament": "ብሉይ ኪዳን",
@@ -252,5 +254,15 @@
   "lastReadingDate": "የመጨረሻ ንባብ፦ {date}",
   "couldNotLoadMemberOverview": "የአባላትን ዝርዝር መጫን አልተቻለም።",
   "bookFinishedStatus": "መጽሐፉ ተጠናቋል",
-  "comingSoon": "በቅርቡ ይጠብቁ"
+  "comingSoon": "በቅርቡ ይጠብቁ",
+  "greetingUser": "ሰላም {name}",
+  "greetingGuest": "እንኳን ደህና መጡ",
+  "thisWeek": "የዚህ ሳምንት",
+  "dayMon": "ሰኞ",
+  "dayTue": "ማክ",
+  "dayWed": "ረቡ",
+  "dayThu": "ሐሙ",
+  "dayFri": "ዓርብ",
+  "daySat": "ቅዳ",
+  "daySun": "እሁ"
 }

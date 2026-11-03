@@ -5,6 +5,7 @@ import '../l10n/app_localizations.dart';
 import '../l10n/app_localizations_en.dart';
 import '../state/auth_state.dart';
 import '../state/locale_state.dart';
+import '../ui/ui.dart';
 import 'forgot_password_screen.dart';
 import 'signup_screen.dart';
 
@@ -42,9 +43,10 @@ class _LoginScreenState extends State<LoginScreen> {
       final error = authState.errorMessage ?? l10n.error;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(error),
-          backgroundColor: Theme.of(context).colorScheme.error,
+          content: Text(error, style: AppTextStyles.body(color: Colors.white)),
+          backgroundColor: AppColors.error,
           behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         ),
       );
     }
@@ -52,99 +54,104 @@ class _LoginScreenState extends State<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
     final authState = context.watch<AuthState>();
     final localeState = Provider.of<LocaleState?>(context);
     final l10n = AppLocalizations.of(context) ?? AppLocalizationsEn();
     final languageCode = localeState?.languageCode ?? l10n.localeName;
 
     return Scaffold(
-      body: Center(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(24.0),
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 420),
-            child: Card(
-              elevation: 0,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(24),
-                side: BorderSide(
-                  color: colorScheme.outlineVariant.withValues(alpha: 0.5),
-                ),
-              ),
-              color: Colors.white,
-              child: Padding(
-                padding: const EdgeInsets.all(32.0),
+      backgroundColor: AppColors.background,
+      body: SafeArea(
+        child: Center(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 24.0),
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 440),
+              child: AppCard(
+                padding: const EdgeInsets.all(28.0),
                 child: Form(
                   key: _formKey,
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      // Language Switch
+                      // Language Switcher
                       Align(
                         alignment: Alignment.topRight,
-                        child: SegmentedButton<String>(
-                          segments: const [
-                            ButtonSegment(
-                              value: 'am',
-                              label: Text('አማርኛ', style: TextStyle(fontSize: 12)),
-                            ),
-                            ButtonSegment(
-                              value: 'en',
-                              label: Text('English', style: TextStyle(fontSize: 12)),
-                            ),
-                          ],
-                          selected: {languageCode},
-                          onSelectionChanged: (selected) {
-                            localeState?.setLanguage(selected.first);
-                          },
-                          showSelectedIcon: false,
-                          style: const ButtonStyle(
-                            visualDensity: VisualDensity.compact,
-                            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                        child: Container(
+                          decoration: BoxDecoration(
+                            color: AppColors.background,
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(color: AppColors.border),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              _buildLangChip('am', 'አማርኛ', languageCode, localeState),
+                              _buildLangChip('en', 'English', languageCode, localeState),
+                            ],
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+
+                      // App Logo / Book Icon
+                      Center(
+                        child: Container(
+                          width: 64,
+                          height: 64,
+                          decoration: BoxDecoration(
+                            color: AppColors.accent.withValues(alpha: 0.12),
+                            shape: BoxShape.circle,
+                          ),
+                          child: const Icon(
+                            Icons.auto_stories_rounded,
+                            size: 32,
+                            color: AppColors.accent,
                           ),
                         ),
                       ),
                       const SizedBox(height: 16),
 
-                      // Header
-                      Icon(
-                        Icons.auto_stories,
-                        size: 48,
-                        color: colorScheme.primary,
-                      ),
-                      const SizedBox(height: 16),
+                      // Welcome Title
                       Text(
                         l10n.welcomeBack,
-                        style: theme.textTheme.headlineMedium?.copyWith(
-                          fontWeight: FontWeight.bold,
-                          color: colorScheme.onSurface,
-                        ),
+                        style: AppTextStyles.headingLarge(),
                         textAlign: TextAlign.center,
                       ),
                       const SizedBox(height: 6),
                       Text(
                         l10n.loginSubtitle,
-                        style: theme.textTheme.bodyMedium?.copyWith(
-                          color: colorScheme.onSurfaceVariant,
-                        ),
+                        style: AppTextStyles.subtitle(),
                         textAlign: TextAlign.center,
                       ),
                       const SizedBox(height: 28),
 
-                      // Username input
+                      // Username Input
                       TextFormField(
                         controller: _usernameController,
                         keyboardType: TextInputType.text,
                         textInputAction: TextInputAction.next,
                         autocorrect: false,
+                        style: AppTextStyles.body(),
                         decoration: InputDecoration(
                           labelText: l10n.username,
-                          prefixIcon: const Icon(Icons.person_outline),
+                          labelStyle: AppTextStyles.caption(),
+                          prefixIcon: const Icon(Icons.person_outline, color: AppColors.textSecondary),
+                          filled: true,
+                          fillColor: AppColors.background,
+                          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
                           border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
+                            borderRadius: BorderRadius.circular(16),
+                            borderSide: const BorderSide(color: AppColors.border),
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(16),
+                            borderSide: const BorderSide(color: AppColors.border),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(16),
+                            borderSide: const BorderSide(color: AppColors.accent, width: 1.8),
                           ),
                         ),
                         validator: (value) {
@@ -156,20 +163,23 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
                       const SizedBox(height: 16),
 
-                      // Password input
+                      // Password Input
                       TextFormField(
                         controller: _passwordController,
                         obscureText: _obscurePassword,
                         textInputAction: TextInputAction.done,
                         onFieldSubmitted: (_) => _submit(l10n),
+                        style: AppTextStyles.body(),
                         decoration: InputDecoration(
                           labelText: l10n.password,
-                          prefixIcon: const Icon(Icons.lock_outline),
+                          labelStyle: AppTextStyles.caption(),
+                          prefixIcon: const Icon(Icons.lock_outline, color: AppColors.textSecondary),
                           suffixIcon: IconButton(
                             icon: Icon(
                               _obscurePassword
                                   ? Icons.visibility_outlined
                                   : Icons.visibility_off_outlined,
+                              color: AppColors.textSecondary,
                             ),
                             onPressed: () {
                               setState(() {
@@ -177,8 +187,20 @@ class _LoginScreenState extends State<LoginScreen> {
                               });
                             },
                           ),
+                          filled: true,
+                          fillColor: AppColors.background,
+                          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
                           border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
+                            borderRadius: BorderRadius.circular(16),
+                            borderSide: const BorderSide(color: AppColors.border),
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(16),
+                            borderSide: const BorderSide(color: AppColors.border),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(16),
+                            borderSide: const BorderSide(color: AppColors.accent, width: 1.8),
                           ),
                         ),
                         validator: (value) {
@@ -190,7 +212,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
                       const SizedBox(height: 8),
 
-                      // Forgot password
+                      // Forgot Password Link
                       Align(
                         alignment: Alignment.centerRight,
                         child: TextButton(
@@ -198,54 +220,39 @@ class _LoginScreenState extends State<LoginScreen> {
                             Navigator.of(context).push(
                               MaterialPageRoute(
                                 builder: (_) => ForgotPasswordScreen(
-                                  initialUsername:
-                                      _usernameController.text.trim(),
+                                  initialUsername: _usernameController.text.trim(),
                                 ),
                               ),
                             );
                           },
-                          child: Text(l10n.forgotPassword),
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-
-                      // Submit button
-                      FilledButton(
-                        onPressed: authState.isLoading ? null : () => _submit(l10n),
-                        style: FilledButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(vertical: 16),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
+                          child: Text(
+                            l10n.forgotPassword,
+                            style: AppTextStyles.caption(
+                              color: AppColors.accent,
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
                         ),
-                        child: authState.isLoading
-                            ? const SizedBox(
-                                height: 20,
-                                width: 20,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                  color: Colors.white,
-                                ),
-                              )
-                            : Text(
-                                l10n.logIn,
-                                style: const TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
+                      ),
+                      const SizedBox(height: 12),
+
+                      // Submit Button
+                      PrimaryButton(
+                        label: l10n.logIn,
+                        isLoading: authState.isLoading,
+                        onPressed: () => _submit(l10n),
                       ),
                       const SizedBox(height: 20),
 
                       // Sign up navigation
-                      Wrap(
-                        alignment: WrapAlignment.center,
-                        crossAxisAlignment: WrapCrossAlignment.center,
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Text(
-                            l10n.dontHaveAccount,
-                            style: theme.textTheme.bodyMedium?.copyWith(
-                              color: colorScheme.onSurfaceVariant,
+                          Flexible(
+                            child: Text(
+                              l10n.dontHaveAccount,
+                              style: AppTextStyles.body(color: AppColors.textSecondary),
+                              overflow: TextOverflow.ellipsis,
                             ),
                           ),
                           TextButton(
@@ -256,7 +263,13 @@ class _LoginScreenState extends State<LoginScreen> {
                                 ),
                               );
                             },
-                            child: Text(l10n.signUp),
+                            child: Text(
+                              l10n.signUp,
+                              style: AppTextStyles.body(
+                                color: AppColors.accent,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
                           ),
                         ],
                       ),
@@ -265,6 +278,27 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
               ),
             ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildLangChip(String code, String label, String current, LocaleState? state) {
+    final isSelected = code == current;
+    return GestureDetector(
+      onTap: () => state?.setLanguage(code),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+        decoration: BoxDecoration(
+          color: isSelected ? AppColors.accent : Colors.transparent,
+          borderRadius: BorderRadius.circular(10),
+        ),
+        child: Text(
+          label,
+          style: AppTextStyles.caption(
+            color: isSelected ? Colors.white : AppColors.textSecondary,
+            fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
           ),
         ),
       ),
