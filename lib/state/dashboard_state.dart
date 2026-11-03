@@ -46,6 +46,7 @@ class DashboardState extends ChangeNotifier {
   String? get error => _error;
   StudyWeek? get currentTeamWeek => _currentTeamWeek;
   String get otTopic => _otTopic;
+  DateTime? get lastFetched => _lastFetched;
 
   String get searchQuery => _searchQuery;
   MemberSort get sort => _sort;

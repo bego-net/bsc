@@ -21,6 +21,7 @@ class StudyState extends ChangeNotifier {
   ReadingEntry? _todayReading;
   List<ReadingEntry> _history = [];
   bool _isLoading = false;
+  bool _hasPendingWrites = false;
   Future<void>? _pendingLoad;
 
   StudyState({
@@ -57,6 +58,7 @@ class StudyState extends ChangeNotifier {
   bool get isReadToday => _todayReading?.completed ?? false;
   List<ReadingEntry> get history => List.unmodifiable(_history);
   bool get isLoading => _isLoading;
+  bool get hasPendingWrites => _hasPendingWrites;
   DateTime get currentDate => _now();
 
   /// Today's date formatted as 'yyyy-MM-dd'.
@@ -296,7 +298,13 @@ class StudyState extends ChangeNotifier {
     _history.sort((a, b) => b.date.compareTo(a.date));
     notifyListeners();
 
-    await _repo.saveReading(uid: _uid!, entry: entry);
+    _hasPendingWrites = true;
+    try {
+      await _repo.saveReading(uid: _uid!, entry: entry);
+    } finally {
+      _hasPendingWrites = false;
+      notifyListeners();
+    }
   }
 
   // --- Reminder Time ---

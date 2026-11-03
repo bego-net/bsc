@@ -10,6 +10,7 @@ import '../models/reading_entry.dart';
 import '../state/auth_state.dart';
 import '../state/locale_state.dart';
 import '../state/study_state.dart';
+import '../ui/ui.dart';
 import '../widgets/profile_avatar_button.dart';
 import 'book_picker_screen.dart';
 
@@ -76,6 +77,12 @@ class IndividualScreen extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
+                // Offline pending-write indicator
+                OfflineIndicator(
+                  hasPendingWrites: studyState.hasPendingWrites,
+                  isFromCache: false,
+                  compact: true,
+                ),
                 // Header: Greeting with user name and today's date
                 _buildGreetingHeader(
                   context,

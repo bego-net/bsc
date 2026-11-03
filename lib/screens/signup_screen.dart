@@ -45,7 +45,13 @@ class _SignupScreenState extends State<SignupScreen> {
     if (success && mounted) {
       Navigator.of(context).pop();
     } else if (mounted) {
-      final error = authState.errorMessage ?? l10n.error;
+      final rawError = authState.errorMessage ?? l10n.error;
+      final isOffline = rawError.contains('network') ||
+          rawError.contains('unavailable') ||
+          rawError.contains('Failed host') ||
+          rawError.contains('SocketException') ||
+          rawError.contains('TimeoutException');
+      final error = isOffline ? l10n.offlineSignupNotice : rawError;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(error, style: AppTextStyles.body(color: Colors.white)),

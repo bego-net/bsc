@@ -38,10 +38,16 @@ class _ForcePasswordChangeScreenState
         await authState.completePasswordChange(_newController.text);
 
     if (!success && mounted) {
+      final rawError = authState.errorMessage ?? l10n.error;
+      final isOffline = rawError.contains('network') ||
+          rawError.contains('unavailable') ||
+          rawError.contains('SocketException') ||
+          rawError.contains('TimeoutException');
+      final msg = isOffline ? l10n.offlinePasswordChangeNotice : rawError;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            authState.errorMessage ?? l10n.error,
+            msg,
             style: AppTextStyles.body(color: Colors.white),
           ),
           backgroundColor: AppColors.error,

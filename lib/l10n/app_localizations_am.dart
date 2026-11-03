@@ -19,6 +19,31 @@ class AppLocalizationsAm extends AppLocalizations {
   String get splashRetry => 'እንደገና ሞክር';
 
   @override
+  String get offlineMode => 'ከመስመር ውጭ ሁነታ';
+
+  @override
+  String get savedOnPhoneWillSync => 'በዚህ ስልክ ላይ ተቀምጧል፣ ሲገናኝ ያመሳስላል';
+
+  @override
+  String get offlineSignupNotice => 'መመዝገብ የበይነመረብ ግንኙነት ይፈልጋል።';
+
+  @override
+  String get offlineFirstLoginNotice => 'የመጀመሪያ መግቢያ የበይነመረብ ግንኙነት ይፈልጋል።';
+
+  @override
+  String get offlinePasswordChangeNotice => 'የይለፍ ቃል መቀየር የበይነመረብ ግንኙነት ይፈልጋል።';
+
+  @override
+  String get offlineForgotPasswordNotice =>
+      'የይለፍ ቃል መልሶ ማግኘት የበይነመረብ ግንኙነት ይፈልጋል።';
+
+  @override
+  String get offlineLinkNotice => 'ከመስመር ውጭ ሆነው አገናኝ መክፈት አይቻልም።';
+
+  @override
+  String get lastUpdated => 'ለመጨረሻ ጊዜ የተሻሻለው';
+
+  @override
   String get individualBs => 'የግል ጥናት';
 
   @override

@@ -20,6 +20,7 @@ class OtState extends ChangeNotifier {
   int _streak = 0;
   bool _remindersEnabled = true;
   bool _isLoading = false;
+  bool _hasPendingWrites = false;
   String? _errorMessage;
 
   List<OtWeek> _history = [];
@@ -46,6 +47,7 @@ class OtState extends ChangeNotifier {
   int get streak => _streak;
   bool get remindersEnabled => _remindersEnabled;
   bool get isLoading => _isLoading;
+  bool get hasPendingWrites => _hasPendingWrites;
   String? get errorMessage => _errorMessage;
   bool get isAdmin => _isAdmin;
   String? get uid => _uid;
@@ -170,6 +172,7 @@ class OtState extends ChangeNotifier {
     final next = !current;
 
     _readings = {..._readings, dateStr: next};
+    _hasPendingWrites = true;
     _safeNotify();
 
     try {
@@ -181,9 +184,11 @@ class OtState extends ChangeNotifier {
       );
       // Refresh streak
       _streak = await _repo.getUserStreak(_uid);
+      _hasPendingWrites = false;
       _safeNotify();
     } catch (e) {
       // Revert on error
+      _hasPendingWrites = false;
       _readings = {..._readings, dateStr: current};
       _errorMessage = 'Could not update reading status.';
       _safeNotify();

@@ -20,6 +20,12 @@ class LeaderboardScreen extends StatefulWidget {
 class _LeaderboardScreenState extends State<LeaderboardScreen> {
   LeaderboardCategory _selectedCategory = LeaderboardCategory.overall;
 
+  String _formatTime(DateTime dt) {
+    final h = dt.hour.toString().padLeft(2, '0');
+    final m = dt.minute.toString().padLeft(2, '0');
+    return '$h:$m';
+  }
+
   @override
   void initState() {
     super.initState();
@@ -92,6 +98,17 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
                   ),
                 ),
               ),
+              if (dash.lastFetched != null)
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
+                  child: Align(
+                    alignment: Alignment.centerRight,
+                    child: Text(
+                      '${l10n.lastUpdated}: ${_formatTime(dash.lastFetched!)}',
+                      style: AppTextStyles.caption(color: AppColors.textMuted),
+                    ),
+                  ),
+                ),
               const SizedBox(height: 8),
 
               // ── Leaderboard List / Podium ────────────────────────────────────

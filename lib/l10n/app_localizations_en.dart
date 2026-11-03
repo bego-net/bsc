@@ -19,6 +19,34 @@ class AppLocalizationsEn extends AppLocalizations {
   String get splashRetry => 'Try again';
 
   @override
+  String get offlineMode => 'Offline mode';
+
+  @override
+  String get savedOnPhoneWillSync => 'Saved on this phone, will sync';
+
+  @override
+  String get offlineSignupNotice =>
+      'Sign up requires an active internet connection.';
+
+  @override
+  String get offlineFirstLoginNotice =>
+      'First login requires an active internet connection.';
+
+  @override
+  String get offlinePasswordChangeNotice =>
+      'Changing password requires an active internet connection.';
+
+  @override
+  String get offlineForgotPasswordNotice =>
+      'Password reset requires an active internet connection.';
+
+  @override
+  String get offlineLinkNotice => 'Cannot open external link while offline.';
+
+  @override
+  String get lastUpdated => 'Last updated';
+
+  @override
   String get individualBs => 'Individual BS';
 
   @override
