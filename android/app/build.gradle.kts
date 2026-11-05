@@ -49,11 +49,11 @@ kotlin {
 flutter {
     source = "../.."
 }
-<<<<<<< HEAD
-=======
+
+
 
 // Required for flutter_local_notifications
 dependencies {
     coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.4")
 }
->>>>>>> 7dc0a2c (Fix Android desugaring configuration)
+
