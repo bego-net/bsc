@@ -10,7 +10,7 @@ class AppLocalizationsEn extends AppLocalizations {
   AppLocalizationsEn([String locale = 'en']) : super(locale);
 
   @override
-  String get appTitle => 'Bible Study';
+  String get appTitle => 'Bisrat Evangelism and Mobilization';
 
   @override
   String get splashAppName => 'Bisrat Evangelism\nand Mobilization';

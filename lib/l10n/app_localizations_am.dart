@@ -10,7 +10,7 @@ class AppLocalizationsAm extends AppLocalizations {
   AppLocalizationsAm([String locale = 'am']) : super(locale);
 
   @override
-  String get appTitle => 'የመጽሐፍ ቅዱስ ጥናት';
+  String get appTitle => 'ብሥራት ኢቫንጀሊዝም እና ሞቢላይዜሽን';
 
   @override
   String get splashAppName => 'ብሥራት ኢቫንጀሊዝም\nእና ሞቢላይዜሽን';
