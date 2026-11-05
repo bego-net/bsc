@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../l10n/app_localizations.dart';
@@ -38,8 +38,10 @@ class _OtOverviewScreenState extends State<OtOverviewScreen> {
         backgroundColor: AppColors.background,
         elevation: 0,
       ),
-      body: otState.overviewLoading
+      body: (otState.overviewLoading && otState.overview.isEmpty)
           ? const Center(child: CircularProgressIndicator(color: AppColors.accent))
+          : (otState.errorMessage != null && otState.overview.isEmpty)
+              ? const Center(child: Text('Not available offline yet', style: TextStyle(fontSize: 16)))
           : week == null
               ? Center(
                   child: Padding(

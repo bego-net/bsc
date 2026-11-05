@@ -1,5 +1,5 @@
 name: bible_study
-description: "Bisrat Bible Study app."
+description: "Bisrat Evangelism and Mobilization app."
 publish_to: 'none'
 
 version: 1.0.0+1
@@ -52,11 +52,10 @@ flutter_launcher_icons:
     theme_color: "#2F6F5E"
 
 flutter_native_splash:
-  color: "#FFFFFF"
-  image: assets/icon/logo_b.png
+  color: "#F4F1EA"
   android: true
   ios: false
   web: true
   android_12:
-    color: "#FFFFFF"
-    image: assets/icon/logo_b.png
+    color: "#F4F1EA"
+    image: assets/icon/transparent.png

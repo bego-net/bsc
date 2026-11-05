@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../l10n/app_localizations.dart';
@@ -61,7 +61,7 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     final authState = context.watch<AuthState>();
-    final localeState = Provider.of<LocaleState?>(context);
+    final localeState = context.watch<LocaleState?>();
     final l10n = AppLocalizations.of(context) ?? AppLocalizationsEn();
     final languageCode = localeState?.languageCode ?? l10n.localeName;
 

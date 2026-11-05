@@ -341,6 +341,17 @@ class StudyState extends ChangeNotifier {
     }
   }
 
+  /// Updates reminder language.
+  Future<void> setLanguageCode(String code) async {
+    final formatted =
+        '${_reminderTime.hour.toString().padLeft(2, '0')}:${_reminderTime.minute.toString().padLeft(2, '0')}';
+    await _notificationService?.scheduleDailyStudyReminder(
+      reminderTime: formatted,
+      enabled: true,
+      languageCode: code,
+    );
+  }
+
   // --- Streak Calculation ---
 
   /// Calculates consecutive days with completed readings.

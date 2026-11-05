@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import 'repositories/auth_repository.dart';
+import 'repositories/dashboard_repository.dart';
 import 'repositories/ot_repository.dart';
 import 'repositories/study_repository.dart';
 import 'repositories/team_repository.dart';
@@ -45,10 +46,10 @@ class BibleStudyApp extends StatelessWidget {
       error: AppColors.error,
     );
 
-    final localeState = Provider.of<LocaleState?>(context);
+    final localeState = context.watch<LocaleState?>();
 
     return MaterialApp(
-      title: 'Bible Study',
+      title: 'Bisrat Evangelism and Mobilization',
       debugShowCheckedModeBanner: false,
       locale: localeState?.locale ?? const Locale('en'),
       supportedLocales: AppLocalizations.supportedLocales,
@@ -225,7 +226,7 @@ class _AuthGateState extends State<AuthGate> {
   @override
   Widget build(BuildContext context) {
     final authState = context.watch<AuthState>();
-    final localeState = Provider.of<LocaleState?>(context);
+    final localeState = context.watch<LocaleState?>();
     if (authState.user != null && localeState != null) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         localeState.syncWithUser(authState.user);
@@ -300,6 +301,7 @@ class _AppShellState extends State<AppShell> {
             studyRepo: context.read<StudyRepository>(),
             otRepo: context.read<OtRepository>(),
             teamRepo: context.read<TeamRepository>(),
+            dashboardRepo: context.read<DashboardRepository>(),
           );
         }
       }

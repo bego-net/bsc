@@ -4,6 +4,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../models/app_user.dart';
 import '../repositories/auth_repository.dart';
 import 'ot_state.dart';
+import 'study_state.dart';
 import 'team_state.dart';
 
 /// Key used in [SharedPreferences] to store preferred language ('am' or 'en').
@@ -55,41 +56,45 @@ class LocaleState extends ChangeNotifier {
   }
 
   /// Changes language to [code] ('am' or 'en').
-  /// Applies immediately, saves to device [SharedPreferences],
-  /// updates Firestore if signed in, and re-schedules active notifications.
-  Future<void> setLanguage(
+  /// Applies immediately and notifies listeners.
+  /// Saves to SharedPreferences and Firestore asynchronously.
+  void setLanguage(
     String code, {
     AppUser? user,
     AuthRepository? authRepo,
     TeamState? teamState,
     OtState? otState,
-  }) async {
+    StudyState? studyState,
+  }) {
     if (code != 'am' && code != 'en') return;
     if (_locale.languageCode == code) return;
 
     _locale = Locale(code);
     notifyListeners();
 
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.setString(kPrefLanguageKey, code);
-    } catch (e) {
+    // Save to SharedPreferences asynchronously without blocking
+    SharedPreferences.getInstance().then((prefs) {
+      prefs.setString(kPrefLanguageKey, code);
+    }).catchError((e) {
       debugPrint('[LocaleState] Error saving to prefs: $e');
-    }
+    });
 
+    // Update Firestore user profile asynchronously without blocking
     if (user != null && authRepo != null) {
-      try {
-        await authRepo.updateLanguage(code);
-      } catch (e) {
+      authRepo.updateLanguage(code).catchError((e) {
         debugPrint('[LocaleState] Error updating user profile: $e');
-      }
+      });
     }
 
+    // Reschedule notifications in the selected language.
     if (teamState != null) {
-      await teamState.setLanguageCode(code);
+      teamState.setLanguageCode(code);
     }
     if (otState != null) {
-      await otState.setLanguageCode(code);
+      otState.setLanguageCode(code);
+    }
+    if (studyState != null) {
+      studyState.setLanguageCode(code);
     }
   }
 }

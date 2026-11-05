@@ -20,12 +20,12 @@ class ProfileScreen extends StatefulWidget {
 }
 
 class _ProfileScreenState extends State<ProfileScreen> {
-  // ── Name editing ────────────────────────────────────────────────────────────
+  // â”€â”€ Name editing â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   late final TextEditingController _nameController;
   bool _nameSaving = false;
   String? _nameError;
 
-  // ── Change password ──────────────────────────────────────────────────────────
+  // â”€â”€ Change password â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   final _changePasswordKey = GlobalKey<FormState>();
   final _currentPwController = TextEditingController();
   final _newPwController = TextEditingController();
@@ -53,7 +53,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     super.dispose();
   }
 
-  // ── Name save ────────────────────────────────────────────────────────────────
+  // â”€â”€ Name save â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   Future<void> _saveName(AppLocalizations l10n) async {
     final name = _nameController.text.trim();
     if (name.isEmpty) {
@@ -84,7 +84,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     }
   }
 
-  // ── Change password ──────────────────────────────────────────────────────────
+  // â”€â”€ Change password â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   Future<void> _changePassword(AppLocalizations l10n) async {
     if (!_changePasswordKey.currentState!.validate()) return;
     setState(() {
@@ -117,7 +117,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     }
   }
 
-  // ── Reminder time picker ─────────────────────────────────────────────────────
+  // â”€â”€ Reminder time picker â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   Future<void> _pickReminderTime(BuildContext context) async {
     final studyState = context.read<StudyState>();
     final selected = await showTimePicker(
@@ -129,7 +129,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     }
   }
 
-  // ── Logout ───────────────────────────────────────────────────────────────────
+  // â”€â”€ Logout â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   void _logout(BuildContext context, AppLocalizations l10n) {
     showDialog(
       context: context,
@@ -146,6 +146,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             style: FilledButton.styleFrom(backgroundColor: AppColors.error),
             onPressed: () {
               Navigator.of(ctx).pop();
+              Navigator.of(context).popUntil((route) => route.isFirst);
               context.read<AuthState>().logOut();
             },
             child: Text(l10n.logOut, style: AppTextStyles.button()),
@@ -204,7 +205,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             child: ListView(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               children: [
-                // ── Avatar & Basic Info Card ─────────────────────────────────
+                // â”€â”€ Avatar & Basic Info Card â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
                 AppCard(
                   padding: const EdgeInsets.all(24),
                   child: Column(
@@ -239,7 +240,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         contentPadding: EdgeInsets.zero,
                         leading: const Icon(Icons.alternate_email, color: AppColors.accent),
                         title: Text(
-                          user.username.isEmpty ? '—' : user.username,
+                          user.username.isEmpty ? 'â€”' : user.username,
                           style: AppTextStyles.title(),
                         ),
                         subtitle: Text(l10n.usernameReadOnly, style: AppTextStyles.caption()),
@@ -256,7 +257,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 ),
                 const SizedBox(height: 16),
 
-                // ── Edit Name Card ───────────────────────────────────────────
+                // â”€â”€ Edit Name Card â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
                 AppCard(
                   padding: const EdgeInsets.all(20),
                   child: Column(
@@ -303,7 +304,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 ),
                 const SizedBox(height: 16),
 
-                // ── Stats Card ───────────────────────────────────────────────
+                // â”€â”€ Stats Card â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
                 AppCard(
                   padding: const EdgeInsets.all(20),
                   child: Column(
@@ -311,21 +312,21 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     children: [
                       SectionTitle(title: l10n.stats, padding: EdgeInsets.zero),
                       const SizedBox(height: 8),
-                      _buildStatRow(l10n.ibsStreakLabel, l10n.daysCount(ibsStreak), '🔥'),
-                      _buildStatRow(l10n.ibsReadingDaysLabel, '$ibsReadingDays', '📖'),
-                      _buildStatRow(l10n.otStreakLabel, l10n.daysCount(otStreak), '🕊️'),
-                      _buildStatRow(l10n.otReadingDaysLabel, '$otReadingDays', '📜'),
+                      _buildStatRow(l10n.ibsStreakLabel, l10n.daysCount(ibsStreak), 'ðŸ”¥'),
+                      _buildStatRow(l10n.ibsReadingDaysLabel, '$ibsReadingDays', 'ðŸ“–'),
+                      _buildStatRow(l10n.otStreakLabel, l10n.daysCount(otStreak), 'ðŸ•Šï¸'),
+                      _buildStatRow(l10n.otReadingDaysLabel, '$otReadingDays', 'ðŸ“œ'),
                       _buildStatRow(
                         l10n.teamBsPreparedLabel,
                         isPrepared ? l10n.yesCheck : l10n.notYet,
-                        '👥',
+                        'ðŸ‘¥',
                       ),
                     ],
                   ),
                 ),
                 const SizedBox(height: 16),
 
-                // ── Settings Card ────────────────────────────────────────────
+                // â”€â”€ Settings Card â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
                 AppCard(
                   padding: const EdgeInsets.all(20),
                   child: Column(
@@ -349,7 +350,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             children: [
                               _buildLangChip(
                                 'am',
-                                'አማርኛ',
+                                l10n.amharic,
                                 localeState.languageCode,
                                 () => localeState.setLanguage(
                                   'am',
@@ -357,11 +358,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                   authRepo: context.read<AuthRepository>(),
                                   teamState: teamState,
                                   otState: otState,
+                                  studyState: studyState,
                                 ),
                               ),
                               _buildLangChip(
                                 'en',
-                                'English',
+                                l10n.english,
                                 localeState.languageCode,
                                 () => localeState.setLanguage(
                                   'en',
@@ -369,6 +371,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                   authRepo: context.read<AuthRepository>(),
                                   teamState: teamState,
                                   otState: otState,
+                                  studyState: studyState,
                                 ),
                               ),
                             ],
@@ -407,7 +410,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 ),
                 const SizedBox(height: 16),
 
-                // ── Change Password Card ─────────────────────────────────────
+                // â”€â”€ Change Password Card â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
                 AppCard(
                   padding: const EdgeInsets.all(20),
                   child: Form(
@@ -489,7 +492,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 ),
                 const SizedBox(height: 20),
 
-                // ── Log Out Button ───────────────────────────────────────────
+                // â”€â”€ Log Out Button â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
                 SizedBox(
                   width: double.infinity,
                   height: 52,

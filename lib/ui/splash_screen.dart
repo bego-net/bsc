@@ -13,7 +13,7 @@ import 'app_text_styles.dart';
 /// - Centered logo (assets/icon/logo_b.png, 90 px) with fade + gentle scale-in (0.8 -> 1.0, 600 ms).
 /// - 150 px circular CustomPaint loader: light-blue ring (#B7E3FF, stroke 6) +
 ///   rotating bright blue arc (#38B6FF, stroke 6, round caps, ~100 degrees, 1.2 s per turn).
-/// - Fading-in localized "Bisrat Bible Study" title in Noto Sans Ethiopic.
+/// - Fading-in localized "Bisrat Evangelism and Mobilization" title in Noto Sans Ethiopic.
 /// - Error fallback with "Try again" button if loading fails or times out (>15 s).
 class SplashScreen extends StatefulWidget {
   final bool showRetry;
@@ -92,7 +92,7 @@ class _SplashScreenState extends State<SplashScreen>
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final appName = l10n?.splashAppName ?? 'Bisrat Bible Study';
+    final appName = l10n?.splashAppName ?? 'Bisrat Evangelism\nand Mobilization';
     final retryText = l10n?.splashRetry ?? 'Try again';
 
     return Scaffold(
@@ -154,6 +154,7 @@ class _SplashScreenState extends State<SplashScreen>
                       letterSpacing: -0.2,
                     ),
                     textAlign: TextAlign.center,
+                    softWrap: true,
                   ),
                 ),
 
@@ -165,6 +166,7 @@ class _SplashScreenState extends State<SplashScreen>
                       widget.errorMessage!,
                       style: AppTextStyles.caption(color: AppColors.error),
                       textAlign: TextAlign.center,
+                    softWrap: true,
                     ),
                     const SizedBox(height: 12),
                   ],

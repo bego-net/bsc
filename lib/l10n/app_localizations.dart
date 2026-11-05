@@ -107,7 +107,7 @@ abstract class AppLocalizations {
   /// No description provided for @splashAppName.
   ///
   /// In en, this message translates to:
-  /// **'Bisrat Bible Study'**
+  /// **'Bisrat Evangelism\nand Mobilization'**
   String get splashAppName;
 
   /// No description provided for @splashRetry.

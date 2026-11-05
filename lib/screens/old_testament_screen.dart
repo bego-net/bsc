@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../data/bible_books.dart';
@@ -39,7 +39,7 @@ class _OldTestamentScreenState extends State<OldTestamentScreen> {
   Widget build(BuildContext context) {
     final authState = context.watch<AuthState>();
     final otState = context.watch<OtState>();
-    final localeState = Provider.of<LocaleState?>(context);
+    final localeState = context.watch<LocaleState?>();
     final l10n = AppLocalizations.of(context) ?? AppLocalizationsEn();
     final languageCode = localeState?.languageCode ?? l10n.localeName;
 
@@ -102,11 +102,11 @@ class _OldTestamentScreenState extends State<OldTestamentScreen> {
     String languageCode,
     AppLocalizations l10n,
   ) {
-    if (otState.isLoading) {
+    if (otState.isLoading && otState.currentWeek == null) {
       return const Center(child: CircularProgressIndicator(color: AppColors.accent));
     }
 
-    if (otState.errorMessage != null) {
+    if (otState.errorMessage != null && otState.currentWeek == null) {
       return Center(
         child: Padding(
           padding: const EdgeInsets.all(24),
@@ -116,7 +116,7 @@ class _OldTestamentScreenState extends State<OldTestamentScreen> {
               const Icon(Icons.error_outline, size: 48, color: AppColors.error),
               const SizedBox(height: 12),
               Text(
-                otState.errorMessage!,
+                'Not available offline yet',
                 textAlign: TextAlign.center,
                 style: AppTextStyles.body(),
               ),

@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
@@ -36,7 +36,7 @@ class IndividualScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final authState = context.watch<AuthState>();
     final studyState = context.watch<StudyState>();
-    final localeState = Provider.of<LocaleState?>(context);
+    final localeState = context.watch<LocaleState?>();
     final l10n = AppLocalizations.of(context) ?? AppLocalizationsEn();
     final languageCode = localeState?.languageCode ?? l10n.localeName;
 

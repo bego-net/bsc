@@ -42,10 +42,17 @@ class AuthState extends ChangeNotifier {
     _isLoading = false;
     notifyListeners();
 
+    _listenToAuthChanges();
+  }
+
+  void _listenToAuthChanges() {
+    _authSubscription?.cancel();
     _authSubscription = _repo.authStateChanges.listen((uid) async {
       if (uid == null) {
-        _user = null;
-        notifyListeners();
+        if (_user != null) {
+          _user = null;
+          notifyListeners();
+        }
       } else {
         _user = await _repo.getCurrentUser();
         notifyListeners();
@@ -70,6 +77,7 @@ class AuthState extends ChangeNotifier {
         password: password,
       );
       _isLoading = false;
+      _listenToAuthChanges();
       notifyListeners();
       return true;
     } catch (e) {
@@ -95,6 +103,7 @@ class AuthState extends ChangeNotifier {
         password: password,
       );
       _isLoading = false;
+      _listenToAuthChanges();
       notifyListeners();
       return true;
     } catch (e) {
@@ -106,14 +115,18 @@ class AuthState extends ChangeNotifier {
   }
 
   /// Signs out the current user.
+  /// Cancels listeners, navigates to login immediately, and runs sign-out cleanup asynchronously.
   Future<void> logOut() async {
-    _isLoading = true;
-    notifyListeners();
-
-    await _repo.logOut();
+    _authSubscription?.cancel();
+    _authSubscription = null;
     _user = null;
     _isLoading = false;
+    _errorMessage = null;
     notifyListeners();
+
+    unawaited(_repo.logOut().catchError((e) {
+      debugPrint('Logout cleanup error: $e');
+    }));
   }
 
   /// Re-authenticates and changes the password; returns true on success.

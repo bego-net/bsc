@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 
@@ -63,10 +63,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
         ],
       ),
       body: Builder(builder: (context) {
-        if (dash.isLoading) {
+        if (dash.isLoading && dash.allMembers.isEmpty) {
           return const Center(child: CircularProgressIndicator(color: AppColors.accent));
         }
-        if (dash.error != null) {
+        if (dash.error != null && dash.allMembers.isEmpty) {
           return Center(
             child: Padding(
               padding: const EdgeInsets.all(24),

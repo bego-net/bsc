@@ -228,11 +228,23 @@ void main() async {
             return otState;
           },
         ),
-        ChangeNotifierProvider<DashboardState>(
+        ChangeNotifierProxyProvider<AuthState, DashboardState>(
           create: (_) => DashboardState(
             repository: dashboardRepository,
             otRepository: otRepository,
           ),
+          update: (context, authState, dashState) {
+            if (dashState == null) {
+              return DashboardState(
+                repository: dashboardRepository,
+                otRepository: otRepository,
+              );
+            }
+            if (authState.user == null) {
+              dashState.reset();
+            }
+            return dashState;
+          },
         ),
       ],
       child: const BibleStudyApp(),

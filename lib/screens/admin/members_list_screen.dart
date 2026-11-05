@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../l10n/app_localizations.dart';
@@ -171,7 +171,7 @@ class _MembersListBodyState extends State<_MembersListBody> {
                       const SizedBox(height: 60),
                       EmptyState(
                         icon: Icons.person_search_outlined,
-                        title: l10n.noMembersFound,
+                        title: dash.error != null ? 'Not available offline yet' : l10n.noMembersFound,
                       ),
                     ],
                   )

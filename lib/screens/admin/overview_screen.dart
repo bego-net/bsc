@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../l10n/app_localizations.dart';
@@ -86,7 +86,7 @@ class _OverviewScreenState extends State<OverviewScreen> {
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Text(l10n.couldNotLoadMemberOverview, style: AppTextStyles.body()),
+                        Text('Not available offline yet', style: AppTextStyles.body()),
                         const SizedBox(height: 16),
                         PrimaryButton(
                           label: l10n.retry,

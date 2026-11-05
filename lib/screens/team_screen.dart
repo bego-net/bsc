@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -59,7 +59,7 @@ class _TeamScreenState extends State<TeamScreen> {
   Widget build(BuildContext context) {
     final authState = context.watch<AuthState>();
     final teamState = context.watch<TeamState>();
-    final localeState = Provider.of<LocaleState?>(context);
+    final localeState = context.watch<LocaleState?>();
     final l10n = AppLocalizations.of(context) ?? AppLocalizationsEn();
     final languageCode = localeState?.languageCode ?? l10n.localeName;
 
@@ -111,11 +111,11 @@ class _TeamScreenState extends State<TeamScreen> {
     String languageCode,
     AppLocalizations l10n,
   ) {
-    if (teamState.isLoading) {
+    if (teamState.isLoading && teamState.currentWeek == null) {
       return const Center(child: CircularProgressIndicator(color: AppColors.accent));
     }
 
-    if (teamState.errorMessage != null) {
+    if (teamState.errorMessage != null && teamState.currentWeek == null) {
       return Center(
         child: Padding(
           padding: const EdgeInsets.all(24),
@@ -125,7 +125,7 @@ class _TeamScreenState extends State<TeamScreen> {
               const Icon(Icons.error_outline, size: 48, color: AppColors.error),
               const SizedBox(height: 12),
               Text(
-                teamState.errorMessage!,
+                'Not available offline yet',
                 textAlign: TextAlign.center,
                 style: AppTextStyles.body(),
               ),

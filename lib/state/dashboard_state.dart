@@ -9,7 +9,7 @@ import '../repositories/ot_repository.dart';
 enum MemberSort { name, lastActive, mostActive }
 
 /// Manages dashboard data: members list, home stats, and member details.
-/// Admin only — never instantiated for members.
+/// Admin only â€” never instantiated for members.
 class DashboardState extends ChangeNotifier {
   final DashboardRepository _repo;
   final OtRepository _otRepo;
@@ -40,7 +40,7 @@ class DashboardState extends ChangeNotifier {
   })  : _repo = repository,
         _otRepo = otRepository;
 
-  // ─── Getters ────────────────────────────────────────────────────────────────
+  // â”€â”€â”€ Getters â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
   bool get isLoading => _isLoading;
   String? get error => _error;
@@ -81,7 +81,7 @@ class DashboardState extends ChangeNotifier {
     return list;
   }
 
-  // ─── Home card stats ────────────────────────────────────────────────────────
+  // â”€â”€â”€ Home card stats â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
   int get totalMembers => _members.length;
 
@@ -112,7 +112,7 @@ class DashboardState extends ChangeNotifier {
   List<MemberSummary> get needsEncouragementList =>
       _members.where((m) => m.needsEncouragement).toList();
 
-  // ─── Actions ────────────────────────────────────────────────────────────────
+  // â”€â”€â”€ Actions â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
   /// Loads members, team week, and OT week. Respects 2-min cache.
   Future<void> load({bool forceRefresh = false}) async {
@@ -207,6 +207,22 @@ class DashboardState extends ChangeNotifier {
 
   /// Pull-to-refresh: force reload.
   Future<void> refresh() => load(forceRefresh: true);
+
+  /// Resets all in-memory dashboard state (used on logout).
+  void reset() {
+    _members = [];
+    _currentTeamWeek = null;
+    _otTopic = '';
+    _currentOtWeekDates = [];
+    _isLoading = false;
+    _error = null;
+    _lastFetched = null;
+    _detailCache.clear();
+    _searchQuery = '';
+    _sort = MemberSort.name;
+    _filterNeedsEncouragement = false;
+    notifyListeners();
+  }
 
   /// Clears cached detail for a member (unused but available for future use).
   void clearDetailCache(String uid) {
